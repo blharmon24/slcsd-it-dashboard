@@ -326,7 +326,7 @@
             <button class="save-btn" onclick="saveScheduleDetail()">Save</button>
             <span class="save-confirm" id="sb-save-confirm">Saved!</span>
             <div id="sb-save-error" style="display:none; color:#c0392b; font-size:12px; margin-top:0.5rem;">
-              CTC class push must be confirmed before setting status to Loading or Complete.
+              CTC class push must be confirmed before moving to Loading.
             </div>
           </div>
         </div>
@@ -818,7 +818,7 @@ async function saveScheduleDetail() {
   // CTC schools cannot move to Loading or Complete without the push confirmation
   if (SB_CTC_SCHOOLS.includes(sbCurrentSchool.name)) {
     const ctcConfirmed = sbRecords[sbCurrentSchool.name]?.ctc_push_confirmed;
-    if (!ctcConfirmed && (status === 'loading' || status === 'complete')) {
+    if (!ctcConfirmed && status === 'loading') {
       errEl.style.display = 'block';
       return;
     }
