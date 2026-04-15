@@ -118,6 +118,11 @@
   .status-loading { background: #CFFAFE; color: #0E7490; }
   .doc-field select { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; }
   .doc-field select:focus { outline: none; border-color: #4A7CFF; }
+  .sb-card { flex-direction: column; align-items: stretch; gap: 8px; }
+  .sb-progress-bar { display: flex; gap: 3px; }
+  .sb-progress-seg { flex: 1; height: 5px; border-radius: 2px; background: #e8eaf0; }
+  .sb-progress-seg.filled { background: #4A7CFF; }
+  .sb-progress-seg.filled-complete { background: #10B981; }
 </style>
 </head>
 <body>
@@ -304,8 +309,25 @@
                 </select>
               </div>
             </div>
+            <!-- CTC push confirmation — shown only for East, Highland, West HS -->
+            <div id="sb-ctc-section" style="display:none; margin-top:0.75rem;">
+              <div class="ctc-banner">
+                <div class="ctc-icon">&#9888;</div>
+                <div class="ctc-text">
+                  <strong>CTC Class Push Required</strong>
+                  Before moving to Loading, confirm that CTC classes have been requested to be pushed to this school's schedule.
+                  <div class="ctc-check">
+                    <input type="checkbox" id="sb-ctc-check" onchange="saveSBCTC(this.checked)">
+                    <label for="sb-ctc-check">CTC class push has been requested</label>
+                  </div>
+                </div>
+              </div>
+            </div>
             <button class="save-btn" onclick="saveScheduleDetail()">Save</button>
             <span class="save-confirm" id="sb-save-confirm">Saved!</span>
+            <div id="sb-save-error" style="display:none; color:#c0392b; font-size:12px; margin-top:0.5rem;">
+              CTC class push must be confirmed before setting status to Loading or Complete.
+            </div>
           </div>
         </div>
       </div>
@@ -694,27 +716,63 @@ async function loadScheduleBuildRecords() {
   renderScheduleSchools();
 }
 
+// These schools require CTC class push confirmation before moving to Loading
+const SB_CTC_SCHOOLS = ['East HS', 'Highland HS', 'West HS'];
+
+// Generates the progress bar HTML — scales automatically with SB_STATUSES length
+function renderSBProgressBar(statusKey) {
+  const total = SB_STATUSES.length;
+  const idx = SB_STATUSES.findIndex(s => s.key === statusKey);
+  const filled = statusKey === 'complete' ? total : idx;
+  const isComplete = statusKey === 'complete';
+  return SB_STATUSES.map((_, i) =>
+    `<div class="sb-progress-seg${i < filled ? (isComplete ? ' filled-complete' : ' filled') : ''}"></div>`
+  ).join('');
+}
+
 function renderScheduleSchools() {
   ['high', 'middle'].forEach(type => {
     const grid = document.getElementById('sb-grid-' + type);
     grid.innerHTML = '';
     SCHOOLS[type].forEach(school => {
+      // Horizonte does not build a schedule — exclude from this tracker
+      if (school.name === 'Horizonte') return;
+
       const rec = sbRecords[school.name];
       const statusKey = rec ? rec.status : 'not_started';
       const statusObj = SB_STATUSES.find(s => s.key === statusKey) || SB_STATUSES[0];
       const person = rec && rec.responsible_person ? rec.responsible_person : '';
       const card = document.createElement('div');
-      card.className = 'school-card';
+      card.className = 'school-card sb-card';
       card.innerHTML = `
-        <div>
-          <div class="sname">${school.name}</div>
-          <div class="sb-person ${person ? '' : 'sb-unassigned'}">${person || 'Unassigned'}</div>
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;width:100%">
+          <div>
+            <div class="sname">${school.name}</div>
+            <div class="sb-person ${person ? '' : 'sb-unassigned'}">${person || 'Unassigned'}</div>
+          </div>
+          <div class="sstatus ${statusObj.cls}">${statusObj.label}</div>
         </div>
-        <div class="sstatus ${statusObj.cls}">${statusObj.label}</div>`;
+        <div class="sb-progress-bar">${renderSBProgressBar(statusKey)}</div>`;
       card.onclick = () => openScheduleSchool(school, type);
       grid.appendChild(card);
     });
   });
+}
+
+// Creates a schedule_build_records row on demand the first time data is saved
+async function ensureSBRecord() {
+  if (sbCurrentRecordId) return sbCurrentRecordId;
+  const { data } = await sb.from('schedule_build_records').insert({
+    school_name: sbCurrentSchool.name,
+    school_type: sbCurrentSchool.type,
+    academic_year: getSBYear(),
+    responsible_person: document.getElementById('sb-responsible').value.trim(),
+    status: document.getElementById('sb-status-select').value,
+    updated_by: currentUser.id,
+  }).select().single();
+  sbCurrentRecordId = data.id;
+  sbRecords[sbCurrentSchool.name] = data;
+  return sbCurrentRecordId;
 }
 
 async function openScheduleSchool(school, type) {
@@ -728,37 +786,55 @@ async function openScheduleSchool(school, type) {
   document.getElementById('sb-detail-year-badge').textContent = getSBYear();
   document.getElementById('sb-responsible').value = rec.responsible_person || '';
   document.getElementById('sb-status-select').value = rec.status || 'not_started';
+  document.getElementById('sb-save-error').style.display = 'none';
+
+  // Show CTC push confirmation banner for the three high schools that require it
+  const ctcSection = document.getElementById('sb-ctc-section');
+  if (SB_CTC_SCHOOLS.includes(school.name)) {
+    ctcSection.style.display = 'block';
+    document.getElementById('sb-ctc-check').checked = rec.ctc_push_confirmed || false;
+  } else {
+    ctcSection.style.display = 'none';
+  }
+}
+
+async function saveSBCTC(checked) {
+  await ensureSBRecord();
+  await sb.from('schedule_build_records').update({
+    ctc_push_confirmed: checked,
+    updated_by: currentUser.id,
+  }).eq('id', sbCurrentRecordId);
+  if (sbRecords[sbCurrentSchool.name]) {
+    sbRecords[sbCurrentSchool.name].ctc_push_confirmed = checked;
+  }
 }
 
 async function saveScheduleDetail() {
   const responsible = document.getElementById('sb-responsible').value.trim();
   const status = document.getElementById('sb-status-select').value;
+  const errEl = document.getElementById('sb-save-error');
+  errEl.style.display = 'none';
 
-  if (sbCurrentRecordId) {
-    await sb.from('schedule_build_records').update({
-      responsible_person: responsible,
-      status,
-      updated_at: new Date().toISOString(),
-      updated_by: currentUser.id,
-    }).eq('id', sbCurrentRecordId);
-  } else {
-    const { data } = await sb.from('schedule_build_records').insert({
-      school_name: sbCurrentSchool.name,
-      school_type: sbCurrentSchool.type,
-      academic_year: getSBYear(),
-      responsible_person: responsible,
-      status,
-      updated_by: currentUser.id,
-    }).select().single();
-    sbCurrentRecordId = data.id;
-    sbRecords[sbCurrentSchool.name] = data;
+  // CTC schools cannot move to Loading or Complete without the push confirmation
+  if (SB_CTC_SCHOOLS.includes(sbCurrentSchool.name)) {
+    const ctcConfirmed = sbRecords[sbCurrentSchool.name]?.ctc_push_confirmed;
+    if (!ctcConfirmed && (status === 'loading' || status === 'complete')) {
+      errEl.style.display = 'block';
+      return;
+    }
   }
+
+  await ensureSBRecord();
+  await sb.from('schedule_build_records').update({
+    responsible_person: responsible,
+    status,
+    updated_at: new Date().toISOString(),
+    updated_by: currentUser.id,
+  }).eq('id', sbCurrentRecordId);
 
   // Update local cache so the list reflects the change without a full reload
-  if (sbRecords[sbCurrentSchool.name]) {
-    sbRecords[sbCurrentSchool.name].responsible_person = responsible;
-    sbRecords[sbCurrentSchool.name].status = status;
-  }
+  sbRecords[sbCurrentSchool.name].responsible_person = responsible;
+  sbRecords[sbCurrentSchool.name].status = status;
 
   const conf = document.getElementById('sb-save-confirm');
   conf.style.display = 'inline';
