@@ -110,6 +110,14 @@
   .check-pending { background: #f0f0f0; color: #999; }
   .coming-soon { background: white; border-radius: 8px; border: 1px solid #e0e4ea; padding: 3rem; text-align: center; color: #999; }
   .coming-soon h2 { font-size: 16px; color: #bbb; margin-bottom: 0.5rem; }
+  .sb-person { font-size: 11px; color: #888; margin-top: 2px; }
+  .sb-unassigned { font-style: italic; color: #bbb; }
+  .status-collecting { background: #DBEAFE; color: #1E40AF; }
+  .status-course-prefs { background: #FEF3C7; color: #92400E; }
+  .status-building { background: #EDE9FE; color: #5B21B6; }
+  .status-loading { background: #CFFAFE; color: #0E7490; }
+  .doc-field select { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; }
+  .doc-field select:focus { outline: none; border-color: #4A7CFF; }
 </style>
 </head>
 <body>
@@ -256,9 +264,50 @@
       </div>
 
       <div class="page" id="page-schedule-commit">
-        <div class="page-title">Schedule Commit</div>
-        <div class="page-sub">Schedule commit tracking.</div>
-        <div class="coming-soon"><h2>Coming soon</h2><p>This module will be built in a future stage.</p></div>
+        <!-- School list view -->
+        <div id="sb-list-view">
+          <div class="page-title">Schedule Build Tracker</div>
+          <div class="page-sub">Track next year schedule build progress and responsible staff per school.</div>
+          <div class="term-bar">
+            <label>Year:</label>
+            <input class="year-input" type="number" id="sb-year-select" value="2026" min="2020" max="2040" onchange="loadScheduleBuildRecords()">
+          </div>
+          <div class="school-group">
+            <div class="school-group-title">High Schools</div>
+            <div class="school-grid" id="sb-grid-high"></div>
+          </div>
+          <div class="school-group">
+            <div class="school-group-title">Middle Schools</div>
+            <div class="school-grid" id="sb-grid-middle"></div>
+          </div>
+        </div>
+        <!-- School detail / edit view -->
+        <div id="sb-detail-view" style="display:none">
+          <button class="back-btn" onclick="showScheduleList()">&#8592; Back to schools</button>
+          <div class="checklist-header">
+            <h2 id="sb-detail-name"></h2>
+            <div class="term-badge" id="sb-detail-year-badge"></div>
+            <div class="doc-grid">
+              <div class="doc-field">
+                <label>Responsible Person</label>
+                <input id="sb-responsible" placeholder="Name">
+              </div>
+              <div class="doc-field">
+                <label>Build Status</label>
+                <select id="sb-status-select">
+                  <option value="not_started">Not Started</option>
+                  <option value="collecting_requests">Collecting Requests</option>
+                  <option value="course_preferences">Course Preferences &amp; Assignments</option>
+                  <option value="building">Building</option>
+                  <option value="loading">Loading</option>
+                  <option value="complete">Complete</option>
+                </select>
+              </div>
+            </div>
+            <button class="save-btn" onclick="saveScheduleDetail()">Save</button>
+            <span class="save-confirm" id="sb-save-confirm">Saved!</span>
+          </div>
+        </div>
       </div>
 
     </div>
@@ -622,11 +671,114 @@ function showHistoryList() {
   document.getElementById('history-list').style.display = 'block';
 }
 
+// ── Schedule Build Tracker ──────────────────────────────────────────
+const SB_STATUSES = [
+  { key: 'not_started',         label: 'Not Started',                     cls: 'status-not-started' },
+  { key: 'collecting_requests', label: 'Collecting Requests',             cls: 'status-collecting' },
+  { key: 'course_preferences',  label: 'Course Preferences & Assignments', cls: 'status-course-prefs' },
+  { key: 'building',            label: 'Building',                        cls: 'status-building' },
+  { key: 'loading',             label: 'Loading',                         cls: 'status-loading' },
+  { key: 'complete',            label: 'Complete',                        cls: 'status-complete' },
+];
+
+let sbRecords = {};
+let sbCurrentSchool = null; // { name, type, ... }
+let sbCurrentRecordId = null;
+
+function getSBYear() { return document.getElementById('sb-year-select').value; }
+
+async function loadScheduleBuildRecords() {
+  const { data } = await sb.from('schedule_build_records').select('*').eq('academic_year', getSBYear());
+  sbRecords = {};
+  if (data) data.forEach(r => { sbRecords[r.school_name] = r; });
+  renderScheduleSchools();
+}
+
+function renderScheduleSchools() {
+  ['high', 'middle'].forEach(type => {
+    const grid = document.getElementById('sb-grid-' + type);
+    grid.innerHTML = '';
+    SCHOOLS[type].forEach(school => {
+      const rec = sbRecords[school.name];
+      const statusKey = rec ? rec.status : 'not_started';
+      const statusObj = SB_STATUSES.find(s => s.key === statusKey) || SB_STATUSES[0];
+      const person = rec && rec.responsible_person ? rec.responsible_person : '';
+      const card = document.createElement('div');
+      card.className = 'school-card';
+      card.innerHTML = `
+        <div>
+          <div class="sname">${school.name}</div>
+          <div class="sb-person ${person ? '' : 'sb-unassigned'}">${person || 'Unassigned'}</div>
+        </div>
+        <div class="sstatus ${statusObj.cls}">${statusObj.label}</div>`;
+      card.onclick = () => openScheduleSchool(school, type);
+      grid.appendChild(card);
+    });
+  });
+}
+
+async function openScheduleSchool(school, type) {
+  sbCurrentSchool = { ...school, type };
+  const rec = sbRecords[school.name] || {};
+  sbCurrentRecordId = rec.id || null;
+
+  document.getElementById('sb-list-view').style.display = 'none';
+  document.getElementById('sb-detail-view').style.display = 'block';
+  document.getElementById('sb-detail-name').textContent = school.name;
+  document.getElementById('sb-detail-year-badge').textContent = getSBYear();
+  document.getElementById('sb-responsible').value = rec.responsible_person || '';
+  document.getElementById('sb-status-select').value = rec.status || 'not_started';
+}
+
+async function saveScheduleDetail() {
+  const responsible = document.getElementById('sb-responsible').value.trim();
+  const status = document.getElementById('sb-status-select').value;
+
+  if (sbCurrentRecordId) {
+    await sb.from('schedule_build_records').update({
+      responsible_person: responsible,
+      status,
+      updated_at: new Date().toISOString(),
+      updated_by: currentUser.id,
+    }).eq('id', sbCurrentRecordId);
+  } else {
+    const { data } = await sb.from('schedule_build_records').insert({
+      school_name: sbCurrentSchool.name,
+      school_type: sbCurrentSchool.type,
+      academic_year: getSBYear(),
+      responsible_person: responsible,
+      status,
+      updated_by: currentUser.id,
+    }).select().single();
+    sbCurrentRecordId = data.id;
+    sbRecords[sbCurrentSchool.name] = data;
+  }
+
+  // Update local cache so the list reflects the change without a full reload
+  if (sbRecords[sbCurrentSchool.name]) {
+    sbRecords[sbCurrentSchool.name].responsible_person = responsible;
+    sbRecords[sbCurrentSchool.name].status = status;
+  }
+
+  const conf = document.getElementById('sb-save-confirm');
+  conf.style.display = 'inline';
+  setTimeout(() => { conf.style.display = 'none'; }, 2500);
+}
+
+function showScheduleList() {
+  document.getElementById('sb-detail-view').style.display = 'none';
+  document.getElementById('sb-list-view').style.display = 'block';
+  sbCurrentSchool = null;
+  sbCurrentRecordId = null;
+  loadScheduleBuildRecords();
+}
+
 function showPage(name, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
+  if (name === 'schedule-commit') loadScheduleBuildRecords();
 }
 
 sb.auth.getSession().then(({ data }) => {
