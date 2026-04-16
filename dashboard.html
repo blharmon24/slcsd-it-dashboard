@@ -170,7 +170,7 @@
       <div class="nav-item" onclick="showPage('school-rollover', this)">School Rollover</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">Schedule Commit</div>
       <div class="nav-item" onclick="showPage('ctc-export', this)">CTC Export</div>
-      <div class="sidebar-version">v2026.04.16.16</div>
+      <div class="sidebar-version">v2026.04.16.17</div>
     </div>
     <div class="main">
 
@@ -855,6 +855,16 @@ async function ensureRecord() {
   return currentRecordId;
 }
 
+// Returns the day before the selected term's end date as a YYYY-MM-DD string
+function getAsOfDateDefault(schoolName) {
+  const dates = schoolName === 'Horizonte' ? termDatesHorizonte : termDatesTraditional;
+  const endDateStr = dates[getTerm()];
+  if (!endDateStr) return '';
+  const d = new Date(endDateStr);
+  d.setDate(d.getDate() - 1);
+  return d.toISOString().split('T')[0];
+}
+
 function renderDocFields(record, type) {
   const el = document.getElementById('cl-doc-fields');
   if (type === 'elementary') {
@@ -865,7 +875,7 @@ function renderDocFields(record, type) {
     el.innerHTML = `
       <div class="doc-field"><label>Requested by</label><input id="f-requested-by" value="${record.requested_by || ''}" placeholder="Name"></div>
       <div class="doc-field"><label>Date requested</label><input id="f-requested-date" type="date" value="${record.requested_date || ''}"></div>
-      <div class="doc-field"><label>As-of date</label><input id="f-as-of-date" type="date" value="${record.as_of_date || ''}"></div>
+      <div class="doc-field"><label>As-of date</label><input id="f-as-of-date" type="date" value="${record.as_of_date || getAsOfDateDefault(currentSchool)}"></div>
       <div class="doc-field"><label>Active student count</label><input id="f-active-students" type="number" value="${record.active_student_count || ''}" placeholder="0"></div>
       <div class="doc-field"><label>Students processed</label><input id="f-students-processed" type="number" value="${record.students_processed || ''}" placeholder="0"></div>
       <div class="doc-field"><label>Grades processed</label><input id="f-grades-processed" type="number" value="${record.grades_processed || ''}" placeholder="0"></div>`;
