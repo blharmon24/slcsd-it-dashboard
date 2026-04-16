@@ -170,7 +170,7 @@
       <div class="nav-item" onclick="showPage('school-rollover', this)">School Rollover</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">Schedule Commit</div>
       <div class="nav-item" onclick="showPage('ctc-export', this)">CTC Export</div>
-      <div class="sidebar-version">v2026.04.16.18</div>
+      <div class="sidebar-version">v2026.04.16.19</div>
     </div>
     <div class="main">
 
@@ -761,8 +761,29 @@ function statusLabel(s) {
   return 'Not Started';
 }
 
+// Build one SVG doughnut widget
+function makeSummaryDonut(completed, total, label) {
+  const R = 28, CX = 36, CY = 36;
+  const circumference = 2 * Math.PI * R;
+  const filled = total > 0 ? (completed / total) * circumference : 0;
+  const arcColor = total > 0 && completed === total ? '#10B981' : '#4A7CFF';
+  return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+    <svg width="72" height="72" viewBox="0 0 72 72">
+      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#e8eaf0" stroke-width="9"/>
+      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${arcColor}" stroke-width="9"
+        stroke-dasharray="${filled.toFixed(1)} ${circumference.toFixed(1)}"
+        stroke-linecap="round"
+        transform="rotate(-90 ${CX} ${CY})"/>
+      <text x="${CX}" y="33" text-anchor="middle" font-size="15" font-weight="700" fill="#222" font-family="Arial,sans-serif">${completed}</text>
+      <text x="${CX}" y="47" text-anchor="middle" font-size="10" fill="#999" font-family="Arial,sans-serif">of ${total}</text>
+    </svg>
+    <div class="gs-stat-label">${label}</div>
+  </div>`;
+}
+
 function renderSchools() {
   let totalSchools = 0, completedSchools = 0;
+  const typeStats = { high: { done: 0, total: 0 }, middle: { done: 0, total: 0 }, elementary: { done: 0, total: 0 } };
 
   ['high','middle','elementary'].forEach(type => {
     const grid = document.getElementById('grid-' + type);
@@ -772,8 +793,9 @@ function renderSchools() {
       if (termNum > school.terms) return;
 
       totalSchools++;
+      typeStats[type].total++;
       const status = getStatus(school.name);
-      if (status === 'complete') completedSchools++;
+      if (status === 'complete') { completedSchools++; typeStats[type].done++; }
       const rec = records[school.name];
       // Checklist progress indicator for this school
       const recComps = rec ? (allCompletions[rec.id] || {}) : {};
@@ -795,27 +817,18 @@ function renderSchools() {
     });
   });
 
-  // Update summary stats bar — SVG doughnut, no library needed
+  // Update summary stats bar — four SVG doughnuts
   const summaryBar = document.getElementById('gs-summary-bar');
   if (totalSchools > 0) {
-    const R = 28, CX = 36, CY = 36;
-    const circumference = 2 * Math.PI * R;
-    const filled = (completedSchools / totalSchools) * circumference;
-    const arcColor = (completedSchools === totalSchools) ? '#10B981' : '#4A7CFF';
     summaryBar.style.display = 'flex';
     summaryBar.innerHTML = `
-      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-        <svg width="72" height="72" viewBox="0 0 72 72">
-          <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#e8eaf0" stroke-width="9"/>
-          <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${arcColor}" stroke-width="9"
-            stroke-dasharray="${filled.toFixed(1)} ${circumference.toFixed(1)}"
-            stroke-linecap="round"
-            transform="rotate(-90 ${CX} ${CY})"/>
-          <text x="${CX}" y="33" text-anchor="middle" font-size="15" font-weight="700" fill="#222" font-family="Arial,sans-serif">${completedSchools}</text>
-          <text x="${CX}" y="47" text-anchor="middle" font-size="10" fill="#999" font-family="Arial,sans-serif">of ${totalSchools}</text>
-        </svg>
-        <div class="gs-stat-label">Schools Complete</div>
-      </div>`;
+      ${makeSummaryDonut(completedSchools, totalSchools, 'All Schools')}
+      <div class="gs-stat-divider"></div>
+      ${makeSummaryDonut(typeStats.high.done, typeStats.high.total, 'High Schools')}
+      <div class="gs-stat-divider"></div>
+      ${makeSummaryDonut(typeStats.middle.done, typeStats.middle.total, 'Middle Schools')}
+      <div class="gs-stat-divider"></div>
+      ${makeSummaryDonut(typeStats.elementary.done, typeStats.elementary.total, 'Elementary')}`;
   } else {
     summaryBar.style.display = 'none';
   }
