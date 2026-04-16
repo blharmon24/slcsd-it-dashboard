@@ -170,7 +170,7 @@
       <div class="nav-item" onclick="showPage('school-rollover', this)">School Rollover</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">Schedule Commit</div>
       <div class="nav-item" onclick="showPage('ctc-export', this)">CTC Export</div>
-      <div class="sidebar-version">v2026.04.16.17</div>
+      <div class="sidebar-version">v2026.04.16.18</div>
     </div>
     <div class="main">
 
@@ -762,7 +762,7 @@ function statusLabel(s) {
 }
 
 function renderSchools() {
-  let totalSchools = 0, completedSchools = 0, totalGrades = 0;
+  let totalSchools = 0, completedSchools = 0;
 
   ['high','middle','elementary'].forEach(type => {
     const grid = document.getElementById('grid-' + type);
@@ -775,8 +775,6 @@ function renderSchools() {
       const status = getStatus(school.name);
       if (status === 'complete') completedSchools++;
       const rec = records[school.name];
-      if (rec && rec.grades_processed) totalGrades += rec.grades_processed;
-
       // Checklist progress indicator for this school
       const recComps = rec ? (allCompletions[rec.id] || {}) : {};
       const tasks = getTasksForSchool(type);
@@ -797,19 +795,26 @@ function renderSchools() {
     });
   });
 
-  // Update summary stats bar
+  // Update summary stats bar — SVG doughnut, no library needed
   const summaryBar = document.getElementById('gs-summary-bar');
   if (totalSchools > 0) {
+    const R = 28, CX = 36, CY = 36;
+    const circumference = 2 * Math.PI * R;
+    const filled = (completedSchools / totalSchools) * circumference;
+    const arcColor = (completedSchools === totalSchools) ? '#10B981' : '#4A7CFF';
     summaryBar.style.display = 'flex';
     summaryBar.innerHTML = `
-      <div class="gs-stat">
-        <div class="gs-stat-value">${completedSchools}<span style="font-size:14px;font-weight:400;color:#bbb"> / ${totalSchools}</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+        <svg width="72" height="72" viewBox="0 0 72 72">
+          <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#e8eaf0" stroke-width="9"/>
+          <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${arcColor}" stroke-width="9"
+            stroke-dasharray="${filled.toFixed(1)} ${circumference.toFixed(1)}"
+            stroke-linecap="round"
+            transform="rotate(-90 ${CX} ${CY})"/>
+          <text x="${CX}" y="33" text-anchor="middle" font-size="15" font-weight="700" fill="#222" font-family="Arial,sans-serif">${completedSchools}</text>
+          <text x="${CX}" y="47" text-anchor="middle" font-size="10" fill="#999" font-family="Arial,sans-serif">of ${totalSchools}</text>
+        </svg>
         <div class="gs-stat-label">Schools Complete</div>
-      </div>
-      <div class="gs-stat-divider"></div>
-      <div class="gs-stat">
-        <div class="gs-stat-value">${totalGrades > 0 ? totalGrades.toLocaleString() : '—'}</div>
-        <div class="gs-stat-label">Total Grades Processed</div>
       </div>`;
   } else {
     summaryBar.style.display = 'none';
