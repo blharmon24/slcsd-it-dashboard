@@ -167,7 +167,7 @@
       <div class="nav-item" onclick="showPage('school-rollover', this)">School Rollover</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">Schedule Commit</div>
       <div class="nav-item" onclick="showPage('ctc-export', this)">CTC Export</div>
-      <div class="sidebar-version">v2026.04.16.9</div>
+      <div class="sidebar-version">v2026.04.16.10</div>
     </div>
     <div class="main">
 
@@ -938,10 +938,11 @@ async function openScheduleSchool(school, type) {
 
 async function saveSBCTC(checked) {
   await ensureSBRecord();
-  await sb.from('schedule_build_records').update({
+  const { error } = await sb.from('schedule_build_records').update({
     ctc_push_confirmed: checked,
     updated_by: currentUser.id,
   }).eq('id', sbCurrentRecordId);
+  if (error) { console.error('saveSBCTC error:', error.message); return; }
   if (sbRecords[sbCurrentSchool.name]) {
     sbRecords[sbCurrentSchool.name].ctc_push_confirmed = checked;
   }
@@ -976,7 +977,12 @@ async function saveScheduleDetail() {
   // Always save the CTC checkbox state for CTC schools
   if (isCTCSchool) updates.ctc_push_confirmed = ctcPushConfirmed;
 
-  await sb.from('schedule_build_records').update(updates).eq('id', sbCurrentRecordId);
+  const { error } = await sb.from('schedule_build_records').update(updates).eq('id', sbCurrentRecordId);
+  if (error) {
+    errEl.textContent = 'Save failed: ' + error.message;
+    errEl.style.display = 'block';
+    return;
+  }
 
   // Update local cache
   sbRecords[sbCurrentSchool.name].responsible_person = responsible;
