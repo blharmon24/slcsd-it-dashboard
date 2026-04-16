@@ -165,12 +165,12 @@
     <div class="sidebar">
       <div class="sidebar-section">Grade Storing</div>
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
-      <div class="nav-item" onclick="showPage('history', this)">History</div>
+      <div class="nav-item" onclick="showPage('history', this)">Grade Store History</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('school-rollover', this)">School Rollover</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">Schedule Commit</div>
       <div class="nav-item" onclick="showPage('ctc-export', this)">CTC Export</div>
-      <div class="sidebar-version">v2026.04.16.14</div>
+      <div class="sidebar-version">v2026.04.16.15</div>
     </div>
     <div class="main">
 
@@ -260,7 +260,14 @@
               <option value="T6">T6</option>
             </select>
             <label>Year:</label>
-            <input type="number" id="hist-year" value="2025" min="2020" max="2040">
+            <select id="hist-year">
+              <option value="2023">23-24</option>
+              <option value="2024">24-25</option>
+              <option value="2025" selected>25-26</option>
+              <option value="2026">26-27</option>
+              <option value="2027">27-28</option>
+              <option value="2028">28-29</option>
+            </select>
             <button onclick="loadHistory()">View</button>
           </div>
           <div class="history-table-wrap">
