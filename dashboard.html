@@ -847,13 +847,13 @@ async function loadScheduleBuildRecords() {
 // These schools require CTC class push confirmation before moving to Loading
 const SB_CTC_SCHOOLS = ['East HS', 'Highland HS', 'West HS'];
 
-// Generates the progress bar HTML — scales automatically with SB_STATUSES length
+// Generates the progress bar HTML — 5 segments, one fills per status transition
 function renderSBProgressBar(statusKey) {
-  const total = SB_STATUSES.length;
+  const SEGMENTS = 5;
   const idx = SB_STATUSES.findIndex(s => s.key === statusKey);
-  const filled = statusKey === 'complete' ? total : idx;
+  const filled = statusKey === 'complete' ? SEGMENTS : idx;
   const isComplete = statusKey === 'complete';
-  return SB_STATUSES.map((_, i) =>
+  return Array.from({ length: SEGMENTS }, (_, i) =>
     `<div class="sb-progress-seg${i < filled ? (isComplete ? ' filled-complete' : ' filled') : ''}"></div>`
   ).join('');
 }
