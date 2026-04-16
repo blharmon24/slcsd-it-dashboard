@@ -343,8 +343,12 @@
       <div class="page" id="page-ctc-export">
         <div class="page-title">CTC Schedule Export</div>
         <div class="page-sub">Upload the CTC master schedule and generate tab-delimited pre-schedule import files for East, Highland, and West.</div>
+        <div class="term-bar">
+          <label>Year:</label>
+          <input class="year-input" type="number" id="ctc-year-select" value="2026" min="2020" max="2040" onchange="initCTCPage()">
+        </div>
 
-        <!-- Term confirmation banner — shown after config is saved -->
+        <!-- Term confirmation banner — shown when config is loaded -->
         <div id="ctc-year-banner" style="display:none; margin-bottom:1.25rem;"></div>
 
         <!-- Annual configuration -->
@@ -944,36 +948,46 @@ function showPage(name, el) {
 }
 
 // ── CTC Schedule Export ─────────────────────────────────────────────
-const CTC_CONFIG_KEY = 'ctc_export_config';
-let ctcRows = null; // parsed rows from the uploaded master schedule
+let ctcRows = null; // rows currently loaded (from DB or fresh upload)
 
-function loadCTCConfig() {
-  try {
-    const stored = localStorage.getItem(CTC_CONFIG_KEY);
-    return stored ? JSON.parse(stored) : {};
-  } catch { return {}; }
+function getCTCYear() { return document.getElementById('ctc-year-select').value; }
+
+async function initCTCPage() {
+  await loadCTCConfigFromDB();
+  await loadCTCScheduleFromDB();
 }
 
-function initCTCPage() {
-  const config = loadCTCConfig();
-  document.getElementById('ctc-term-label').value    = config.termLabel       || '';
-  document.getElementById('ctc-base-termid').value   = config.baseTermId      || '';
-  document.getElementById('ctc-east-buildid').value  = config.eastBuildId     || '';
-  document.getElementById('ctc-east-catalogid').value= config.eastCatalogId   || '';
-  document.getElementById('ctc-highland-buildid').value  = config.highlandBuildId   || '';
-  document.getElementById('ctc-highland-catalogid').value= config.highlandCatalogId || '';
-  document.getElementById('ctc-west-buildid').value  = config.westBuildId     || '';
-  document.getElementById('ctc-west-catalogid').value= config.westCatalogId   || '';
+// Load config for the selected year from Supabase and populate the form
+async function loadCTCConfigFromDB() {
+  const { data } = await sb.from('ctc_export_config').select('*').eq('academic_year', getCTCYear()).maybeSingle();
+  const set = (id, val) => { document.getElementById(id).value = val || ''; };
+  if (data) {
+    set('ctc-term-label',           data.term_label);
+    set('ctc-base-termid',          data.base_term_id);
+    set('ctc-east-buildid',         data.east_build_id);
+    set('ctc-east-catalogid',       data.east_catalog_id);
+    set('ctc-highland-buildid',     data.highland_build_id);
+    set('ctc-highland-catalogid',   data.highland_catalog_id);
+    set('ctc-west-buildid',         data.west_build_id);
+    set('ctc-west-catalogid',       data.west_catalog_id);
+    updateCTCBanner(data.term_label, data.base_term_id);
+  } else {
+    ['ctc-term-label','ctc-base-termid','ctc-east-buildid','ctc-east-catalogid',
+     'ctc-highland-buildid','ctc-highland-catalogid','ctc-west-buildid','ctc-west-catalogid']
+      .forEach(id => { document.getElementById(id).value = ''; });
+    updateCTCBanner(null, null);
+  }
+}
 
-  // Show a term reminder banner when a term label is saved
+function updateCTCBanner(termLabel, baseTermId) {
   const banner = document.getElementById('ctc-year-banner');
-  if (config.termLabel) {
+  if (termLabel) {
     banner.style.display = 'block';
     banner.innerHTML = `<div class="ctc-banner" style="background:#EFF6FF;border-color:#BFDBFE;">
       <div class="ctc-icon" style="font-size:16px;">&#8505;</div>
       <div class="ctc-text" style="color:#1E40AF;">
-        <strong>Configured term: ${config.termLabel} &nbsp;|&nbsp; Base Term ID: ${config.baseTermId || '—'}</strong>
-        At the start of each new school year, update the Term Label and Base Term ID in the configuration below.
+        <strong>Configured term: ${termLabel} &nbsp;|&nbsp; Base Term ID: ${baseTermId || '—'}</strong>
+        At the start of each new school year, update the Term Label and Base Term ID below.
       </div>
     </div>`;
   } else {
@@ -981,24 +995,70 @@ function initCTCPage() {
   }
 }
 
-function saveCTCConfig() {
-  const config = {
-    termLabel:        document.getElementById('ctc-term-label').value.trim(),
-    baseTermId:       document.getElementById('ctc-base-termid').value.trim(),
-    eastBuildId:      document.getElementById('ctc-east-buildid').value.trim(),
-    eastCatalogId:    document.getElementById('ctc-east-catalogid').value.trim(),
-    highlandBuildId:  document.getElementById('ctc-highland-buildid').value.trim(),
-    highlandCatalogId:document.getElementById('ctc-highland-catalogid').value.trim(),
-    westBuildId:      document.getElementById('ctc-west-buildid').value.trim(),
-    westCatalogId:    document.getElementById('ctc-west-catalogid').value.trim(),
+// Save (upsert) config for the selected year to Supabase
+async function saveCTCConfig() {
+  const payload = {
+    academic_year:       getCTCYear(),
+    term_label:          document.getElementById('ctc-term-label').value.trim(),
+    base_term_id:        parseInt(document.getElementById('ctc-base-termid').value)       || null,
+    east_build_id:       parseInt(document.getElementById('ctc-east-buildid').value)      || null,
+    east_catalog_id:     parseInt(document.getElementById('ctc-east-catalogid').value)    || null,
+    highland_build_id:   parseInt(document.getElementById('ctc-highland-buildid').value)  || null,
+    highland_catalog_id: parseInt(document.getElementById('ctc-highland-catalogid').value)|| null,
+    west_build_id:       parseInt(document.getElementById('ctc-west-buildid').value)      || null,
+    west_catalog_id:     parseInt(document.getElementById('ctc-west-catalogid').value)    || null,
+    updated_at:          new Date().toISOString(),
+    updated_by:          currentUser.id,
   };
-  localStorage.setItem(CTC_CONFIG_KEY, JSON.stringify(config));
-
-  // Refresh banner
-  initCTCPage();
+  const { error } = await sb.from('ctc_export_config').upsert(payload, { onConflict: 'academic_year' });
+  if (error) { alert('Error saving configuration: ' + error.message); return; }
+  updateCTCBanner(payload.term_label, payload.base_term_id);
   const conf = document.getElementById('ctc-config-confirm');
   conf.style.display = 'inline';
   setTimeout(() => { conf.style.display = 'none'; }, 2500);
+}
+
+// Load stored schedule rows for the selected year from Supabase
+async function loadCTCScheduleFromDB() {
+  const statusEl = document.getElementById('ctc-row-count');
+  statusEl.textContent = 'Loading schedule…';
+  statusEl.style.color = '#555';
+  ctcRows = null;
+  document.getElementById('ctc-preview-wrap').style.display = 'none';
+  document.getElementById('ctc-generate-section').style.display = 'none';
+
+  const { data } = await sb.from('ctc_master_schedule').select('*').eq('academic_year', getCTCYear()).order('course_number');
+  if (!data || data.length === 0) {
+    statusEl.textContent = '';
+    document.getElementById('ctc-file-name').textContent = 'Choose file…';
+    return;
+  }
+
+  // Map DB columns back to the header names the rest of the code expects
+  ctcRows = data.map(r => ({
+    'TeachLastName':  r.teach_last_name  || '',
+    'Teacher ID':     r.teacher_id       || '',
+    'Course Number':  r.course_number    || '',
+    'Room':           r.room             || '',
+    'SECTION_NUMBER': r.section_number   || '',
+    'EXPRESSION':     r.expression       || '',
+    'TermId':         r.term_id          || '',
+    'SCHOOLID':       r.school_id        || '',
+    'MaxCut':         String(r.max_cut        ?? ''),
+    'MAXENROLLMENT':  String(r.max_enrollment ?? ''),
+    'EHS':            String(r.ehs ?? 0),
+    'HHS':            String(r.hhs ?? 0),
+    'WHS':            String(r.whs ?? 0),
+  }));
+
+  const uploadDate = data[0].uploaded_at ? new Date(data[0].uploaded_at).toLocaleDateString() : '';
+  statusEl.textContent = `${ctcRows.length} rows loaded from database${uploadDate ? ' (uploaded ' + uploadDate + ')' : ''}.`;
+  statusEl.style.color = '#065F46';
+  document.getElementById('ctc-file-name').textContent = uploadDate ? `Last upload: ${uploadDate}` : 'Loaded from database';
+
+  const headers = ['TeachLastName','Teacher ID','Course Number','Room','SECTION_NUMBER','EXPRESSION','TermId','SCHOOLID','MaxCut','MAXENROLLMENT','EHS','HHS','WHS'];
+  renderCTCPreview(headers, ctcRows);
+  document.getElementById('ctc-generate-section').style.display = 'block';
 }
 
 function handleCTCFileUpload(event) {
@@ -1013,12 +1073,9 @@ function handleCTCFileUpload(event) {
   ctcRows = null;
 
   const reader = new FileReader();
-  reader.onload = function(e) {
+  reader.onload = async function(e) {
     const lines = e.target.result.split(/\r?\n/).filter(l => l.trim());
-    if (lines.length < 2) {
-      showCTCUploadError('File appears empty or has no data rows.');
-      return;
-    }
+    if (lines.length < 2) { showCTCUploadError('File appears empty or has no data rows.'); return; }
 
     const headers = lines[0].split('\t').map(h => h.trim());
     const required = ['Course Number', 'EXPRESSION', 'TermId', 'EHS', 'HHS', 'WHS'];
@@ -1033,14 +1090,56 @@ function handleCTCFileUpload(event) {
       const row = {};
       headers.forEach((h, i) => { row[h] = (vals[i] || '').trim(); });
       return row;
-    }).filter(row => Object.values(row).some(v => v)); // drop fully blank rows
+    }).filter(row => Object.values(row).some(v => v));
 
     ctcRows = parsed;
-    document.getElementById('ctc-row-count').textContent = `${ctcRows.length} rows loaded successfully.`;
+    const statusEl = document.getElementById('ctc-row-count');
+    statusEl.textContent = `${ctcRows.length} rows parsed. Saving to database…`;
+    statusEl.style.color = '#555';
     renderCTCPreview(headers, ctcRows);
-    document.getElementById('ctc-generate-section').style.display = 'block';
+    await saveCTCScheduleToDB(parsed);
   };
   reader.readAsText(file);
+}
+
+// Replace all existing schedule rows for this year, then insert the new batch
+async function saveCTCScheduleToDB(rows) {
+  const year = getCTCYear();
+  const statusEl = document.getElementById('ctc-row-count');
+
+  const { error: delErr } = await sb.from('ctc_master_schedule').delete().eq('academic_year', year);
+  if (delErr) { showCTCUploadError('Error clearing old data: ' + delErr.message); return; }
+
+  const now = new Date().toISOString();
+  const dbRows = rows.map(r => ({
+    academic_year:   year,
+    teach_last_name: r['TeachLastName']  || null,
+    teacher_id:      r['Teacher ID']     || null,
+    course_number:   r['Course Number']  || null,
+    room:            r['Room']           || null,
+    section_number:  r['SECTION_NUMBER'] || null,
+    expression:      r['EXPRESSION']     || null,
+    term_id:         r['TermId']         || null,
+    school_id:       r['SCHOOLID']       || null,
+    max_cut:         parseInt(r['MaxCut'])        || null,
+    max_enrollment:  parseInt(r['MAXENROLLMENT']) || null,
+    ehs:             parseInt(r['EHS'])  || 0,
+    hhs:             parseInt(r['HHS'])  || 0,
+    whs:             parseInt(r['WHS'])  || 0,
+    uploaded_at:     now,
+    uploaded_by:     currentUser.id,
+  }));
+
+  // Insert in batches of 100
+  const CHUNK = 100;
+  for (let i = 0; i < dbRows.length; i += CHUNK) {
+    const { error } = await sb.from('ctc_master_schedule').insert(dbRows.slice(i, i + CHUNK));
+    if (error) { showCTCUploadError('Error saving to database: ' + error.message); return; }
+  }
+
+  statusEl.textContent = `${rows.length} rows saved to database successfully.`;
+  statusEl.style.color = '#065F46';
+  document.getElementById('ctc-generate-section').style.display = 'block';
 }
 
 function showCTCUploadError(msg) {
@@ -1050,12 +1149,9 @@ function showCTCUploadError(msg) {
 }
 
 function renderCTCPreview(headers, rows) {
-  const wrap = document.getElementById('ctc-preview-wrap');
-  const preview = document.getElementById('ctc-preview');
-  wrap.style.display = 'block';
-
+  document.getElementById('ctc-preview-wrap').style.display = 'block';
   const show = rows.slice(0, 5);
-  preview.innerHTML = `<table class="history-table" style="font-size:11px;min-width:max-content;">
+  document.getElementById('ctc-preview').innerHTML = `<table class="history-table" style="font-size:11px;min-width:max-content;">
     <thead><tr>${headers.map(h => `<th style="white-space:nowrap">${h}</th>`).join('')}</tr></thead>
     <tbody>
       ${show.map(row => `<tr>${headers.map(h => `<td style="white-space:nowrap">${row[h] || ''}</td>`).join('')}</tr>`).join('')}
@@ -1070,11 +1166,21 @@ function generatePreSchedule(school) {
     return;
   }
 
-  const config = loadCTCConfig();
+  // Read directly from the live input fields
+  const config = {
+    termLabel:         document.getElementById('ctc-term-label').value.trim(),
+    baseTermId:        document.getElementById('ctc-base-termid').value.trim(),
+    eastBuildId:       document.getElementById('ctc-east-buildid').value.trim(),
+    eastCatalogId:     document.getElementById('ctc-east-catalogid').value.trim(),
+    highlandBuildId:   document.getElementById('ctc-highland-buildid').value.trim(),
+    highlandCatalogId: document.getElementById('ctc-highland-catalogid').value.trim(),
+    westBuildId:       document.getElementById('ctc-west-buildid').value.trim(),
+    westCatalogId:     document.getElementById('ctc-west-catalogid').value.trim(),
+  };
+
   const missing = [];
   if (!config.termLabel)  missing.push('Term Label');
   if (!config.baseTermId) missing.push('Base Term ID');
-
   const ids = {
     East:     { build: 'eastBuildId',     catalog: 'eastCatalogId' },
     Highland: { build: 'highlandBuildId', catalog: 'highlandCatalogId' },
@@ -1091,8 +1197,6 @@ function generatePreSchedule(school) {
   }
 
   const baseTermId = parseInt(config.baseTermId);
-
-  // Fixed values per school
   const SCHOOL_DATA = {
     East:     { buildId: config.eastBuildId,     catalogId: config.eastCatalogId,     teacherId: '11608', schoolId: '704', col: 'EHS' },
     Highland: { buildId: config.highlandBuildId, catalogId: config.highlandCatalogId, teacherId: '11609', schoolId: '708', col: 'HHS' },
@@ -1100,30 +1204,21 @@ function generatePreSchedule(school) {
   };
   const sc = SCHOOL_DATA[school];
 
-  // Only include sections where this school has at least 1 seat
   const filtered = ctcRows.filter(row => parseInt(row[sc.col] || '0') > 0);
 
-  // Derive TERM label from TermId using the configured base
   function termLabel(termIdStr) {
     const tid = parseInt(termIdStr);
-    if (tid === baseTermId)     return config.termLabel; // e.g. 26-27
+    if (tid === baseTermId)     return config.termLabel;
     if (tid === baseTermId + 1) return 'S1';
     if (tid === baseTermId + 2) return 'S2';
-    return termIdStr; // fallback: use the raw value
+    return termIdStr;
   }
 
   const outputHeaders = ['BUILDID','CatalogID','ConstraintCode','COURSENUMBER','TEACHERID','TERMID','TERM','CLASSROOM','SCHOOLID','EXPRESSION'];
   const dataRows = filtered.map(row => [
-    sc.buildId,
-    sc.catalogId,
-    '16',
-    row['Course Number'],
-    sc.teacherId,
-    row['TermId'],
-    termLabel(row['TermId']),
-    'CTCenter',
-    sc.schoolId,
-    row['EXPRESSION'],
+    sc.buildId, sc.catalogId, '16', row['Course Number'],
+    sc.teacherId, row['TermId'], termLabel(row['TermId']),
+    'CTCenter', sc.schoolId, row['EXPRESSION'],
   ]);
 
   const content = [outputHeaders, ...dataRows].map(r => r.join('\t')).join('\r\n');
