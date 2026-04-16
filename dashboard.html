@@ -127,6 +127,10 @@
   .ctc-file-label:hover { background:#f0f2f6; border-color:#4A7CFF; color:#4A7CFF; }
   .ctc-school-col { }
   .ctc-school-heading { font-size:12px; font-weight:600; color:#333; padding-bottom:6px; border-bottom:1px solid #eee; margin-bottom:8px; }
+  .gs-stat { text-align:center; }
+  .gs-stat-value { font-size:22px; font-weight:700; color:#222; line-height:1.1; }
+  .gs-stat-label { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; }
+  .gs-stat-divider { width:1px; background:#e0e4ea; align-self:stretch; margin:0 0.5rem; }
 </style>
 </head>
 <body>
@@ -165,7 +169,7 @@
       <div class="nav-item" onclick="showPage('school-rollover', this)">School Rollover</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">Schedule Commit</div>
       <div class="nav-item" onclick="showPage('ctc-export', this)">CTC Export</div>
-      <div class="sidebar-version">v2026.04.16.12</div>
+      <div class="sidebar-version">v2026.04.16.13</div>
     </div>
     <div class="main">
 
@@ -193,6 +197,7 @@
               <option value="2028">28-29</option>
             </select>
           </div>
+          <div id="gs-summary-bar" style="display:none; background:white; border:1px solid #e0e4ea; border-radius:8px; padding:0.875rem 1.25rem; margin-bottom:1.5rem; gap:1.25rem; align-items:center; flex-wrap:wrap;"></div>
           <div class="school-group">
             <div class="school-group-title">High Schools</div>
             <div class="school-grid" id="grid-high"></div>
@@ -290,6 +295,7 @@
             <label>Year:</label>
             <input class="year-input" type="number" id="sb-year-select" value="2026" min="2020" max="2040" onchange="loadScheduleBuildRecords()">
           </div>
+          <div id="sb-summary-bar" style="display:none; margin-bottom:1rem;"></div>
           <div class="school-group">
             <div class="school-group-title">High Schools</div>
             <div class="school-grid" id="sb-grid-high"></div>
@@ -340,6 +346,16 @@
             <span class="save-confirm" id="sb-save-confirm">Saved!</span>
             <div id="sb-save-error" style="display:none; color:#c0392b; font-size:12px; margin-top:0.5rem;">
               CTC class push must be confirmed before moving to Loading.
+            </div>
+          </div>
+          <!-- Schedule commit checklist — shown when status is Complete -->
+          <div id="sb-checklist-section" style="display:none; margin-top:1rem;">
+            <div class="tasks-card">
+              <div class="tasks-card-title">
+                Schedule Commit Checklist
+                <span class="progress-info" id="sb-cl-progress"></span>
+              </div>
+              <div id="sb-cl-tasks"></div>
             </div>
           </div>
         </div>
@@ -405,6 +421,7 @@
             </label>
             <div id="ctc-row-count" style="margin-top:0.5rem;font-size:12px;color:#065F46;font-weight:500;"></div>
             <div id="ctc-upload-error" style="display:none;color:#c0392b;font-size:12px;margin-top:0.5rem;"></div>
+            <div id="ctc-last-uploaded" style="display:none;font-size:12px;color:#1E40AF;background:#EFF6FF;border:1px solid #BFDBFE;border-radius:5px;padding:6px 10px;margin-top:0.5rem;"></div>
           </div>
           <div id="ctc-preview-wrap" style="display:none;overflow-x:auto;padding:0 1rem 1rem;border-top:1px solid #f0f0f0;">
             <div style="font-size:12px;font-weight:600;color:#555;padding-top:0.75rem;margin-bottom:6px;">Preview (first 5 rows)</div>
@@ -538,6 +555,7 @@ const ELEM_TASKS = [
 let currentUser = null;
 let records = {};
 let completions = {};
+let allCompletions = {}; // keyed by record_id → { task_key → completion }
 let currentSchool = null;
 let currentSchoolObj = null;
 let currentRecordId = null;
@@ -588,7 +606,20 @@ function showApp() {
 async function loadRecordsAndRender() {
   const { data } = await sb.from('grade_store_records').select('*').eq('term_label', getTerm()).eq('academic_year', getYear());
   records = {};
-  if (data) data.forEach(r => { records[r.school_name] = r; });
+  allCompletions = {};
+  if (data) {
+    data.forEach(r => { records[r.school_name] = r; });
+    const ids = data.map(r => r.id);
+    if (ids.length > 0) {
+      const { data: comps } = await sb.from('checklist_completions').select('*').in('record_id', ids);
+      if (comps) {
+        comps.forEach(c => {
+          if (!allCompletions[c.record_id]) allCompletions[c.record_id] = {};
+          allCompletions[c.record_id][c.task_key] = c;
+        });
+      }
+    }
+  }
   renderSchools();
 }
 
@@ -604,20 +635,56 @@ function statusLabel(s) {
 }
 
 function renderSchools() {
+  let totalSchools = 0, completedSchools = 0, totalGrades = 0;
+
   ['high','middle','elementary'].forEach(type => {
     const grid = document.getElementById('grid-' + type);
     grid.innerHTML = '';
     SCHOOLS[type].forEach(school => {
       const termNum = parseInt(getTerm().replace('T',''));
       if (termNum > school.terms) return;
+
+      totalSchools++;
       const status = getStatus(school.name);
+      if (status === 'complete') completedSchools++;
+      const rec = records[school.name];
+      if (rec && rec.grades_processed) totalGrades += rec.grades_processed;
+
+      // Checklist progress indicator for this school
+      const recComps = rec ? (allCompletions[rec.id] || {}) : {};
+      const tasks = getTasksForSchool(type);
+      const doneTasks = tasks.filter(t => recComps[t.key] && recComps[t.key].completed).length;
+      let taskHtml = '';
+      if (rec) {
+        const allDone = doneTasks === tasks.length;
+        taskHtml = `<div style="font-size:11px;color:${allDone ? '#065F46' : '#999'};margin-top:2px;">${allDone ? '&#10003; All tasks done' : doneTasks + ' / ' + tasks.length + ' tasks'}</div>`;
+      }
+
       const card = document.createElement('div');
       card.className = 'school-card';
-      card.innerHTML = `<div class="sname">${school.name}</div><div class="sstatus status-${status}">${statusLabel(status)}</div>`;
+      card.innerHTML = `<div><div class="sname">${school.name}</div>${taskHtml}</div><div class="sstatus status-${status}">${statusLabel(status)}</div>`;
       card.onclick = () => openSchool(school, type);
       grid.appendChild(card);
     });
   });
+
+  // Update summary stats bar
+  const summaryBar = document.getElementById('gs-summary-bar');
+  if (totalSchools > 0) {
+    summaryBar.style.display = 'flex';
+    summaryBar.innerHTML = `
+      <div class="gs-stat">
+        <div class="gs-stat-value">${completedSchools}<span style="font-size:14px;font-weight:400;color:#bbb"> / ${totalSchools}</span></div>
+        <div class="gs-stat-label">Schools Complete</div>
+      </div>
+      <div class="gs-stat-divider"></div>
+      <div class="gs-stat">
+        <div class="gs-stat-value">${totalGrades > 0 ? totalGrades.toLocaleString() : '—'}</div>
+        <div class="gs-stat-label">Total Grades Processed</div>
+      </div>`;
+  } else {
+    summaryBar.style.display = 'none';
+  }
 }
 
 async function openSchool(school, type) {
@@ -875,6 +942,28 @@ function renderSBProgressBar(statusKey) {
 }
 
 function renderScheduleSchools() {
+  // Compute status counts for the summary bar
+  const counts = {};
+  SB_STATUSES.forEach(s => { counts[s.key] = 0; });
+  ['high', 'middle'].forEach(type => {
+    SCHOOLS[type].forEach(school => {
+      if (school.name === 'Horizonte') return;
+      const rec = sbRecords[school.name];
+      const key = rec ? rec.status : 'not_started';
+      counts[key] = (counts[key] || 0) + 1;
+    });
+  });
+  const summaryBar = document.getElementById('sb-summary-bar');
+  const pills = SB_STATUSES.filter(s => counts[s.key] > 0).map(s =>
+    `<span class="sstatus ${s.cls}" style="font-size:12px;padding:4px 12px;">${counts[s.key]} ${s.label}</span>`
+  ).join('');
+  summaryBar.style.display = 'block';
+  summaryBar.innerHTML = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:white;border:1px solid #e0e4ea;border-radius:8px;padding:0.75rem 1rem;">
+    <span style="font-size:12px;font-weight:600;color:#555;margin-right:4px;">Overview</span>
+    ${pills}
+  </div>`;
+
+  // Render school cards
   ['high', 'middle'].forEach(type => {
     const grid = document.getElementById('sb-grid-' + type);
     grid.innerHTML = '';
@@ -940,6 +1029,17 @@ async function openScheduleSchool(school, type) {
   } else {
     ctcSection.style.display = 'none';
   }
+
+  // Show schedule commit checklist only when status is Complete
+  const clSection = document.getElementById('sb-checklist-section');
+  sbCompletions = {};
+  if ((rec.status || 'not_started') === 'complete') {
+    clSection.style.display = 'block';
+    if (sbCurrentRecordId) await loadSBChecklist(sbCurrentRecordId);
+    else renderSBChecklist();
+  } else {
+    clSection.style.display = 'none';
+  }
 }
 
 async function saveSBCTC(checked) {
@@ -995,6 +1095,17 @@ async function saveScheduleDetail() {
   sbRecords[sbCurrentSchool.name].status = status;
   if (isCTCSchool) sbRecords[sbCurrentSchool.name].ctc_push_confirmed = ctcPushConfirmed;
 
+  // Show or hide the commit checklist based on new status
+  const clSection = document.getElementById('sb-checklist-section');
+  if (status === 'complete') {
+    clSection.style.display = 'block';
+    if (sbCurrentRecordId) await loadSBChecklist(sbCurrentRecordId);
+    else renderSBChecklist();
+  } else {
+    clSection.style.display = 'none';
+    sbCompletions = {};
+  }
+
   const conf = document.getElementById('sb-save-confirm');
   conf.style.display = 'inline';
   setTimeout(() => { conf.style.display = 'none'; }, 2500);
@@ -1005,7 +1116,63 @@ function showScheduleList() {
   document.getElementById('sb-list-view').style.display = 'block';
   sbCurrentSchool = null;
   sbCurrentRecordId = null;
+  sbCompletions = {};
   loadScheduleBuildRecords();
+}
+
+// ── Schedule Build Checklist (shown when status = Complete) ─────────
+const SB_CHECKLIST = [
+  { key: 'sb_verify_schedule',    label: 'Verify schedule runs without conflicts in PowerSchool' },
+  { key: 'sb_enrollment_caps',    label: 'Confirm section enrollment caps are set correctly' },
+  { key: 'sb_notify_counselors',  label: 'Notify counselors that schedule is finalized' },
+  { key: 'sb_admin_approval',     label: 'Submit schedule to administration for approval' },
+];
+
+let sbCompletions = {};
+
+async function loadSBChecklist(recordId) {
+  sbCompletions = {};
+  const { data } = await sb.from('sb_checklist_completions').select('*').eq('record_id', recordId);
+  if (data) data.forEach(c => { sbCompletions[c.task_key] = c; });
+  renderSBChecklist();
+}
+
+function renderSBChecklist() {
+  const doneCount = SB_CHECKLIST.filter(t => sbCompletions[t.key] && sbCompletions[t.key].completed).length;
+  document.getElementById('sb-cl-progress').textContent = doneCount + ' of ' + SB_CHECKLIST.length + ' complete';
+  document.getElementById('sb-cl-tasks').innerHTML = SB_CHECKLIST.map(t => {
+    const comp = sbCompletions[t.key];
+    const done = comp && comp.completed;
+    const meta = done && comp.completed_at ? 'Completed on ' + new Date(comp.completed_at).toLocaleDateString() : '';
+    return `<div class="task-item">
+      <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleSBTask('${t.key}', this.checked)">
+      <div><div class="task-label ${done ? 'done' : ''}">${t.label}</div>${meta ? '<div class="task-meta">' + meta + '</div>' : ''}</div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleSBTask(taskKey, checked) {
+  await ensureSBRecord();
+  const now = new Date().toISOString();
+  const existing = sbCompletions[taskKey];
+  if (existing) {
+    await sb.from('sb_checklist_completions').update({
+      completed: checked,
+      completed_at: checked ? now : null,
+      completed_by: currentUser.id,
+    }).eq('id', existing.id);
+    sbCompletions[taskKey] = { ...existing, completed: checked, completed_at: checked ? now : null };
+  } else {
+    const { data } = await sb.from('sb_checklist_completions').insert({
+      record_id: sbCurrentRecordId,
+      task_key: taskKey,
+      completed: checked,
+      completed_at: checked ? now : null,
+      completed_by: currentUser.id,
+    }).select().single();
+    if (data) sbCompletions[taskKey] = data;
+  }
+  renderSBChecklist();
 }
 
 function showPage(name, el) {
@@ -1124,9 +1291,19 @@ async function loadCTCScheduleFromDB() {
   }));
 
   const uploadDate = data[0].uploaded_at ? new Date(data[0].uploaded_at).toLocaleDateString() : '';
-  statusEl.textContent = `${ctcRows.length} rows loaded from database${uploadDate ? ' (uploaded ' + uploadDate + ')' : ''}.`;
+  statusEl.textContent = `${ctcRows.length} rows loaded from database.`;
   statusEl.style.color = '#065F46';
   document.getElementById('ctc-file-name').textContent = uploadDate ? `Last upload: ${uploadDate}` : 'Loaded from database';
+
+  // Show last-uploaded timestamp prominently
+  const lastUploadedEl = document.getElementById('ctc-last-uploaded');
+  if (data[0].uploaded_at) {
+    const dt = new Date(data[0].uploaded_at);
+    lastUploadedEl.style.display = 'block';
+    lastUploadedEl.textContent = `Last uploaded: ${dt.toLocaleDateString()} at ${dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+  } else {
+    lastUploadedEl.style.display = 'none';
+  }
 
   const headers = ['TeachLastName','Teacher ID','Course Number','Room','SECTION_NUMBER','EXPRESSION','TermId','SCHOOLID','MaxCut','MAXENROLLMENT','EHS','HHS','WHS'];
   renderCTCPreview(headers, ctcRows);
@@ -1140,6 +1317,7 @@ function handleCTCFileUpload(event) {
   document.getElementById('ctc-file-name').textContent = file.name;
   document.getElementById('ctc-upload-error').style.display = 'none';
   document.getElementById('ctc-row-count').textContent = '';
+  document.getElementById('ctc-last-uploaded').style.display = 'none';
   document.getElementById('ctc-preview-wrap').style.display = 'none';
   document.getElementById('ctc-generate-section').style.display = 'none';
   ctcRows = null;
@@ -1211,6 +1389,13 @@ async function saveCTCScheduleToDB(rows) {
 
   statusEl.textContent = `${rows.length} rows saved to database successfully.`;
   statusEl.style.color = '#065F46';
+
+  // Update last-uploaded timestamp
+  const dt = new Date(now);
+  const lastUploadedEl = document.getElementById('ctc-last-uploaded');
+  lastUploadedEl.style.display = 'block';
+  lastUploadedEl.textContent = `Last uploaded: ${dt.toLocaleDateString()} at ${dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
+
   document.getElementById('ctc-generate-section').style.display = 'block';
 }
 
@@ -1220,16 +1405,36 @@ function showCTCUploadError(msg) {
   el.style.display = 'block';
 }
 
+// Returns an issue descriptor if a row has problems, or null if clean
+function rowHasIssue(row) {
+  if (!row['Course Number'] || !row['Course Number'].trim()) return { level: 'error', msg: 'Missing course number' };
+  if (!row['Room'] || !row['Room'].trim()) return { level: 'warn', msg: 'No room' };
+  const ehs = parseInt(row['EHS'] || '0') || 0;
+  const hhs = parseInt(row['HHS'] || '0') || 0;
+  const whs = parseInt(row['WHS'] || '0') || 0;
+  if (ehs === 0 && hhs === 0 && whs === 0) return { level: 'warn', msg: 'No seats at any school' };
+  return null;
+}
+
 function renderCTCPreview(headers, rows) {
   document.getElementById('ctc-preview-wrap').style.display = 'block';
   const show = rows.slice(0, 5);
+  const issueCount = rows.filter(r => rowHasIssue(r)).length;
   document.getElementById('ctc-preview').innerHTML = `<table class="history-table" style="font-size:11px;min-width:max-content;">
-    <thead><tr>${headers.map(h => `<th style="white-space:nowrap">${h}</th>`).join('')}</tr></thead>
+    <thead><tr>${headers.map(h => `<th style="white-space:nowrap">${h}</th>`).join('')}<th style="white-space:nowrap;color:#aaa;font-weight:500;">Notes</th></tr></thead>
     <tbody>
-      ${show.map(row => `<tr>${headers.map(h => `<td style="white-space:nowrap">${row[h] || ''}</td>`).join('')}</tr>`).join('')}
-      ${rows.length > 5 ? `<tr><td colspan="${headers.length}" style="text-align:center;color:#999;font-style:italic;padding:8px">…and ${rows.length - 5} more rows</td></tr>` : ''}
+      ${show.map(row => {
+        const issue = rowHasIssue(row);
+        const bg = issue ? (issue.level === 'error' ? 'background:#FEF2F2;' : 'background:#FFFBEB;') : '';
+        const note = issue
+          ? `<td style="color:${issue.level === 'error' ? '#991B1B' : '#92400E'};font-size:10px;white-space:nowrap;">${issue.msg}</td>`
+          : '<td></td>';
+        return `<tr style="${bg}">${headers.map(h => `<td style="white-space:nowrap">${row[h] || ''}</td>`).join('')}${note}</tr>`;
+      }).join('')}
+      ${rows.length > 5 ? `<tr><td colspan="${headers.length + 1}" style="text-align:center;color:#999;font-style:italic;padding:8px">…and ${rows.length - 5} more rows</td></tr>` : ''}
     </tbody>
-  </table>`;
+  </table>
+  ${issueCount > 0 ? `<div style="margin-top:6px;font-size:12px;color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:4px;padding:5px 10px;">${issueCount} row${issueCount === 1 ? '' : 's'} across all data may need review — missing room, missing course number, or no seats at any school.</div>` : ''}`;
 }
 
 // ── CTC shared helpers ──────────────────────────────────────────────
