@@ -123,8 +123,6 @@
   .sb-card { flex-direction: column; align-items: stretch; gap: 8px; }
   .sb-progress-bar { display: flex; gap: 3px; }
   .sb-progress-seg { flex: 1; height: 5px; border-radius: 2px; background: #e8eaf0; }
-  .sb-progress-seg.filled { background: #4A7CFF; }
-  .sb-progress-seg.filled-complete { background: #10B981; }
   .ctc-file-label { display:inline-flex; align-items:center; gap:8px; padding:8px 16px; background:#f8f9fb; border:1px dashed #ccc; border-radius:6px; cursor:pointer; font-size:13px; color:#555; }
   .ctc-file-label:hover { background:#f0f2f6; border-color:#4A7CFF; color:#4A7CFF; }
   .ctc-school-col { }
@@ -167,7 +165,7 @@
       <div class="nav-item" onclick="showPage('school-rollover', this)">School Rollover</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">Schedule Commit</div>
       <div class="nav-item" onclick="showPage('ctc-export', this)">CTC Export</div>
-      <div class="sidebar-version">v2026.04.16.10</div>
+      <div class="sidebar-version">v2026.04.16.11</div>
     </div>
     <div class="main">
 
@@ -857,15 +855,16 @@ async function loadScheduleBuildRecords() {
 // These schools require CTC class push confirmation before moving to Loading
 const SB_CTC_SCHOOLS = ['East HS', 'Highland HS', 'West HS'];
 
-// Generates the progress bar HTML — 5 segments, one fills per status transition
+// Generates the progress bar HTML — 5 heat-colored segments, one per status transition
+const SB_HEAT_COLORS = ['#EF4444', '#F97316', '#EAB308', '#84CC16', '#10B981'];
 function renderSBProgressBar(statusKey) {
   const SEGMENTS = 5;
   const idx = SB_STATUSES.findIndex(s => s.key === statusKey);
   const filled = statusKey === 'complete' ? SEGMENTS : idx;
-  const isComplete = statusKey === 'complete';
-  return Array.from({ length: SEGMENTS }, (_, i) =>
-    `<div class="sb-progress-seg${i < filled ? (isComplete ? ' filled-complete' : ' filled') : ''}"></div>`
-  ).join('');
+  return Array.from({ length: SEGMENTS }, (_, i) => {
+    const bg = i < filled ? SB_HEAT_COLORS[i] : '#e8eaf0';
+    return `<div class="sb-progress-seg" style="background:${bg}"></div>`;
+  }).join('');
 }
 
 function renderScheduleSchools() {
