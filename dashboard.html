@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>IT Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: Arial, sans-serif; background: #f4f6f9; color: #222; min-height: 100vh; }
@@ -436,7 +437,7 @@
             </div>
 
             <!-- Post-Build -->
-            <div style="border-top:1px solid #f0f0f0;padding-top:1rem;">
+            <div style="border-top:1px solid #f0f0f0;padding-top:1rem;margin-bottom:1.25rem;">
               <div style="font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">Post-Build</div>
               <p style="font-size:12px;color:#666;margin-bottom:0.6rem;">One row per section. MaxEnrollment comes from the school's seat count (EHS/HHS/WHS). MaxCut is always TRUE.</p>
               <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -445,6 +446,14 @@
                 <button class="save-btn" onclick="generatePostBuild('West')">&#8595; West</button>
               </div>
               <div id="ctc-pb-status" style="font-size:12px;margin-top:0.5rem;"></div>
+            </div>
+
+            <!-- Download All -->
+            <div style="border-top:2px solid #e0e4ea;padding-top:1rem;">
+              <div style="font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">Download All 9 Files</div>
+              <p style="font-size:12px;color:#666;margin-bottom:0.6rem;">Packages all three export types for all three schools into a single ZIP file.</p>
+              <button class="save-btn" style="background:#10B981;" onclick="generateAllExports()">&#8595; Download All 9 as ZIP</button>
+              <div id="ctc-all-status" style="font-size:12px;margin-top:0.5rem;"></div>
             </div>
 
           </div>
@@ -1190,14 +1199,11 @@ function renderCTCPreview(headers, rows) {
   </table>`;
 }
 
-function generatePreSchedule(school) {
-  if (!ctcRows || ctcRows.length === 0) {
-    alert('Please upload the CTC master schedule first.');
-    return;
-  }
+// ── CTC shared helpers ──────────────────────────────────────────────
 
-  // Read directly from the live input fields
-  const config = {
+// Read all config fields from the live DOM inputs
+function readCTCConfig() {
+  return {
     termLabel:         document.getElementById('ctc-term-label').value.trim(),
     baseTermId:        document.getElementById('ctc-base-termid').value.trim(),
     eastBuildId:       document.getElementById('ctc-east-buildid').value.trim(),
@@ -1207,224 +1213,181 @@ function generatePreSchedule(school) {
     westBuildId:       document.getElementById('ctc-west-buildid').value.trim(),
     westCatalogId:     document.getElementById('ctc-west-catalogid').value.trim(),
   };
-
-  const missing = [];
-  if (!config.termLabel)  missing.push('Term Label');
-  if (!config.baseTermId) missing.push('Base Term ID');
-  const ids = {
-    East:     { build: 'eastBuildId',     catalog: 'eastCatalogId' },
-    Highland: { build: 'highlandBuildId', catalog: 'highlandCatalogId' },
-    West:     { build: 'westBuildId',     catalog: 'westCatalogId' },
-  };
-  if (!config[ids[school].build])   missing.push(`${school} Build ID`);
-  if (!config[ids[school].catalog]) missing.push(`${school} Catalog ID`);
-
-  const statusEl = document.getElementById('ctc-gen-status');
-  if (missing.length > 0) {
-    statusEl.textContent = `Missing configuration: ${missing.join(', ')}. Save your configuration above first.`;
-    statusEl.style.color = '#c0392b';
-    return;
-  }
-
-  const baseTermId = parseInt(config.baseTermId);
-  const SCHOOL_DATA = {
-    East:     { buildId: config.eastBuildId,     catalogId: config.eastCatalogId,     teacherId: '11608', schoolId: '704', col: 'EHS' },
-    Highland: { buildId: config.highlandBuildId, catalogId: config.highlandCatalogId, teacherId: '11609', schoolId: '708', col: 'HHS' },
-    West:     { buildId: config.westBuildId,     catalogId: config.westCatalogId,     teacherId: '11610', schoolId: '716', col: 'WHS' },
-  };
-  const sc = SCHOOL_DATA[school];
-
-  const filtered = ctcRows.filter(row => parseInt(row[sc.col] || '0') > 0);
-
-  function termLabel(termIdStr) {
-    const tid = parseInt(termIdStr);
-    if (tid === baseTermId)     return config.termLabel;
-    if (tid === baseTermId + 1) return 'S1';
-    if (tid === baseTermId + 2) return 'S2';
-    return termIdStr;
-  }
-
-  const outputHeaders = ['BUILDID','CatalogID','ConstraintCode','COURSENUMBER','TEACHERID','TERMID','TERM','CLASSROOM','SCHOOLID','EXPRESSION'];
-  const dataRows = filtered.map(row => [
-    sc.buildId, sc.catalogId, '16', row['Course Number'],
-    sc.teacherId, row['TermId'], termLabel(row['TermId']),
-    'CTCenter', sc.schoolId, row['EXPRESSION'],
-  ]);
-
-  const content = [outputHeaders, ...dataRows].map(r => r.join('\t')).join('\r\n');
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${school}_CTC_PreSchedule_${config.termLabel}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-
-  statusEl.textContent = `${school} Pre-Schedule generated — ${filtered.length} sections exported.`;
-  statusEl.style.color = '#065F46';
 }
 
-function generateTeacherAssignment(school) {
-  if (!ctcRows || ctcRows.length === 0) {
-    alert('Please upload the CTC master schedule first.');
-    return;
-  }
-
-  // Read directly from the live input fields
-  const config = {
-    termLabel:         document.getElementById('ctc-term-label').value.trim(),
-    baseTermId:        document.getElementById('ctc-base-termid').value.trim(),
-    eastBuildId:       document.getElementById('ctc-east-buildid').value.trim(),
-    eastCatalogId:     document.getElementById('ctc-east-catalogid').value.trim(),
-    highlandBuildId:   document.getElementById('ctc-highland-buildid').value.trim(),
-    highlandCatalogId: document.getElementById('ctc-highland-catalogid').value.trim(),
-    westBuildId:       document.getElementById('ctc-west-buildid').value.trim(),
-    westCatalogId:     document.getElementById('ctc-west-catalogid').value.trim(),
-  };
-
+// Return array of missing field names. Pass school=null to validate all three schools.
+function validateCTCConfig(school, config, { needsBaseTermId = true } = {}) {
   const missing = [];
-  if (!config.termLabel)  missing.push('Term Label');
-  if (!config.baseTermId) missing.push('Base Term ID');
-  const ids = {
+  if (!config.termLabel)               missing.push('Term Label');
+  if (needsBaseTermId && !config.baseTermId) missing.push('Base Term ID');
+  const schoolKeys = {
     East:     { build: 'eastBuildId',     catalog: 'eastCatalogId' },
     Highland: { build: 'highlandBuildId', catalog: 'highlandCatalogId' },
     West:     { build: 'westBuildId',     catalog: 'westCatalogId' },
   };
-  if (!config[ids[school].build])   missing.push(`${school} Build ID`);
-  if (!config[ids[school].catalog]) missing.push(`${school} Catalog ID`);
+  const toCheck = school ? [school] : ['East', 'Highland', 'West'];
+  toCheck.forEach(s => {
+    if (!config[schoolKeys[s].build])   missing.push(`${s} Build ID`);
+    if (!config[schoolKeys[s].catalog]) missing.push(`${s} Catalog ID`);
+  });
+  return missing;
+}
 
-  const statusEl = document.getElementById('ctc-ta-status');
-  if (missing.length > 0) {
-    statusEl.textContent = `Missing configuration: ${missing.join(', ')}. Save your configuration above first.`;
-    statusEl.style.color = '#c0392b';
-    return;
-  }
+// Fixed per-school values
+function ctcSchoolData(school, config) {
+  return {
+    East:     { teacher: '11608', buildId: config.eastBuildId,     catalogId: config.eastCatalogId,     schoolId: '704', col: 'EHS' },
+    Highland: { teacher: '11609', buildId: config.highlandBuildId, catalogId: config.highlandCatalogId, schoolId: '708', col: 'HHS' },
+    West:     { teacher: '11610', buildId: config.westBuildId,     catalogId: config.westCatalogId,     schoolId: '716', col: 'WHS' },
+  }[school];
+}
 
-  const baseTermId = parseInt(config.baseTermId);
-  const SCHOOL_DATA = {
-    East:     { teacherKey: '11608', buildId: config.eastBuildId,     catalogId: config.eastCatalogId,     schoolId: '704', col: 'EHS' },
-    Highland: { teacherKey: '11609', buildId: config.highlandBuildId, catalogId: config.highlandCatalogId, schoolId: '708', col: 'HHS' },
-    West:     { teacherKey: '11610', buildId: config.westBuildId,     catalogId: config.westCatalogId,     schoolId: '716', col: 'WHS' },
-  };
-  const sc = SCHOOL_DATA[school];
+// Derive TERM label from raw TermId
+function ctcTermLabel(termIdStr, config) {
+  const tid = parseInt(termIdStr), base = parseInt(config.baseTermId);
+  if (tid === base)     return config.termLabel;
+  if (tid === base + 1) return 'S1';
+  if (tid === base + 2) return 'S2';
+  return termIdStr;
+}
 
-  function termLabel(termIdStr) {
-    const tid = parseInt(termIdStr);
-    if (tid === baseTermId)     return config.termLabel;
-    if (tid === baseTermId + 1) return 'S1';
-    if (tid === baseTermId + 2) return 'S2';
-    return termIdStr;
-  }
+// Trigger a file download from a string or Blob
+function downloadFile(filename, content) {
+  const blob = content instanceof Blob ? content : new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
 
-  // Filter to sections available for this school, then group by CourseNumber + TermId
+// ── Content builders — return tab-delimited string, no side effects ─
+
+function buildPreScheduleContent(school, config) {
+  const sc = ctcSchoolData(school, config);
+  const filtered = ctcRows.filter(row => parseInt(row[sc.col] || '0') > 0);
+  const headers = ['BUILDID','CatalogID','ConstraintCode','COURSENUMBER','TEACHERID','TERMID','TERM','CLASSROOM','SCHOOLID','EXPRESSION'];
+  const rows = filtered.map(row => [
+    sc.buildId, sc.catalogId, '16', row['Course Number'],
+    sc.teacher, row['TermId'], ctcTermLabel(row['TermId'], config),
+    'CTCenter', sc.schoolId, row['EXPRESSION'],
+  ]);
+  return [headers, ...rows].map(r => r.join('\t')).join('\r\n');
+}
+
+function buildTeacherAssignmentContent(school, config) {
+  const sc = ctcSchoolData(school, config);
   const filtered = ctcRows.filter(row => parseInt(row[sc.col] || '0') > 0);
   const groups = {};
   filtered.forEach(row => {
     const key = `${row['Course Number']}|${row['TermId']}`;
-    if (!groups[key]) {
-      groups[key] = { courseNumber: row['Course Number'], termId: row['TermId'], count: 0 };
-    }
+    if (!groups[key]) groups[key] = { courseNumber: row['Course Number'], termId: row['TermId'], count: 0 };
     groups[key].count++;
   });
-
-  const outputHeaders = ['TeacherKey','COURSENUMBER','ScheduleTermCode','SectionsAssigned','BuildID','CatalogID','SchoolId'];
-  const dataRows = Object.values(groups).map(g => [
-    sc.teacherKey,
-    g.courseNumber,
-    termLabel(g.termId),
-    g.count,
-    sc.buildId,
-    sc.catalogId,
-    sc.schoolId,
+  const headers = ['TeacherKey','COURSENUMBER','ScheduleTermCode','SectionsAssigned','BuildID','CatalogID','SchoolId'];
+  const rows = Object.values(groups).map(g => [
+    sc.teacher, g.courseNumber, ctcTermLabel(g.termId, config),
+    g.count, sc.buildId, sc.catalogId, sc.schoolId,
   ]);
+  return [headers, ...rows].map(r => r.join('\t')).join('\r\n');
+}
 
-  const content = [outputHeaders, ...dataRows].map(r => r.join('\t')).join('\r\n');
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${school}_CTC_TeacherAssignment_${config.termLabel}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+function buildPostBuildContent(school, config) {
+  const sc = ctcSchoolData(school, config);
+  const filtered = ctcRows.filter(row => parseInt(row[sc.col] || '0') > 0);
+  const headers = ['Teacher','Course Number','Room','EXPRESSION','TermId','SCHOOLID','BUILDID','SECTION_NUMBER','MaxCut','MaxEnrollment'];
+  const rows = filtered.map(row => [
+    sc.teacher, row['Course Number'], 'CTCenter', row['EXPRESSION'],
+    row['TermId'], sc.schoolId, sc.buildId, row['SECTION_NUMBER'],
+    'TRUE', row[sc.col],
+  ]);
+  return [headers, ...rows].map(r => r.join('\t')).join('\r\n');
+}
 
-  statusEl.textContent = `${school} Teacher Assignment generated — ${dataRows.length} rows exported.`;
+// ── Individual download functions ───────────────────────────────────
+
+function generatePreSchedule(school) {
+  if (!ctcRows || !ctcRows.length) { alert('Please upload the CTC master schedule first.'); return; }
+  const config = readCTCConfig();
+  const missing = validateCTCConfig(school, config);
+  const statusEl = document.getElementById('ctc-gen-status');
+  if (missing.length) {
+    statusEl.textContent = `Missing: ${missing.join(', ')}. Save your configuration first.`;
+    statusEl.style.color = '#c0392b'; return;
+  }
+  const content = buildPreScheduleContent(school, config);
+  const rowCount = content.split('\n').length - 1;
+  downloadFile(`${school}_CTC_PreSchedule_${config.termLabel}.txt`, content);
+  statusEl.textContent = `${school} Pre-Schedule generated — ${rowCount} sections exported.`;
+  statusEl.style.color = '#065F46';
+}
+
+function generateTeacherAssignment(school) {
+  if (!ctcRows || !ctcRows.length) { alert('Please upload the CTC master schedule first.'); return; }
+  const config = readCTCConfig();
+  const missing = validateCTCConfig(school, config);
+  const statusEl = document.getElementById('ctc-ta-status');
+  if (missing.length) {
+    statusEl.textContent = `Missing: ${missing.join(', ')}. Save your configuration first.`;
+    statusEl.style.color = '#c0392b'; return;
+  }
+  const content = buildTeacherAssignmentContent(school, config);
+  const rowCount = content.split('\n').length - 1;
+  downloadFile(`${school}_CTC_TeacherAssignment_${config.termLabel}.txt`, content);
+  statusEl.textContent = `${school} Teacher Assignment generated — ${rowCount} rows exported.`;
   statusEl.style.color = '#065F46';
 }
 
 function generatePostBuild(school) {
-  if (!ctcRows || ctcRows.length === 0) {
-    alert('Please upload the CTC master schedule first.');
-    return;
-  }
-
-  // Read directly from the live input fields
-  const config = {
-    termLabel:         document.getElementById('ctc-term-label').value.trim(),
-    eastBuildId:       document.getElementById('ctc-east-buildid').value.trim(),
-    eastCatalogId:     document.getElementById('ctc-east-catalogid').value.trim(),
-    highlandBuildId:   document.getElementById('ctc-highland-buildid').value.trim(),
-    highlandCatalogId: document.getElementById('ctc-highland-catalogid').value.trim(),
-    westBuildId:       document.getElementById('ctc-west-buildid').value.trim(),
-    westCatalogId:     document.getElementById('ctc-west-catalogid').value.trim(),
-  };
-
-  const missing = [];
-  if (!config.termLabel) missing.push('Term Label');
-  const ids = {
-    East:     { build: 'eastBuildId',     catalog: 'eastCatalogId' },
-    Highland: { build: 'highlandBuildId', catalog: 'highlandCatalogId' },
-    West:     { build: 'westBuildId',     catalog: 'westCatalogId' },
-  };
-  if (!config[ids[school].build])   missing.push(`${school} Build ID`);
-  if (!config[ids[school].catalog]) missing.push(`${school} Catalog ID`);
-
+  if (!ctcRows || !ctcRows.length) { alert('Please upload the CTC master schedule first.'); return; }
+  const config = readCTCConfig();
+  const missing = validateCTCConfig(school, config, { needsBaseTermId: false });
   const statusEl = document.getElementById('ctc-pb-status');
-  if (missing.length > 0) {
-    statusEl.textContent = `Missing configuration: ${missing.join(', ')}. Save your configuration above first.`;
-    statusEl.style.color = '#c0392b';
-    return;
+  if (missing.length) {
+    statusEl.textContent = `Missing: ${missing.join(', ')}. Save your configuration first.`;
+    statusEl.style.color = '#c0392b'; return;
+  }
+  const content = buildPostBuildContent(school, config);
+  const rowCount = content.split('\n').length - 1;
+  downloadFile(`${school}_CTC_PostBuild_${config.termLabel}.txt`, content);
+  statusEl.textContent = `${school} Post-Build generated — ${rowCount} sections exported.`;
+  statusEl.style.color = '#065F46';
+}
+
+// ── Download All 9 as ZIP ───────────────────────────────────────────
+
+async function generateAllExports() {
+  if (!ctcRows || !ctcRows.length) { alert('Please upload the CTC master schedule first.'); return; }
+  const config = readCTCConfig();
+  // Validate everything needed across all three export types
+  const missing = validateCTCConfig(null, config);
+  const statusEl = document.getElementById('ctc-all-status');
+  if (missing.length) {
+    statusEl.textContent = `Missing: ${missing.join(', ')}. Save your configuration first.`;
+    statusEl.style.color = '#c0392b'; return;
   }
 
-  const SCHOOL_DATA = {
-    East:     { teacher: '11608', buildId: config.eastBuildId,     schoolId: '704', col: 'EHS' },
-    Highland: { teacher: '11609', buildId: config.highlandBuildId, schoolId: '708', col: 'HHS' },
-    West:     { teacher: '11610', buildId: config.westBuildId,     schoolId: '716', col: 'WHS' },
-  };
-  const sc = SCHOOL_DATA[school];
+  statusEl.textContent = 'Building ZIP…';
+  statusEl.style.color = '#555';
 
-  // One row per section where this school has at least 1 seat
-  const filtered = ctcRows.filter(row => parseInt(row[sc.col] || '0') > 0);
+  const zip = new JSZip();
+  const schools = ['East', 'Highland', 'West'];
+  const exports = [
+    { key: 'PreSchedule',       fn: buildPreScheduleContent },
+    { key: 'TeacherAssignment', fn: buildTeacherAssignmentContent },
+    { key: 'PostBuild',         fn: buildPostBuildContent },
+  ];
 
-  const outputHeaders = ['Teacher','Course Number','Room','EXPRESSION','TermId','SCHOOLID','BUILDID','SECTION_NUMBER','MaxCut','MaxEnrollment'];
-  const dataRows = filtered.map(row => [
-    sc.teacher,
-    row['Course Number'],
-    'CTCenter',
-    row['EXPRESSION'],
-    row['TermId'],
-    sc.schoolId,
-    sc.buildId,
-    row['SECTION_NUMBER'],
-    'TRUE',
-    row[sc.col],  // MaxEnrollment = seats allocated to this school
-  ]);
+  schools.forEach(school => {
+    exports.forEach(({ key, fn }) => {
+      zip.file(`${school}_CTC_${key}_${config.termLabel}.txt`, fn(school, config));
+    });
+  });
 
-  const content = [outputHeaders, ...dataRows].map(r => r.join('\t')).join('\r\n');
-  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `${school}_CTC_PostBuild_${config.termLabel}.txt`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const blob = await zip.generateAsync({ type: 'blob' });
+  downloadFile(`CTC_AllExports_${config.termLabel}.zip`, blob);
 
-  statusEl.textContent = `${school} Post-Build generated — ${dataRows.length} sections exported.`;
+  statusEl.textContent = 'All 9 files packaged and downloaded.';
   statusEl.style.color = '#065F46';
 }
 
