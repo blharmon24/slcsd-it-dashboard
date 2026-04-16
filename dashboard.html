@@ -170,7 +170,7 @@
       <div class="nav-item" onclick="showPage('school-rollover', this)">School Rollover</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">Schedule Commit</div>
       <div class="nav-item" onclick="showPage('ctc-export', this)">CTC Export</div>
-      <div class="sidebar-version">v2026.04.16.15</div>
+      <div class="sidebar-version">v2026.04.16.16</div>
     </div>
     <div class="main">
 
@@ -204,7 +204,7 @@
               <span id="term-dates-toggle-icon">&#9654;</span> Term end dates
             </button>
             <div id="term-dates-panel" style="display:none;background:white;border:1px solid #e0e4ea;border-radius:8px;padding:1rem;margin-top:0.5rem;">
-              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Set the end date for each term. The page will auto-select the current term and flag overdue schools (2+ weeks past due).</p>
+              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Set end dates separately for traditional schools (T1–T4) and Horizonte (T1–T6). The page will auto-select the current term and flag overdue schools (2+ weeks past due).</p>
               <div id="term-dates-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:0.75rem;"></div>
               <button class="save-btn" onclick="saveTermDates()">Save</button>
               <span class="save-confirm" id="term-dates-confirm">Saved!</span>
@@ -576,7 +576,8 @@ let currentUser = null;
 let records = {};
 let completions = {};
 let allCompletions = {}; // keyed by record_id → { task_key → completion }
-let termDates = {};      // keyed by term_label → end_date string (YYYY-MM-DD)
+let termDatesTraditional = {}; // T1–T4 end dates for all schools except Horizonte
+let termDatesHorizonte   = {}; // T1–T6 end dates for Horizonte
 let currentSchool = null;
 let currentSchoolObj = null;
 let currentRecordId = null;
@@ -634,61 +635,78 @@ async function initGradeStoringPage() {
 }
 
 async function loadTermDates() {
-  termDates = {};
+  termDatesTraditional = {};
+  termDatesHorizonte = {};
   const { data } = await sb.from('term_dates').select('*').eq('academic_year', getYear());
-  if (data) data.forEach(r => { termDates[r.term_label] = r.end_date; });
+  if (data) {
+    data.forEach(r => {
+      if (r.schedule_type === 'horizonte') termDatesHorizonte[r.term_label] = r.end_date;
+      else                                 termDatesTraditional[r.term_label] = r.end_date;
+    });
+  }
   renderTermDatesForm();
 }
 
-// Populate the term dates inputs with values from termDates
+// Populate the two-section term dates form
 function renderTermDatesForm() {
   const grid = document.getElementById('term-dates-grid');
   if (!grid) return;
-  grid.innerHTML = ['T1','T2','T3','T4','T5','T6'].map(t => `
+  const tradFields = ['T1','T2','T3','T4'].map(t => `
     <div class="doc-field">
       <label>${t} End Date</label>
-      <input type="date" id="td-${t}" value="${termDates[t] || ''}">
+      <input type="date" id="td-trad-${t}" value="${termDatesTraditional[t] || ''}">
     </div>`).join('');
+  const horizFields = ['T1','T2','T3','T4','T5','T6'].map(t => `
+    <div class="doc-field">
+      <label>${t} End Date</label>
+      <input type="date" id="td-horiz-${t}" value="${termDatesHorizonte[t] || ''}">
+    </div>`).join('');
+  grid.innerHTML = `
+    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#555;padding-bottom:4px;border-bottom:1px solid #eee;">Traditional Schools (T1–T4)</div>
+    ${tradFields}
+    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#555;padding-bottom:4px;border-bottom:1px solid #eee;margin-top:0.75rem;">Horizonte (T1–T6)</div>
+    ${horizFields}`;
 }
 
-// Set the term dropdown to the most recently ended term (if any)
+// Set the term dropdown to the most recently ended traditional term (if any)
 function autoSelectTerm() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   let bestTerm = null, bestDate = null;
-  Object.entries(termDates).forEach(([label, endDateStr]) => {
+  Object.entries(termDatesTraditional).forEach(([label, endDateStr]) => {
     const d = new Date(endDateStr);
-    if (d < today && (!bestDate || d > bestDate)) {
-      bestDate = d;
-      bestTerm = label;
-    }
+    if (d < today && (!bestDate || d > bestDate)) { bestDate = d; bestTerm = label; }
   });
   if (bestTerm) document.getElementById('term-select').value = bestTerm;
 }
 
-// Save term end dates for the current year (delete + re-insert)
+// Save both sets of term end dates for the current year (delete + re-insert)
 async function saveTermDates() {
   const year = getYear();
-  const rows = ['T1','T2','T3','T4','T5','T6']
-    .map(t => ({ academic_year: year, term_label: t, end_date: document.getElementById('td-' + t).value || null }))
+  const tradRows = ['T1','T2','T3','T4']
+    .map(t => ({ academic_year: year, term_label: t, schedule_type: 'traditional', end_date: document.getElementById('td-trad-' + t).value || null }))
+    .filter(r => r.end_date);
+  const horizRows = ['T1','T2','T3','T4','T5','T6']
+    .map(t => ({ academic_year: year, term_label: t, schedule_type: 'horizonte', end_date: document.getElementById('td-horiz-' + t).value || null }))
     .filter(r => r.end_date);
 
   const { error: delErr } = await sb.from('term_dates').delete().eq('academic_year', year);
   if (delErr) { alert('Error saving: ' + delErr.message); return; }
 
-  if (rows.length > 0) {
-    const { error } = await sb.from('term_dates').insert(rows);
+  const allRows = [...tradRows, ...horizRows];
+  if (allRows.length > 0) {
+    const { error } = await sb.from('term_dates').insert(allRows);
     if (error) { alert('Error saving: ' + error.message); return; }
   }
 
-  termDates = {};
-  rows.forEach(r => { termDates[r.term_label] = r.end_date; });
+  termDatesTraditional = {};
+  tradRows.forEach(r => { termDatesTraditional[r.term_label] = r.end_date; });
+  termDatesHorizonte = {};
+  horizRows.forEach(r => { termDatesHorizonte[r.term_label] = r.end_date; });
 
   const conf = document.getElementById('term-dates-confirm');
   conf.style.display = 'inline';
   setTimeout(() => { conf.style.display = 'none'; }, 2500);
-
-  // Re-render schools so overdue highlighting updates immediately
   renderSchools();
 }
 
@@ -702,7 +720,8 @@ function toggleTermDatesPanel() {
 
 // Returns true if a school is Not Started and ≥14 days past the selected term's end date
 function isOverdue(schoolName) {
-  const endDateStr = termDates[getTerm()];
+  const dates = schoolName === 'Horizonte' ? termDatesHorizonte : termDatesTraditional;
+  const endDateStr = dates[getTerm()];
   if (!endDateStr) return false;
   if (getStatus(schoolName) !== 'not-started') return false;
   const today = new Date();
