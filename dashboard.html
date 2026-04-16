@@ -563,11 +563,21 @@ async function handleLogout() {
   document.getElementById('login-screen').style.display = 'flex';
 }
 
-async function showApp() {
+function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-shell').style.display = 'block';
   document.getElementById('user-label').textContent = currentUser.email.split('@')[0];
-  await loadRecordsAndRender();
+
+  // Restore the last active page, defaulting to grade-storing
+  const valid = ['grade-storing', 'history', 'school-rollover', 'schedule-commit', 'ctc-export'];
+  const saved = localStorage.getItem('it_dash_page');
+  const page  = valid.includes(saved) ? saved : 'grade-storing';
+
+  // Find the matching nav item so it gets highlighted correctly
+  const navEl = [...document.querySelectorAll('.nav-item')].find(n =>
+    n.getAttribute('onclick')?.includes(`'${page}'`)
+  );
+  showPage(page, navEl);
 }
 
 async function loadRecordsAndRender() {
@@ -991,8 +1001,10 @@ function showPage(name, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
+  if (name === 'grade-storing')   loadRecordsAndRender();
   if (name === 'schedule-commit') loadScheduleBuildRecords();
-  if (name === 'ctc-export') initCTCPage();
+  if (name === 'ctc-export')      initCTCPage();
+  localStorage.setItem('it_dash_page', name);
 }
 
 // ── CTC Schedule Export ─────────────────────────────────────────────
