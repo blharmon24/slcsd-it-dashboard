@@ -424,7 +424,7 @@
             </div>
 
             <!-- Teacher Assignments -->
-            <div style="border-top:1px solid #f0f0f0;padding-top:1rem;">
+            <div style="border-top:1px solid #f0f0f0;padding-top:1rem;margin-bottom:1.25rem;">
               <div style="font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">Teacher Assignments</div>
               <p style="font-size:12px;color:#666;margin-bottom:0.6rem;">One row per course + term combination, with a count of how many sections are taught in that term.</p>
               <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -433,6 +433,18 @@
                 <button class="save-btn" onclick="generateTeacherAssignment('West')">&#8595; West</button>
               </div>
               <div id="ctc-ta-status" style="font-size:12px;margin-top:0.5rem;"></div>
+            </div>
+
+            <!-- Post-Build -->
+            <div style="border-top:1px solid #f0f0f0;padding-top:1rem;">
+              <div style="font-size:12px;font-weight:600;color:#333;margin-bottom:4px;">Post-Build</div>
+              <p style="font-size:12px;color:#666;margin-bottom:0.6rem;">One row per section. MaxEnrollment comes from the school's seat count (EHS/HHS/WHS). MaxCut is always TRUE.</p>
+              <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <button class="save-btn" onclick="generatePostBuild('East')">&#8595; East</button>
+                <button class="save-btn" onclick="generatePostBuild('Highland')">&#8595; Highland</button>
+                <button class="save-btn" onclick="generatePostBuild('West')">&#8595; West</button>
+              </div>
+              <div id="ctc-pb-status" style="font-size:12px;margin-top:0.5rem;"></div>
             </div>
 
           </div>
@@ -1340,6 +1352,79 @@ function generateTeacherAssignment(school) {
   URL.revokeObjectURL(url);
 
   statusEl.textContent = `${school} Teacher Assignment generated — ${dataRows.length} rows exported.`;
+  statusEl.style.color = '#065F46';
+}
+
+function generatePostBuild(school) {
+  if (!ctcRows || ctcRows.length === 0) {
+    alert('Please upload the CTC master schedule first.');
+    return;
+  }
+
+  // Read directly from the live input fields
+  const config = {
+    termLabel:         document.getElementById('ctc-term-label').value.trim(),
+    eastBuildId:       document.getElementById('ctc-east-buildid').value.trim(),
+    eastCatalogId:     document.getElementById('ctc-east-catalogid').value.trim(),
+    highlandBuildId:   document.getElementById('ctc-highland-buildid').value.trim(),
+    highlandCatalogId: document.getElementById('ctc-highland-catalogid').value.trim(),
+    westBuildId:       document.getElementById('ctc-west-buildid').value.trim(),
+    westCatalogId:     document.getElementById('ctc-west-catalogid').value.trim(),
+  };
+
+  const missing = [];
+  if (!config.termLabel) missing.push('Term Label');
+  const ids = {
+    East:     { build: 'eastBuildId',     catalog: 'eastCatalogId' },
+    Highland: { build: 'highlandBuildId', catalog: 'highlandCatalogId' },
+    West:     { build: 'westBuildId',     catalog: 'westCatalogId' },
+  };
+  if (!config[ids[school].build])   missing.push(`${school} Build ID`);
+  if (!config[ids[school].catalog]) missing.push(`${school} Catalog ID`);
+
+  const statusEl = document.getElementById('ctc-pb-status');
+  if (missing.length > 0) {
+    statusEl.textContent = `Missing configuration: ${missing.join(', ')}. Save your configuration above first.`;
+    statusEl.style.color = '#c0392b';
+    return;
+  }
+
+  const SCHOOL_DATA = {
+    East:     { teacher: '11608', buildId: config.eastBuildId,     schoolId: '704', col: 'EHS' },
+    Highland: { teacher: '11609', buildId: config.highlandBuildId, schoolId: '708', col: 'HHS' },
+    West:     { teacher: '11610', buildId: config.westBuildId,     schoolId: '716', col: 'WHS' },
+  };
+  const sc = SCHOOL_DATA[school];
+
+  // One row per section where this school has at least 1 seat
+  const filtered = ctcRows.filter(row => parseInt(row[sc.col] || '0') > 0);
+
+  const outputHeaders = ['Teacher','Course Number','Room','EXPRESSION','TermId','SCHOOLID','BUILDID','SECTION_NUMBER','MaxCut','MaxEnrollment'];
+  const dataRows = filtered.map(row => [
+    sc.teacher,
+    row['Course Number'],
+    'CTCenter',
+    row['EXPRESSION'],
+    row['TermId'],
+    sc.schoolId,
+    sc.buildId,
+    row['SECTION_NUMBER'],
+    'TRUE',
+    row[sc.col],  // MaxEnrollment = seats allocated to this school
+  ]);
+
+  const content = [outputHeaders, ...dataRows].map(r => r.join('\t')).join('\r\n');
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${school}_CTC_PostBuild_${config.termLabel}.txt`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  statusEl.textContent = `${school} Post-Build generated — ${dataRows.length} sections exported.`;
   statusEl.style.color = '#065F46';
 }
 
