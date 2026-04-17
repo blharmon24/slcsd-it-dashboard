@@ -170,7 +170,7 @@
       <div class="nav-item" onclick="showPage('school-rollover', this)">School Rollover</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">Schedule Commit</div>
       <div class="nav-item" onclick="showPage('ctc-export', this)">CTC Export</div>
-      <div class="sidebar-version">v2026.04.16.19</div>
+      <div class="sidebar-version">v2026.04.17.1</div>
     </div>
     <div class="main">
 
@@ -991,6 +991,21 @@ function showSchoolList() {
   loadRecordsAndRender();
 }
 
+async function initHistoryPage() {
+  // Load term dates if they haven't been loaded yet (e.g. user navigated directly here)
+  if (Object.keys(termDatesTraditional).length === 0) await loadTermDates();
+  // Auto-select the most recently ended traditional term, same logic as autoSelectTerm()
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let bestTerm = null, bestDate = null;
+  Object.entries(termDatesTraditional).forEach(([label, endDateStr]) => {
+    const d = new Date(endDateStr);
+    if (d < today && (!bestDate || d > bestDate)) { bestDate = d; bestTerm = label; }
+  });
+  if (bestTerm) document.getElementById('hist-term').value = bestTerm;
+  await loadHistory();
+}
+
 async function loadHistory() {
   const term = document.getElementById('hist-term').value;
   const year = document.getElementById('hist-year').value;
@@ -1338,6 +1353,7 @@ function showPage(name, el) {
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
   if (name === 'grade-storing')   initGradeStoringPage();
+  if (name === 'history')         initHistoryPage();
   if (name === 'schedule-commit') loadScheduleBuildRecords();
   if (name === 'ctc-export')      initCTCPage();
   localStorage.setItem('it_dash_page', name);
