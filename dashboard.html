@@ -171,17 +171,23 @@
     <div class="sidebar">
       <div class="sidebar-section">Grade Storing</div>
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
-      <div class="nav-item" onclick="showPage('history', this)">Grade Store History</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.17.3</div>
+      <div class="sidebar-version">v2026.04.17.4</div>
     </div>
     <div class="main">
 
       <div class="page active" id="page-grade-storing">
+        <div class="page-title">Storing Grades</div>
+        <div class="page-sub">Track and manage PowerSchool grade storage across all schools.</div>
+        <div class="tab-bar">
+          <button class="tab-btn active" id="tab-btn-storing" onclick="switchGSTab('storing')">Storing Grades</button>
+          <button class="tab-btn" id="tab-btn-history" onclick="switchGSTab('history')">Grade Store History</button>
+        </div>
+
+        <!-- Storing Grades tab -->
+        <div class="tab-content active" id="tab-storing">
         <div id="school-list-view">
-          <div class="page-title">Storing Grades</div>
-          <div class="page-sub">Select a term, then click a school to begin or continue its grade store process.</div>
           <div class="term-bar">
             <label>Term:</label>
             <select id="term-select" onchange="loadRecordsAndRender()">
@@ -247,12 +253,11 @@
             <div id="cl-tasks"></div>
           </div>
         </div>
-      </div>
+        </div> <!-- end tab-storing -->
 
-      <div class="page" id="page-history">
+        <!-- History tab -->
+        <div class="tab-content" id="tab-history">
         <div id="history-list">
-          <div class="page-title">Grade Store History</div>
-          <div class="page-sub">View completed and in-progress grade stores by term.</div>
           <div class="history-filters">
             <label>Term:</label>
             <select id="hist-term">
@@ -302,7 +307,8 @@
             <div id="hd-tasks"></div>
           </div>
         </div>
-      </div>
+        </div> <!-- end tab-history -->
+      </div> <!-- end page-grade-storing -->
 
       <div class="page" id="page-schedule-commit">
         <div class="page-title">School Schedule Build Tracker</div>
@@ -614,7 +620,7 @@ function showApp() {
   document.getElementById('user-label').textContent = currentUser.email.split('@')[0];
 
   // Restore the last active page, defaulting to grade-storing
-  const valid = ['grade-storing', 'history', 'schedule-commit'];
+  const valid = ['grade-storing', 'schedule-commit'];
   const saved = localStorage.getItem('it_dash_page');
   const page  = valid.includes(saved) ? saved : 'grade-storing';
 
@@ -626,6 +632,15 @@ function showApp() {
 }
 
 // ── Term Dates / Auto-select / Overdue ──────────────────────────────
+
+function switchGSTab(tab) {
+  document.querySelectorAll('#page-grade-storing .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-grade-storing .tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('tab-btn-' + tab).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'storing') loadRecordsAndRender();
+  if (tab === 'history') initHistoryPage();
+}
 
 // Entry point for the grade storing page — loads term dates, auto-selects term, then renders
 async function initGradeStoringPage() {
@@ -1368,7 +1383,6 @@ function showPage(name, el) {
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
   if (name === 'grade-storing')   initGradeStoringPage();
-  if (name === 'history')         initHistoryPage();
   if (name === 'schedule-commit') loadScheduleBuildRecords();
   localStorage.setItem('it_dash_page', name);
 }
