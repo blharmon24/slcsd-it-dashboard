@@ -184,7 +184,7 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.21.15</div>
+      <div class="sidebar-version">v2026.04.21.16</div>
     </div>
     <div class="main">
 
@@ -1508,18 +1508,18 @@ const ROLLOVER_SCHOOLS = {
 };
 
 const ROLLOVER_DISTRICT_TASKS = [
-  { key: 'ro_d_state_reporting',      label: 'Sam has finished State Reporting', required: true },
-  { key: 'ro_d_disable_sif',         label: 'Disable SIF Adapter (System Management → Server → Global API and SIF Settings)', required: true },
-  { key: 'ro_d_store_grades',         label: 'Permanently Store All Grades for Current Year', required: false },
-  { key: 'ro_d_enrollment_audit',     label: 'Run School Enrollment Audit — Correct Any Issues', required: false },
-  { key: 'ro_d_section_audit',        label: 'Run Section Enrollment Audit — Correct Any Issues', required: false },
-  { key: 'ro_d_export_entry_codes',   label: 'Export OE/DP Entry Code Students (Pre-Rollover)', required: true },
-  { key: 'ro_d_graduates',            label: 'Change Graduates: enroll_status 2 → 3', required: true },
-  { key: 'ro_d_next_school',          label: 'Assign Next School Indicator — All Students', required: true },
-  { key: 'ro_d_next_grade',           label: 'Assign Next Year Grade — All Students', required: true },
-  { key: 'ro_d_clear_fields',         label: 'Clear Custom Student Fields (Review yearly with Sam)', required: true },
-  { key: 'ro_d_eoy_process',          label: 'Run End of Year (EOY) Process', required: true },
-  { key: 'ro_d_attendance_year',      label: 'Update Attendance Calculation Year (District Setup → Attendance Tracking)', required: true },
+  { key: 'ro_d_state_reporting',      label: 'Sam has finished State Reporting' },
+  { key: 'ro_d_disable_sif',         label: 'Disable SIF Adapter (System Management → Server → Global API and SIF Settings)' },
+  { key: 'ro_d_store_grades',         label: 'Permanently Store All Grades for Current Year' },
+  { key: 'ro_d_enrollment_audit',     label: 'Run School Enrollment Audit — Correct Any Issues' },
+  { key: 'ro_d_section_audit',        label: 'Run Section Enrollment Audit — Correct Any Issues' },
+  { key: 'ro_d_export_entry_codes',   label: 'Export OE/DP Entry Code Students (Pre-Rollover)' },
+  { key: 'ro_d_graduates',            label: 'Change Graduates: enroll_status 2 → 3' },
+  { key: 'ro_d_next_school',          label: 'Assign Next School Indicator — All Students' },
+  { key: 'ro_d_next_grade',           label: 'Assign Next Year Grade — All Students' },
+  { key: 'ro_d_clear_fields',         label: 'Clear Custom Student Fields (Review yearly with Sam)' },
+  { key: 'ro_d_eoy_process',          label: 'Run End of Year (EOY) Process' },
+  { key: 'ro_d_attendance_year',      label: 'Update Attendance Calculation Year (District Setup → Attendance Tracking)' },
 ];
 
 const ROLLOVER_SCHOOL_TASKS = [
@@ -1736,9 +1736,7 @@ function renderRolloverDistrictTasks() {
     const meta = checked && comp?.completed_by_name
       ? `<div class="task-meta">${comp.completed_by_name} · ${new Date(comp.completed_at).toLocaleDateString()}</div>`
       : '';
-    const badge = task.required
-      ? '<span style="font-size:10px;color:#1a6fa8;background:#e8f3fb;border:1px solid #b8d9f0;border-radius:3px;padding:1px 5px;margin-left:6px;">Required</span>'
-      : '';
+    const badge = '';
     const moveBtns = `<div style="display:flex;flex-direction:column;flex-shrink:0;">
       <button class="task-move-btn" onclick="moveTask('district','${task.key}','up')" ${idx === 0 ? 'disabled' : ''}>&#9650;</button>
       <button class="task-move-btn" onclick="moveTask('district','${task.key}','down')" ${idx === orderedTasks.length - 1 ? 'disabled' : ''}>&#9660;</button>
