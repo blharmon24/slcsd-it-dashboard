@@ -177,7 +177,7 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.21.6</div>
+      <div class="sidebar-version">v2026.04.21.7</div>
     </div>
     <div class="main">
 
@@ -1489,6 +1489,7 @@ const ROLLOVER_SCHOOLS = {
 };
 
 const ROLLOVER_DISTRICT_TASKS = [
+  { key: 'ro_d_state_reporting',      label: 'Sam has finished State Reporting', required: true },
   { key: 'ro_d_disable_sif',         label: 'Disable SIF Adapter (System Management → Server → Global API and SIF Settings)', required: true },
   { key: 'ro_d_store_grades',         label: 'Permanently Store All Grades for Current Year', required: false },
   { key: 'ro_d_next_year_standards',  label: 'Create Next Year\'s Standards List', required: false },
