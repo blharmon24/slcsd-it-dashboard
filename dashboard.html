@@ -86,6 +86,9 @@
   .task-note-btn:hover { color: #4A7CFF; }
   .task-note-btn.has-note { color: #4A7CFF; }
   .task-note-input { width: 100%; margin-top: 6px; padding: 6px 8px; font-size: 12px; border: 1px solid #d0d5dd; border-radius: 6px; resize: vertical; min-height: 56px; font-family: inherit; background: #fafbfc; color: #333; box-sizing: border-box; }
+  .task-move-btn { background: none; border: none; cursor: pointer; font-size: 10px; color: #ccc; padding: 0; line-height: 1.2; display: block; transition: color .15s; }
+  .task-move-btn:hover { color: #4A7CFF; }
+  .task-move-btn[disabled] { visibility: hidden; cursor: default; }
   .task-locked { opacity: 0.45; pointer-events: none; }
   .history-filters { display: flex; align-items: center; gap: 12px; background: white; padding: 0.875rem 1rem; border-radius: 8px; border: 1px solid #e0e4ea; margin-bottom: 1.5rem; flex-wrap: wrap; }
   .history-filters label { font-size: 13px; font-weight: 500; }
@@ -177,7 +180,7 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.21.10</div>
+      <div class="sidebar-version">v2026.04.21.12</div>
     </div>
     <div class="main">
 
@@ -1185,6 +1188,7 @@ function switchSBTab(tab) {
   if (tab === 'schedule') loadScheduleBuildRecords();
   if (tab === 'ctc')      initCTCPage();
   if (tab === 'rollover') loadRolloverData();
+  localStorage.setItem('it_dash_sb_tab', tab);
 }
 
 function onSBPageYearChange() {
@@ -1476,7 +1480,10 @@ function showPage(name, el) {
   document.getElementById('page-' + name).classList.add('active');
   if (el) el.classList.add('active');
   if (name === 'grade-storing')   initGradeStoringPage();
-  if (name === 'schedule-commit') loadScheduleBuildRecords();
+  if (name === 'schedule-commit') {
+    const savedTab = localStorage.getItem('it_dash_sb_tab') || 'schedule';
+    switchSBTab(savedTab);
+  }
   localStorage.setItem('it_dash_page', name);
 }
 
@@ -1513,6 +1520,7 @@ const ROLLOVER_SCHOOL_TASKS = [
   { key: 'ro_s_meal_transactions',    label: 'Confirm Meal Transactions Reported with Lunch Staff' },
   { key: 'ro_s_precommit_validation', label: 'Pre-Commit Validation — Verify No Errors' },
   { key: 'ro_s_commit_schedule',      label: 'Commit Schedule from PowerScheduler' },
+  { key: 'ro_s_ctc_enrollments',      label: 'Copy Generic CTC Section enrollments to Real CTC sections', schools: ['East HS', 'Highland HS', 'West HS'] },
   { key: 'ro_s_student_portal',       label: 'Disable Parent/Student Access to Standards' },
 ];
 
@@ -1528,6 +1536,8 @@ let roFieldCompletions = {};     // { field_task_id: completion_record } for cur
 let roDistrictNotes = {};        // { task_key: note_record } — year-agnostic
 let roAllSchoolNotes = {};       // { school_name: { task_key: note_record } } — year-agnostic
 let roSchoolNotes = {};          // notes for currently open school
+let roDistrictTaskOrder = {};    // { task_key: sort_order }
+let roSchoolTaskOrder = {};      // { task_key: sort_order }
 
 function getRolloverYear() {
   return parseInt(document.getElementById('sb-year-select').value) || new Date().getFullYear();
@@ -1569,6 +1579,15 @@ async function loadRolloverData() {
     const { data: fc } = await sb.from('rollover_field_completions').select('*').eq('academic_year', year);
     if (fc) fc.forEach(c => { roFieldCompletions[c.field_task_id] = c; });
   }
+
+  // Task ordering
+  roDistrictTaskOrder = {};
+  roSchoolTaskOrder = {};
+  const { data: taskOrd } = await sb.from('rollover_task_order').select('*');
+  if (taskOrd) taskOrd.forEach(r => {
+    if (r.task_type === 'district') roDistrictTaskOrder[r.task_key] = r.sort_order;
+    if (r.task_type === 'school')   roSchoolTaskOrder[r.task_key]   = r.sort_order;
+  });
 
   // Persistent notes — not tied to a year
   roDistrictNotes = {};
@@ -1622,11 +1641,61 @@ async function saveRolloverDate() {
   updateRolloverCountdown();
 }
 
-function renderRolloverDistrictTasks() {
-  const done = ROLLOVER_DISTRICT_TASKS.filter(t => roDistrictCompletions[t.key]?.completed).length;
-  document.getElementById('ro-district-progress').textContent = `${done} / ${ROLLOVER_DISTRICT_TASKS.length}`;
+function getOrderedDistrictTasks() {
+  return [...ROLLOVER_DISTRICT_TASKS].sort((a, b) => {
+    const oa = roDistrictTaskOrder[a.key] ?? ROLLOVER_DISTRICT_TASKS.indexOf(a);
+    const ob = roDistrictTaskOrder[b.key] ?? ROLLOVER_DISTRICT_TASKS.indexOf(b);
+    return oa - ob;
+  });
+}
 
-  document.getElementById('ro-district-tasks').innerHTML = ROLLOVER_DISTRICT_TASKS.map(task => {
+function getOrderedSchoolTasks() {
+  return [...ROLLOVER_SCHOOL_TASKS].sort((a, b) => {
+    const oa = roSchoolTaskOrder[a.key] ?? ROLLOVER_SCHOOL_TASKS.indexOf(a);
+    const ob = roSchoolTaskOrder[b.key] ?? ROLLOVER_SCHOOL_TASKS.indexOf(b);
+    return oa - ob;
+  });
+}
+
+// Returns tasks applicable to a given school (filters school-specific tasks)
+function getSchoolTasks(schoolName) {
+  return getOrderedSchoolTasks().filter(t => !t.schools || t.schools.includes(schoolName));
+}
+
+async function moveTask(type, taskKey, direction) {
+  const ordered = type === 'district' ? getOrderedDistrictTasks() : getOrderedSchoolTasks();
+  const orderMap = type === 'district' ? roDistrictTaskOrder : roSchoolTaskOrder;
+  const idx = ordered.findIndex(t => t.key === taskKey);
+  const swapIdx = direction === 'up' ? idx - 1 : idx + 1;
+  if (swapIdx < 0 || swapIdx >= ordered.length) return;
+
+  const aKey = ordered[idx].key;
+  const bKey = ordered[swapIdx].key;
+  const aOrder = orderMap[aKey] ?? idx;
+  const bOrder = orderMap[bKey] ?? swapIdx;
+  orderMap[aKey] = bOrder;
+  orderMap[bKey] = aOrder;
+
+  await sb.from('rollover_task_order').upsert([
+    { task_type: type, task_key: aKey, sort_order: bOrder },
+    { task_type: type, task_key: bKey, sort_order: aOrder },
+  ], { onConflict: 'task_type,task_key' });
+
+  if (type === 'district') {
+    const sublistOpen = document.getElementById('ro-fields-sublist')?.style.display !== 'none';
+    renderRolloverDistrictTasks();
+    if (sublistOpen) { const el = document.getElementById('ro-fields-sublist'); if (el) el.style.display = 'block'; }
+  } else {
+    renderRolloverSchoolChecklist();
+  }
+}
+
+function renderRolloverDistrictTasks() {
+  const orderedTasks = getOrderedDistrictTasks();
+  const done = orderedTasks.filter(t => roDistrictCompletions[t.key]?.completed).length;
+  document.getElementById('ro-district-progress').textContent = `${done} / ${orderedTasks.length}`;
+
+  document.getElementById('ro-district-tasks').innerHTML = orderedTasks.map((task, idx) => {
     const comp = roDistrictCompletions[task.key];
     const checked = comp?.completed || false;
     const note = roDistrictNotes[task.key]?.notes || '';
@@ -1637,6 +1706,10 @@ function renderRolloverDistrictTasks() {
     const badge = task.required
       ? '<span style="font-size:10px;color:#1a6fa8;background:#e8f3fb;border:1px solid #b8d9f0;border-radius:3px;padding:1px 5px;margin-left:6px;">Required</span>'
       : '';
+    const moveBtns = `<div style="display:flex;flex-direction:column;flex-shrink:0;">
+      <button class="task-move-btn" onclick="moveTask('district','${task.key}','up')" ${idx === 0 ? 'disabled' : ''}>&#9650;</button>
+      <button class="task-move-btn" onclick="moveTask('district','${task.key}','down')" ${idx === orderedTasks.length - 1 ? 'disabled' : ''}>&#9660;</button>
+    </div>`;
 
     // Special case: clear fields task gets an expandable sub-checklist
     if (task.key === 'ro_d_clear_fields') {
@@ -1673,6 +1746,7 @@ function renderRolloverDistrictTasks() {
             <textarea class="task-note-input" onblur="saveDistrictTaskNote('${task.key}', this.value)" placeholder="Add a note...">${note}</textarea>
           </div>
         </div>
+        ${moveBtns}
         <button class="task-note-btn ${note ? 'has-note' : ''}" onclick="toggleNoteArea('${noteId}')" title="${note ? 'Edit note' : 'Add note'}">&#9998;</button>
       </div>`;
     }
@@ -1684,6 +1758,7 @@ function renderRolloverDistrictTasks() {
           <textarea class="task-note-input" onblur="saveDistrictTaskNote('${task.key}', this.value)" placeholder="Add a note...">${note}</textarea>
         </div>
       </div>
+      ${moveBtns}
       <button class="task-note-btn ${note ? 'has-note' : ''}" onclick="toggleNoteArea('${noteId}')" title="${note ? 'Edit note' : 'Add note'}">&#9998;</button>
     </div>`;
   }).join('');
@@ -1717,7 +1792,8 @@ function renderRolloverSchools() {
     const rec = roRecords[n];
     if (!rec) return false;
     const comps = roAllSchoolCompletions[rec.id] || {};
-    return ROLLOVER_SCHOOL_TASKS.every(t => comps[t.key]?.completed);
+    const tasks = getSchoolTasks(n);
+    return tasks.length > 0 && tasks.every(t => comps[t.key]?.completed);
   }).length;
 
   const bar = document.getElementById('ro-summary-bar');
@@ -1734,10 +1810,11 @@ function renderRolloverSchools() {
     ROLLOVER_SCHOOLS[type].forEach(name => {
       const rec = roRecords[name];
       const comps = rec ? (roAllSchoolCompletions[rec.id] || {}) : {};
-      const doneCount = ROLLOVER_SCHOOL_TASKS.filter(t => comps[t.key]?.completed).length;
-      const total = ROLLOVER_SCHOOL_TASKS.length;
+      const schoolTasks = getSchoolTasks(name);
+      const doneCount = schoolTasks.filter(t => comps[t.key]?.completed).length;
+      const total = schoolTasks.length;
       const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
-      const isComplete = pct === 100;
+      const isComplete = doneCount === total && total > 0;
       const barColor = isComplete ? '#10B981' : doneCount > 0 ? '#4A7CFF' : '#e8eaf0';
       const fillColor = isComplete ? '#10B981' : '#4A7CFF';
 
@@ -1777,10 +1854,11 @@ async function openRolloverSchool(name, type) {
 }
 
 function renderRolloverSchoolChecklist() {
-  const done = ROLLOVER_SCHOOL_TASKS.filter(t => roSchoolCompletions[t.key]?.completed).length;
-  document.getElementById('ro-school-progress').textContent = `${done} / ${ROLLOVER_SCHOOL_TASKS.length}`;
+  const tasks = getSchoolTasks(roCurrentSchool.name);
+  const done = tasks.filter(t => roSchoolCompletions[t.key]?.completed).length;
+  document.getElementById('ro-school-progress').textContent = `${done} / ${tasks.length}`;
 
-  document.getElementById('ro-school-tasks').innerHTML = ROLLOVER_SCHOOL_TASKS.map(task => {
+  document.getElementById('ro-school-tasks').innerHTML = tasks.map((task, idx) => {
     const comp = roSchoolCompletions[task.key];
     const checked = comp?.completed || false;
     const note = roSchoolNotes[task.key]?.notes || '';
@@ -1788,6 +1866,10 @@ function renderRolloverSchoolChecklist() {
     const meta = checked && comp?.completed_by_name
       ? `<div class="task-meta">${comp.completed_by_name} · ${new Date(comp.completed_at).toLocaleDateString()}</div>`
       : '';
+    const moveBtns = `<div style="display:flex;flex-direction:column;flex-shrink:0;">
+      <button class="task-move-btn" onclick="moveTask('school','${task.key}','up')" ${idx === 0 ? 'disabled' : ''}>&#9650;</button>
+      <button class="task-move-btn" onclick="moveTask('school','${task.key}','down')" ${idx === tasks.length - 1 ? 'disabled' : ''}>&#9660;</button>
+    </div>`;
     return `<div class="task-item">
       <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleRolloverSchoolTask('${task.key}', this.checked)">
       <div style="flex:1"><div class="task-label ${checked ? 'done' : ''}">${task.label}</div>${meta}
@@ -1795,6 +1877,7 @@ function renderRolloverSchoolChecklist() {
           <textarea class="task-note-input" onblur="saveSchoolTaskNote('${task.key}', this.value)" placeholder="Add a note...">${note}</textarea>
         </div>
       </div>
+      ${moveBtns}
       <button class="task-note-btn ${note ? 'has-note' : ''}" onclick="toggleNoteArea('${noteId}')" title="${note ? 'Edit note' : 'Add note'}">&#9998;</button>
     </div>`;
   }).join('');
@@ -1893,13 +1976,9 @@ async function saveSchoolTaskNote(taskKey, value) {
 }
 
 function refreshDistrictTasks() {
-  // Preserve sub-list open state across re-render
   const sublistOpen = document.getElementById('ro-fields-sublist')?.style.display !== 'none';
   renderRolloverDistrictTasks();
-  if (sublistOpen) {
-    const el = document.getElementById('ro-fields-sublist');
-    if (el) el.style.display = 'block';
-  }
+  if (sublistOpen) { const el = document.getElementById('ro-fields-sublist'); if (el) el.style.display = 'block'; }
 }
 
 async function toggleFieldCompletion(fieldTaskId, checked) {
