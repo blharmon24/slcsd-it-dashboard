@@ -82,6 +82,10 @@
   .task-label { font-size: 13px; line-height: 1.5; flex: 1; }
   .task-label.done { text-decoration: line-through; color: #aaa; }
   .task-meta { font-size: 11px; color: #999; margin-top: 2px; }
+  .task-note-btn { background: none; border: none; cursor: pointer; font-size: 13px; color: #ccc; padding: 0 2px; margin-top: 1px; flex-shrink: 0; line-height: 1; transition: color .15s; }
+  .task-note-btn:hover { color: #4A7CFF; }
+  .task-note-btn.has-note { color: #4A7CFF; }
+  .task-note-input { width: 100%; margin-top: 6px; padding: 6px 8px; font-size: 12px; border: 1px solid #d0d5dd; border-radius: 6px; resize: vertical; min-height: 56px; font-family: inherit; background: #fafbfc; color: #333; box-sizing: border-box; }
   .task-locked { opacity: 0.45; pointer-events: none; }
   .history-filters { display: flex; align-items: center; gap: 12px; background: white; padding: 0.875rem 1rem; border-radius: 8px; border: 1px solid #e0e4ea; margin-bottom: 1.5rem; flex-wrap: wrap; }
   .history-filters label { font-size: 13px; font-weight: 500; }
@@ -173,7 +177,7 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.21.4</div>
+      <div class="sidebar-version">v2026.04.21.5</div>
     </div>
     <div class="main">
 
@@ -1602,6 +1606,8 @@ function renderRolloverDistrictTasks() {
   document.getElementById('ro-district-tasks').innerHTML = ROLLOVER_DISTRICT_TASKS.map(task => {
     const comp = roDistrictCompletions[task.key];
     const checked = comp?.completed || false;
+    const note = comp?.notes || '';
+    const noteId = `ro-note-d-${task.key}`;
     const meta = checked && comp?.completed_by_name
       ? `<div class="task-meta">${comp.completed_by_name} · ${new Date(comp.completed_at).toLocaleDateString()}</div>`
       : '';
@@ -1610,7 +1616,12 @@ function renderRolloverDistrictTasks() {
       : '';
     return `<div class="task-item">
       <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleDistrictTask('${task.key}', this.checked)">
-      <div><div class="task-label ${checked ? 'done' : ''}">${task.label}${badge}</div>${meta}</div>
+      <div style="flex:1"><div class="task-label ${checked ? 'done' : ''}">${task.label}${badge}</div>${meta}
+        <div id="${noteId}" style="display:${note ? 'block' : 'none'};">
+          <textarea class="task-note-input" onblur="saveDistrictTaskNote('${task.key}', this.value)" placeholder="Add a note...">${note}</textarea>
+        </div>
+      </div>
+      <button class="task-note-btn ${note ? 'has-note' : ''}" onclick="toggleNoteArea('${noteId}')" title="${note ? 'Edit note' : 'Add note'}">&#9998;</button>
     </div>`;
   }).join('');
 }
@@ -1708,12 +1719,19 @@ function renderRolloverSchoolChecklist() {
   document.getElementById('ro-school-tasks').innerHTML = ROLLOVER_SCHOOL_TASKS.map(task => {
     const comp = roSchoolCompletions[task.key];
     const checked = comp?.completed || false;
+    const note = comp?.notes || '';
+    const noteId = `ro-note-s-${task.key}`;
     const meta = checked && comp?.completed_by_name
       ? `<div class="task-meta">${comp.completed_by_name} · ${new Date(comp.completed_at).toLocaleDateString()}</div>`
       : '';
     return `<div class="task-item">
       <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleRolloverSchoolTask('${task.key}', this.checked)">
-      <div><div class="task-label ${checked ? 'done' : ''}">${task.label}</div>${meta}</div>
+      <div style="flex:1"><div class="task-label ${checked ? 'done' : ''}">${task.label}</div>${meta}
+        <div id="${noteId}" style="display:${note ? 'block' : 'none'};">
+          <textarea class="task-note-input" onblur="saveSchoolTaskNote('${task.key}', this.value)" placeholder="Add a note...">${note}</textarea>
+        </div>
+      </div>
+      <button class="task-note-btn ${note ? 'has-note' : ''}" onclick="toggleNoteArea('${noteId}')" title="${note ? 'Edit note' : 'Add note'}">&#9998;</button>
     </div>`;
   }).join('');
 }
@@ -1765,6 +1783,49 @@ function showRolloverList() {
   roCurrentRecordId = null;
   roSchoolCompletions = {};
   renderRolloverSchools();
+}
+
+function toggleNoteArea(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const opening = el.style.display === 'none';
+  el.style.display = opening ? 'block' : 'none';
+  if (opening) el.querySelector('textarea')?.focus();
+}
+
+async function saveDistrictTaskNote(taskKey, value) {
+  const notes = value.trim() || null;
+  const existing = roDistrictCompletions[taskKey];
+  if (existing) {
+    await sb.from('rollover_district_completions').update({ notes }).eq('id', existing.id);
+    roDistrictCompletions[taskKey] = { ...existing, notes };
+  } else {
+    const { data } = await sb.from('rollover_district_completions')
+      .insert({ academic_year: getRolloverYear(), task_key: taskKey, completed: false, notes }).select().single();
+    roDistrictCompletions[taskKey] = data;
+  }
+  // Update button style without full re-render
+  const btn = document.querySelector(`button[onclick="toggleNoteArea('ro-note-d-${taskKey}')"]`);
+  if (btn) { btn.classList.toggle('has-note', !!notes); btn.title = notes ? 'Edit note' : 'Add note'; }
+}
+
+async function saveSchoolTaskNote(taskKey, value) {
+  await ensureRolloverRecord();
+  const notes = value.trim() || null;
+  const existing = roSchoolCompletions[taskKey];
+  if (existing) {
+    await sb.from('rollover_school_completions').update({ notes }).eq('id', existing.id);
+    roSchoolCompletions[taskKey] = { ...existing, notes };
+  } else {
+    const { data } = await sb.from('rollover_school_completions')
+      .insert({ record_id: roCurrentRecordId, task_key: taskKey, completed: false, notes }).select().single();
+    roSchoolCompletions[taskKey] = data;
+  }
+  if (roAllSchoolCompletions[roCurrentRecordId]) {
+    roAllSchoolCompletions[roCurrentRecordId][taskKey] = roSchoolCompletions[taskKey];
+  }
+  const btn = document.querySelector(`button[onclick="toggleNoteArea('ro-note-s-${taskKey}')"]`);
+  if (btn) { btn.classList.toggle('has-note', !!notes); btn.title = notes ? 'Edit note' : 'Add note'; }
 }
 
 // ── CTC Schedule Export ─────────────────────────────────────────────
