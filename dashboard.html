@@ -89,6 +89,10 @@
   .task-move-btn { background: none; border: none; cursor: pointer; font-size: 10px; color: #ccc; padding: 0; line-height: 1.2; display: block; transition: color .15s; }
   .task-move-btn:hover { color: #4A7CFF; }
   .task-move-btn[disabled] { visibility: hidden; cursor: default; }
+  .task-item[draggable="true"] { cursor: grab; }
+  .task-item.ro-dragging { opacity: 0.4; }
+  .task-item.ro-drop-above { border-top: 2px solid #4A7CFF !important; }
+  .task-item.ro-drop-below { border-bottom: 2px solid #4A7CFF !important; }
   .task-locked { opacity: 0.45; pointer-events: none; }
   .history-filters { display: flex; align-items: center; gap: 12px; background: white; padding: 0.875rem 1rem; border-radius: 8px; border: 1px solid #e0e4ea; margin-bottom: 1.5rem; flex-wrap: wrap; }
   .history-filters label { font-size: 13px; font-weight: 500; }
@@ -180,7 +184,7 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.21.13</div>
+      <div class="sidebar-version">v2026.04.21.14</div>
     </div>
     <div class="main">
 
@@ -1548,6 +1552,8 @@ let roDistrictTaskOrder = {};    // { task_key: sort_order }
 let roSchoolTaskOrder = {};      // { task_key: sort_order }
 let roCustomDistrictTasks = [];  // custom district tasks from DB
 let roCustomSchoolTasks = [];    // custom school tasks from DB
+let roDragKey = null;
+let roDragType = null;
 
 function getRolloverYear() {
   return parseInt(document.getElementById('sb-year-select').value) || new Date().getFullYear();
@@ -1753,7 +1759,7 @@ function renderRolloverDistrictTasks() {
           <button onclick="removeFieldTask('${ft.id}')" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:16px;line-height:1;padding:0 2px;" title="Remove field">&times;</button>
         </div>`;
       }).join('');
-      return `<div class="task-item">
+      return `<div class="task-item" draggable="true" ondragstart="roDragStart(event,'${task.key}','district')" ondragend="roDragEnd()" ondragover="roDragOver(event,'${task.key}')" ondragleave="roDragLeave(event)" ondrop="roDrop(event,'${task.key}','district')">
         <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleDistrictTask('${task.key}', this.checked)">
         <div style="flex:1">
           <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
@@ -1779,7 +1785,7 @@ function renderRolloverDistrictTasks() {
       </div>`;
     }
 
-    return `<div class="task-item">
+    return `<div class="task-item" draggable="true" ondragstart="roDragStart(event,'${task.key}','district')" ondragend="roDragEnd()" ondragover="roDragOver(event,'${task.key}')" ondragleave="roDragLeave(event)" ondrop="roDrop(event,'${task.key}','district')">
       <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleDistrictTask('${task.key}', this.checked)">
       <div style="flex:1"><div class="task-label ${checked ? 'done' : ''}">${task.label}${badge}</div>${meta}
         <div id="${noteId}" style="display:${note ? 'block' : 'none'};">
@@ -1899,7 +1905,7 @@ function renderRolloverSchoolChecklist() {
       <button class="task-move-btn" onclick="moveTask('school','${task.key}','up')" ${idx === 0 ? 'disabled' : ''}>&#9650;</button>
       <button class="task-move-btn" onclick="moveTask('school','${task.key}','down')" ${idx === tasks.length - 1 ? 'disabled' : ''}>&#9660;</button>
     </div>`;
-    return `<div class="task-item">
+    return `<div class="task-item" draggable="true" ondragstart="roDragStart(event,'${task.key}','school')" ondragend="roDragEnd()" ondragover="roDragOver(event,'${task.key}')" ondragleave="roDragLeave(event)" ondrop="roDrop(event,'${task.key}','school')">
       <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleRolloverSchoolTask('${task.key}', this.checked)">
       <div style="flex:1"><div class="task-label ${checked ? 'done' : ''}">${task.label}</div>${meta}
         <div id="${noteId}" style="display:${note ? 'block' : 'none'};">
@@ -2052,6 +2058,65 @@ async function removeFieldTask(fieldTaskId) {
   roFieldTasks = roFieldTasks.filter(ft => ft.id !== fieldTaskId);
   refreshDistrictTasks();
   document.getElementById('ro-fields-sublist').style.display = 'block';
+}
+
+function roDragStart(e, taskKey, type) {
+  if (e.target.closest('input, button, textarea, select')) { e.preventDefault(); return; }
+  roDragKey = taskKey;
+  roDragType = type;
+  e.dataTransfer.effectAllowed = 'move';
+  const row = e.target.closest('.task-item');
+  setTimeout(() => { if (row) row.classList.add('ro-dragging'); }, 0);
+}
+
+function roDragEnd() {
+  document.querySelectorAll('.task-item').forEach(el =>
+    el.classList.remove('ro-dragging', 'ro-drop-above', 'ro-drop-below'));
+  roDragKey = null;
+  roDragType = null;
+}
+
+function roDragOver(e, targetKey) {
+  if (!roDragKey || roDragKey === targetKey) return;
+  e.preventDefault();
+  const el = e.currentTarget;
+  const isTop = e.clientY < el.getBoundingClientRect().top + el.offsetHeight / 2;
+  document.querySelectorAll('.task-item').forEach(t =>
+    t.classList.remove('ro-drop-above', 'ro-drop-below'));
+  el.classList.add(isTop ? 'ro-drop-above' : 'ro-drop-below');
+}
+
+function roDragLeave(e) {
+  e.currentTarget.classList.remove('ro-drop-above', 'ro-drop-below');
+}
+
+async function roDrop(e, targetKey, type) {
+  e.preventDefault();
+  document.querySelectorAll('.task-item').forEach(el =>
+    el.classList.remove('ro-dragging', 'ro-drop-above', 'ro-drop-below'));
+  if (!roDragKey || roDragKey === targetKey || roDragType !== type) return;
+
+  const ordered = type === 'district' ? getOrderedDistrictTasks() : getOrderedSchoolTasks();
+  const orderMap = type === 'district' ? roDistrictTaskOrder : roSchoolTaskOrder;
+
+  const fromIdx = ordered.findIndex(t => t.key === roDragKey);
+  let toIdx   = ordered.findIndex(t => t.key === targetKey);
+  const el = e.currentTarget;
+  const isBottom = e.clientY >= el.getBoundingClientRect().top + el.offsetHeight / 2;
+  if (isBottom) toIdx++;
+  if (toIdx > fromIdx) toIdx--; // adjust for removal
+
+  if (fromIdx === toIdx) return;
+
+  const newOrder = [...ordered];
+  const [moved] = newOrder.splice(fromIdx, 1);
+  newOrder.splice(toIdx, 0, moved);
+
+  const upserts = newOrder.map((t, i) => { orderMap[t.key] = i; return { task_type: type, task_key: t.key, sort_order: i }; });
+  await sb.from('rollover_task_order').upsert(upserts, { onConflict: 'task_type,task_key' });
+
+  if (type === 'district') refreshDistrictTasks();
+  else renderRolloverSchoolChecklist();
 }
 
 async function addCustomTask(type) {
