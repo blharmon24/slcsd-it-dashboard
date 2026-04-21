@@ -180,7 +180,7 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.21.12</div>
+      <div class="sidebar-version">v2026.04.21.13</div>
     </div>
     <div class="main">
 
@@ -542,6 +542,10 @@
                 <span class="progress-info" id="ro-district-progress"></span>
               </div>
               <div id="ro-district-tasks"></div>
+              <div style="padding:8px 1rem;border-top:1px solid #f0f0f0;display:flex;gap:8px;background:#fafbfc;">
+                <input id="ro-add-district-task" placeholder="Add a task..." style="flex:1;font-size:13px;border:1px solid #d0d5dd;border-radius:6px;padding:5px 8px;">
+                <button class="save-btn" onclick="addCustomTask('district')" style="margin:0;padding:5px 14px;font-size:12px;">Add</button>
+              </div>
             </div>
 
             <!-- School summary bar -->
@@ -575,6 +579,10 @@
                 <span class="progress-info" id="ro-school-progress"></span>
               </div>
               <div id="ro-school-tasks"></div>
+              <div style="padding:8px 1rem;border-top:1px solid #f0f0f0;display:flex;gap:8px;background:#fafbfc;">
+                <input id="ro-add-school-task" placeholder="Add a task..." style="flex:1;font-size:13px;border:1px solid #d0d5dd;border-radius:6px;padding:5px 8px;">
+                <button class="save-btn" onclick="addCustomTask('school')" style="margin:0;padding:5px 14px;font-size:12px;">Add</button>
+              </div>
             </div>
           </div>
 
@@ -1538,6 +1546,8 @@ let roAllSchoolNotes = {};       // { school_name: { task_key: note_record } } �
 let roSchoolNotes = {};          // notes for currently open school
 let roDistrictTaskOrder = {};    // { task_key: sort_order }
 let roSchoolTaskOrder = {};      // { task_key: sort_order }
+let roCustomDistrictTasks = [];  // custom district tasks from DB
+let roCustomSchoolTasks = [];    // custom school tasks from DB
 
 function getRolloverYear() {
   return parseInt(document.getElementById('sb-year-select').value) || new Date().getFullYear();
@@ -1579,6 +1589,15 @@ async function loadRolloverData() {
     const { data: fc } = await sb.from('rollover_field_completions').select('*').eq('academic_year', year);
     if (fc) fc.forEach(c => { roFieldCompletions[c.field_task_id] = c; });
   }
+
+  // Custom tasks
+  roCustomDistrictTasks = [];
+  roCustomSchoolTasks = [];
+  const { data: ct } = await sb.from('rollover_custom_tasks').select('*').eq('active', true).order('created_at');
+  if (ct) ct.forEach(t => {
+    if (t.task_type === 'district') roCustomDistrictTasks.push(t);
+    else roCustomSchoolTasks.push(t);
+  });
 
   // Task ordering
   roDistrictTaskOrder = {};
@@ -1642,19 +1661,27 @@ async function saveRolloverDate() {
 }
 
 function getOrderedDistrictTasks() {
-  return [...ROLLOVER_DISTRICT_TASKS].sort((a, b) => {
-    const oa = roDistrictTaskOrder[a.key] ?? ROLLOVER_DISTRICT_TASKS.indexOf(a);
-    const ob = roDistrictTaskOrder[b.key] ?? ROLLOVER_DISTRICT_TASKS.indexOf(b);
-    return oa - ob;
-  });
+  const custom = roCustomDistrictTasks.map(t => ({ key: t.task_key, label: t.label, custom: true }));
+  const all = [...ROLLOVER_DISTRICT_TASKS, ...custom];
+  return all
+    .filter(t => roDistrictTaskOrder[t.key] !== -999)
+    .sort((a, b) => {
+      const oa = roDistrictTaskOrder[a.key] ?? all.indexOf(a);
+      const ob = roDistrictTaskOrder[b.key] ?? all.indexOf(b);
+      return oa - ob;
+    });
 }
 
 function getOrderedSchoolTasks() {
-  return [...ROLLOVER_SCHOOL_TASKS].sort((a, b) => {
-    const oa = roSchoolTaskOrder[a.key] ?? ROLLOVER_SCHOOL_TASKS.indexOf(a);
-    const ob = roSchoolTaskOrder[b.key] ?? ROLLOVER_SCHOOL_TASKS.indexOf(b);
-    return oa - ob;
-  });
+  const custom = roCustomSchoolTasks.map(t => ({ key: t.task_key, label: t.label, custom: true }));
+  const all = [...ROLLOVER_SCHOOL_TASKS, ...custom];
+  return all
+    .filter(t => roSchoolTaskOrder[t.key] !== -999)
+    .sort((a, b) => {
+      const oa = roSchoolTaskOrder[a.key] ?? all.indexOf(a);
+      const ob = roSchoolTaskOrder[b.key] ?? all.indexOf(b);
+      return oa - ob;
+    });
 }
 
 // Returns tasks applicable to a given school (filters school-specific tasks)
@@ -1747,6 +1774,7 @@ function renderRolloverDistrictTasks() {
           </div>
         </div>
         ${moveBtns}
+        <button class="task-note-btn" onclick="removeTask('${task.key}','district',false)" title="Remove task" style="color:#e0b0b0;">&#10005;</button>
         <button class="task-note-btn ${note ? 'has-note' : ''}" onclick="toggleNoteArea('${noteId}')" title="${note ? 'Edit note' : 'Add note'}">&#9998;</button>
       </div>`;
     }
@@ -1759,6 +1787,7 @@ function renderRolloverDistrictTasks() {
         </div>
       </div>
       ${moveBtns}
+      <button class="task-note-btn" onclick="removeTask('${task.key}','district',${task.custom ? 'true' : 'false'})" title="Remove task" style="color:#e0b0b0;">&#10005;</button>
       <button class="task-note-btn ${note ? 'has-note' : ''}" onclick="toggleNoteArea('${noteId}')" title="${note ? 'Edit note' : 'Add note'}">&#9998;</button>
     </div>`;
   }).join('');
@@ -1878,6 +1907,7 @@ function renderRolloverSchoolChecklist() {
         </div>
       </div>
       ${moveBtns}
+      <button class="task-note-btn" onclick="removeTask('${task.key}','school',${task.custom ? 'true' : 'false'})" title="Remove task" style="color:#e0b0b0;">&#10005;</button>
       <button class="task-note-btn ${note ? 'has-note' : ''}" onclick="toggleNoteArea('${noteId}')" title="${note ? 'Edit note' : 'Add note'}">&#9998;</button>
     </div>`;
   }).join('');
@@ -2022,6 +2052,41 @@ async function removeFieldTask(fieldTaskId) {
   roFieldTasks = roFieldTasks.filter(ft => ft.id !== fieldTaskId);
   refreshDistrictTasks();
   document.getElementById('ro-fields-sublist').style.display = 'block';
+}
+
+async function addCustomTask(type) {
+  const inputId = type === 'district' ? 'ro-add-district-task' : 'ro-add-school-task';
+  const input = document.getElementById(inputId);
+  const label = input?.value.trim();
+  if (!label) return;
+  const taskKey = 'ro_custom_' + Date.now();
+  const { data } = await sb.from('rollover_custom_tasks')
+    .insert({ task_type: type, task_key: taskKey, label }).select().single();
+  if (type === 'district') roCustomDistrictTasks.push(data);
+  else roCustomSchoolTasks.push(data);
+  input.value = '';
+  if (type === 'district') refreshDistrictTasks();
+  else renderRolloverSchoolChecklist();
+}
+
+async function removeTask(taskKey, type, isCustom) {
+  if (!confirm('Remove this task? (You can ask IT to restore it if needed)')) return;
+  if (isCustom) {
+    // Soft-delete custom tasks from the custom tasks table
+    await sb.from('rollover_custom_tasks').update({ active: false }).eq('task_key', taskKey);
+    if (type === 'district') roCustomDistrictTasks = roCustomDistrictTasks.filter(t => t.task_key !== taskKey);
+    else roCustomSchoolTasks = roCustomSchoolTasks.filter(t => t.task_key !== taskKey);
+  } else {
+    // Hide hardcoded tasks using a -999 sentinel in the task order table
+    const orderMap = type === 'district' ? roDistrictTaskOrder : roSchoolTaskOrder;
+    orderMap[taskKey] = -999;
+    await sb.from('rollover_task_order').upsert(
+      [{ task_type: type, task_key: taskKey, sort_order: -999 }],
+      { onConflict: 'task_type,task_key' }
+    );
+  }
+  if (type === 'district') refreshDistrictTasks();
+  else renderRolloverSchoolChecklist();
 }
 
 // ── CTC Schedule Export ─────────────────────────────────────────────
