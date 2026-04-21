@@ -173,7 +173,7 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.21.3</div>
+      <div class="sidebar-version">v2026.04.21.4</div>
     </div>
     <div class="main">
 
@@ -320,6 +320,7 @@
         <div class="tab-bar">
           <button class="tab-btn active" id="tab-btn-schedule" onclick="switchSBTab('schedule')">Schedule Build</button>
           <button class="tab-btn" id="tab-btn-ctc" onclick="switchSBTab('ctc')">CTC Export</button>
+          <button class="tab-btn" id="tab-btn-rollover" onclick="switchSBTab('rollover')">School Rollover</button>
         </div>
 
         <!-- Schedule Build tab -->
@@ -513,6 +514,65 @@
           </div>
         </div>
         </div> <!-- end tab-ctc -->
+
+        <!-- School Rollover tab -->
+        <div class="tab-content" id="tab-rollover">
+
+          <!-- Rollover date bar -->
+          <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;background:white;border:1px solid #e0e4ea;border-radius:8px;padding:0.75rem 1rem;margin-bottom:1.25rem;">
+            <span style="font-size:13px;font-weight:600;color:#555;">Target Rollover Date:</span>
+            <input type="date" id="ro-target-date" style="font-size:13px;border:1px solid #d0d5dd;border-radius:6px;padding:4px 8px;" onchange="updateRolloverCountdown()">
+            <button class="save-btn" onclick="saveRolloverDate()" style="margin:0;padding:6px 14px;font-size:12px;">Save Date</button>
+            <span id="ro-date-countdown" style="font-size:12px;font-weight:500;"></span>
+          </div>
+
+          <!-- List view -->
+          <div id="ro-list-view">
+            <!-- District-wide tasks -->
+            <div class="tasks-card" style="margin-bottom:1.5rem;">
+              <div class="tasks-card-title">
+                District-Wide Tasks
+                <span class="progress-info" id="ro-district-progress"></span>
+              </div>
+              <div id="ro-district-tasks"></div>
+            </div>
+
+            <!-- School summary bar -->
+            <div id="ro-summary-bar" style="display:none;margin-bottom:1rem;"></div>
+
+            <!-- School grids -->
+            <div class="school-group">
+              <div class="school-group-title">High Schools</div>
+              <div class="school-grid" id="ro-grid-high"></div>
+            </div>
+            <div class="school-group">
+              <div class="school-group-title">Middle Schools</div>
+              <div class="school-grid" id="ro-grid-middle"></div>
+            </div>
+            <div class="school-group">
+              <div class="school-group-title">Other</div>
+              <div class="school-grid" id="ro-grid-other"></div>
+            </div>
+          </div>
+
+          <!-- School detail view -->
+          <div id="ro-detail-view" style="display:none;">
+            <button class="back-btn" onclick="showRolloverList()">&#8592; Back to schools</button>
+            <div class="checklist-header">
+              <h2 id="ro-detail-name"></h2>
+              <div class="term-badge" id="ro-detail-year-badge"></div>
+            </div>
+            <div class="tasks-card" style="margin-top:1rem;">
+              <div class="tasks-card-title">
+                School Rollover Checklist
+                <span class="progress-info" id="ro-school-progress"></span>
+              </div>
+              <div id="ro-school-tasks"></div>
+            </div>
+          </div>
+
+        </div> <!-- end tab-rollover -->
+
       </div> <!-- end page-schedule-commit -->
 
     </div>
@@ -1120,12 +1180,14 @@ function switchSBTab(tab) {
   document.getElementById('tab-' + tab).classList.add('active');
   if (tab === 'schedule') loadScheduleBuildRecords();
   if (tab === 'ctc')      initCTCPage();
+  if (tab === 'rollover') loadRolloverData();
 }
 
 function onSBPageYearChange() {
   const activeTab = document.querySelector('#page-schedule-commit .tab-btn.active')?.id?.replace('tab-btn-', '');
   if (activeTab === 'schedule') loadScheduleBuildRecords();
   if (activeTab === 'ctc')      initCTCPage();
+  if (activeTab === 'rollover') loadRolloverData();
 }
 
 async function loadScheduleBuildRecords() {
@@ -1412,6 +1474,297 @@ function showPage(name, el) {
   if (name === 'grade-storing')   initGradeStoringPage();
   if (name === 'schedule-commit') loadScheduleBuildRecords();
   localStorage.setItem('it_dash_page', name);
+}
+
+// ── School Rollover ──────────────────────────────────────────────────
+
+const ROLLOVER_SCHOOLS = {
+  high:   ['East HS', 'Highland HS', 'West HS'],
+  middle: ['Northwest Middle', 'Hillside Middle', 'Glendale Middle', 'Clayton Middle', 'Bryant Middle'],
+  other:  ['CTC', 'Salt Lake City Science Center'],
+};
+
+const ROLLOVER_DISTRICT_TASKS = [
+  { key: 'ro_d_disable_sif',         label: 'Disable SIF Adapter (System Management → Server → Global API and SIF Settings)', required: true },
+  { key: 'ro_d_change_history',       label: 'Check Change History Retention Settings', required: false },
+  { key: 'ro_d_backup',               label: 'Initiate PowerSchool Data Backup', required: false },
+  { key: 'ro_d_store_grades',         label: 'Permanently Store All Grades for Current Year', required: false },
+  { key: 'ro_d_next_year_standards',  label: 'Create Next Year\'s Standards List', required: false },
+  { key: 'ro_d_enrollment_audit',     label: 'Run School Enrollment Audit — Correct Any Issues', required: false },
+  { key: 'ro_d_section_audit',        label: 'Run Section Enrollment Audit — Correct Any Issues', required: false },
+  { key: 'ro_d_fee_balance',          label: 'Recalculate Fee Balance (Special Operations)', required: false },
+  { key: 'ro_d_export_entry_codes',   label: 'Export OE/DP Entry Code Students (Pre-Rollover)', required: true },
+  { key: 'ro_d_graduates',            label: 'Change Graduates: enroll_status 2 → 3', required: true },
+  { key: 'ro_d_next_school',          label: 'Assign Next School Indicator — All Students', required: true },
+  { key: 'ro_d_next_grade',           label: 'Assign Next Year Grade — All Students', required: true },
+  { key: 'ro_d_clear_fields',         label: 'Clear Custom Student Fields (S_UT_STU_X, U_SLC_STUDENTS, etc.)', required: true },
+  { key: 'ro_d_eoy_process',          label: 'Run End of Year (EOY) Process', required: true },
+  { key: 'ro_d_attendance_year',      label: 'Update Attendance Calculation Year (District Setup → Attendance Tracking)', required: true },
+];
+
+const ROLLOVER_SCHOOL_TASKS = [
+  { key: 'ro_s_years_terms',          label: 'Create Upcoming School Year (Years and Terms)' },
+  { key: 'ro_s_fte_grades',           label: 'Review FTE Default Grade Levels for All Grades' },
+  { key: 'ro_s_attendance_conv',      label: 'Verify Attendance Conversions — Full Day Defined' },
+  { key: 'ro_s_calendar_setup',       label: 'Set Up Calendar — Sem 1 & Sem 2 First Day + Bell Schedule' },
+  { key: 'ro_s_reset_class_count',    label: 'Reset Class Count (System → Special Operations)' },
+  { key: 'ro_s_clear_lockers',        label: 'Clear Lockers and Advance to Next Sequence' },
+  { key: 'ro_s_meal_transactions',    label: 'Confirm Meal Transactions Reported with Lunch Staff' },
+  { key: 'ro_s_precommit_validation', label: 'Pre-Commit Validation — Verify No Errors' },
+  { key: 'ro_s_commit_schedule',      label: 'Commit Schedule from PowerScheduler' },
+  { key: 'ro_s_student_portal',       label: 'Disable Parent/Student Access to Standards' },
+];
+
+let roConfig = null;
+let roDistrictCompletions = {};  // { task_key: record }
+let roRecords = {};              // { school_name: record }
+let roAllSchoolCompletions = {}; // { record_id: { task_key: record } }
+let roSchoolCompletions = {};    // completions for the currently open school
+let roCurrentSchool = null;      // { name, type }
+let roCurrentRecordId = null;
+
+function getRolloverYear() {
+  return parseInt(document.getElementById('sb-year-select').value) || new Date().getFullYear();
+}
+
+async function loadRolloverData() {
+  const year = getRolloverYear();
+
+  // Config (target date)
+  const { data: cfg } = await sb.from('rollover_config').select('*').eq('academic_year', year).maybeSingle();
+  roConfig = cfg;
+
+  // District completions
+  roDistrictCompletions = {};
+  const { data: dc } = await sb.from('rollover_district_completions').select('*').eq('academic_year', year);
+  if (dc) dc.forEach(c => { roDistrictCompletions[c.task_key] = c; });
+
+  // School records
+  roRecords = {};
+  const { data: recs } = await sb.from('rollover_records').select('*').eq('academic_year', year);
+  if (recs) recs.forEach(r => { roRecords[r.school_name] = r; });
+
+  // All school completions (for progress bars on cards)
+  roAllSchoolCompletions = {};
+  const recordIds = Object.values(roRecords).map(r => r.id);
+  if (recordIds.length > 0) {
+    const { data: sc } = await sb.from('rollover_school_completions').select('*').in('record_id', recordIds);
+    if (sc) sc.forEach(c => {
+      if (!roAllSchoolCompletions[c.record_id]) roAllSchoolCompletions[c.record_id] = {};
+      roAllSchoolCompletions[c.record_id][c.task_key] = c;
+    });
+  }
+
+  renderRolloverPage();
+}
+
+function renderRolloverPage() {
+  // Populate date bar
+  const dateInput = document.getElementById('ro-target-date');
+  dateInput.value = roConfig?.target_date || '';
+  updateRolloverCountdown();
+
+  renderRolloverDistrictTasks();
+  renderRolloverSchools();
+  document.getElementById('ro-list-view').style.display = 'block';
+  document.getElementById('ro-detail-view').style.display = 'none';
+}
+
+function updateRolloverCountdown() {
+  const val = document.getElementById('ro-target-date').value;
+  const el = document.getElementById('ro-date-countdown');
+  if (!val) { el.textContent = ''; return; }
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const target = new Date(val + 'T00:00:00');
+  const diff = Math.round((target - today) / 86400000);
+  if (diff === 0)      { el.textContent = 'Today!';                                  el.style.color = '#e67e22'; }
+  else if (diff > 0)   { el.textContent = `${diff} day${diff === 1 ? '' : 's'} away`; el.style.color = diff <= 14 ? '#e67e22' : '#27ae60'; }
+  else                 { el.textContent = `${Math.abs(diff)} day${Math.abs(diff) === 1 ? '' : 's'} ago`; el.style.color = '#c0392b'; }
+}
+
+async function saveRolloverDate() {
+  const year = getRolloverYear();
+  const dateVal = document.getElementById('ro-target-date').value || null;
+  if (roConfig?.id) {
+    await sb.from('rollover_config').update({ target_date: dateVal, updated_at: new Date().toISOString(), updated_by: currentUser.id }).eq('id', roConfig.id);
+    roConfig.target_date = dateVal;
+  } else {
+    const { data } = await sb.from('rollover_config').insert({ academic_year: year, target_date: dateVal, updated_by: currentUser.id }).select().single();
+    roConfig = data;
+  }
+  updateRolloverCountdown();
+}
+
+function renderRolloverDistrictTasks() {
+  const done = ROLLOVER_DISTRICT_TASKS.filter(t => roDistrictCompletions[t.key]?.completed).length;
+  document.getElementById('ro-district-progress').textContent = `${done} / ${ROLLOVER_DISTRICT_TASKS.length}`;
+
+  document.getElementById('ro-district-tasks').innerHTML = ROLLOVER_DISTRICT_TASKS.map(task => {
+    const comp = roDistrictCompletions[task.key];
+    const checked = comp?.completed || false;
+    const meta = checked && comp?.completed_by_name
+      ? `<div class="task-meta">${comp.completed_by_name} · ${new Date(comp.completed_at).toLocaleDateString()}</div>`
+      : '';
+    const badge = task.required
+      ? '<span style="font-size:10px;color:#1a6fa8;background:#e8f3fb;border:1px solid #b8d9f0;border-radius:3px;padding:1px 5px;margin-left:6px;">Required</span>'
+      : '';
+    return `<div class="task-item">
+      <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleDistrictTask('${task.key}', this.checked)">
+      <div><div class="task-label ${checked ? 'done' : ''}">${task.label}${badge}</div>${meta}</div>
+    </div>`;
+  }).join('');
+}
+
+async function toggleDistrictTask(taskKey, checked) {
+  const year = getRolloverYear();
+  const now = new Date().toISOString();
+  const userName = currentUser.email.split('@')[0];
+  const existing = roDistrictCompletions[taskKey];
+  const payload = {
+    completed: checked,
+    completed_at: checked ? now : null,
+    completed_by: checked ? currentUser.id : null,
+    completed_by_name: checked ? userName : null,
+  };
+  if (existing) {
+    await sb.from('rollover_district_completions').update(payload).eq('id', existing.id);
+    roDistrictCompletions[taskKey] = { ...existing, ...payload };
+  } else {
+    const { data } = await sb.from('rollover_district_completions')
+      .insert({ academic_year: year, task_key: taskKey, ...payload }).select().single();
+    roDistrictCompletions[taskKey] = data;
+  }
+  renderRolloverDistrictTasks();
+}
+
+function renderRolloverSchools() {
+  const allNames = Object.values(ROLLOVER_SCHOOLS).flat();
+  const completeCount = allNames.filter(n => {
+    const rec = roRecords[n];
+    if (!rec) return false;
+    const comps = roAllSchoolCompletions[rec.id] || {};
+    return ROLLOVER_SCHOOL_TASKS.every(t => comps[t.key]?.completed);
+  }).length;
+
+  const bar = document.getElementById('ro-summary-bar');
+  bar.style.display = 'block';
+  bar.innerHTML = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:white;border:1px solid #e0e4ea;border-radius:8px;padding:0.75rem 1rem;">
+    <span style="font-size:12px;font-weight:600;color:#555;margin-right:4px;">Schools</span>
+    <span class="sstatus sstatus-complete" style="font-size:12px;padding:4px 12px;">${completeCount} Complete</span>
+    <span class="sstatus sstatus-not-started" style="font-size:12px;padding:4px 12px;">${allNames.length - completeCount} Not Complete</span>
+  </div>`;
+
+  ['high', 'middle', 'other'].forEach(type => {
+    const grid = document.getElementById('ro-grid-' + type);
+    grid.innerHTML = '';
+    ROLLOVER_SCHOOLS[type].forEach(name => {
+      const rec = roRecords[name];
+      const comps = rec ? (roAllSchoolCompletions[rec.id] || {}) : {};
+      const doneCount = ROLLOVER_SCHOOL_TASKS.filter(t => comps[t.key]?.completed).length;
+      const total = ROLLOVER_SCHOOL_TASKS.length;
+      const pct = total > 0 ? Math.round((doneCount / total) * 100) : 0;
+      const isComplete = pct === 100;
+      const barColor = isComplete ? '#10B981' : doneCount > 0 ? '#4A7CFF' : '#e8eaf0';
+      const fillColor = isComplete ? '#10B981' : '#4A7CFF';
+
+      const card = document.createElement('div');
+      card.className = 'school-card sb-card';
+      card.innerHTML = `
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;width:100%">
+          <div class="sname">${name}</div>
+          ${isComplete ? '<div class="sstatus sstatus-complete">Complete</div>' : ''}
+        </div>
+        <div style="margin-top:0.4rem;font-size:12px;color:#666;">${doneCount} / ${total} tasks complete</div>
+        <div style="background:#e8eaf0;border-radius:4px;height:6px;margin-top:6px;">
+          <div style="background:${fillColor};width:${pct}%;height:100%;border-radius:4px;transition:width 0.3s;"></div>
+        </div>`;
+      card.onclick = () => openRolloverSchool(name, type);
+      grid.appendChild(card);
+    });
+  });
+}
+
+async function openRolloverSchool(name, type) {
+  roCurrentSchool = { name, type };
+  const rec = roRecords[name];
+  roCurrentRecordId = rec?.id || null;
+
+  // Load school completions for detail view
+  roSchoolCompletions = roCurrentRecordId
+    ? (roAllSchoolCompletions[roCurrentRecordId] || {})
+    : {};
+
+  document.getElementById('ro-list-view').style.display = 'none';
+  document.getElementById('ro-detail-view').style.display = 'block';
+  document.getElementById('ro-detail-name').textContent = name;
+  document.getElementById('ro-detail-year-badge').textContent = getRolloverYear();
+  renderRolloverSchoolChecklist();
+}
+
+function renderRolloverSchoolChecklist() {
+  const done = ROLLOVER_SCHOOL_TASKS.filter(t => roSchoolCompletions[t.key]?.completed).length;
+  document.getElementById('ro-school-progress').textContent = `${done} / ${ROLLOVER_SCHOOL_TASKS.length}`;
+
+  document.getElementById('ro-school-tasks').innerHTML = ROLLOVER_SCHOOL_TASKS.map(task => {
+    const comp = roSchoolCompletions[task.key];
+    const checked = comp?.completed || false;
+    const meta = checked && comp?.completed_by_name
+      ? `<div class="task-meta">${comp.completed_by_name} · ${new Date(comp.completed_at).toLocaleDateString()}</div>`
+      : '';
+    return `<div class="task-item">
+      <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleRolloverSchoolTask('${task.key}', this.checked)">
+      <div><div class="task-label ${checked ? 'done' : ''}">${task.label}</div>${meta}</div>
+    </div>`;
+  }).join('');
+}
+
+async function ensureRolloverRecord() {
+  if (roCurrentRecordId) return roCurrentRecordId;
+  const { data } = await sb.from('rollover_records').insert({
+    school_name: roCurrentSchool.name,
+    school_type: roCurrentSchool.type,
+    academic_year: getRolloverYear(),
+    updated_by: currentUser.id,
+  }).select().single();
+  roCurrentRecordId = data.id;
+  roRecords[roCurrentSchool.name] = data;
+  roAllSchoolCompletions[roCurrentRecordId] = {};
+  return roCurrentRecordId;
+}
+
+async function toggleRolloverSchoolTask(taskKey, checked) {
+  await ensureRolloverRecord();
+  const now = new Date().toISOString();
+  const userName = currentUser.email.split('@')[0];
+  const existing = roSchoolCompletions[taskKey];
+  const payload = {
+    completed: checked,
+    completed_at: checked ? now : null,
+    completed_by: checked ? currentUser.id : null,
+    completed_by_name: checked ? userName : null,
+  };
+  if (existing) {
+    await sb.from('rollover_school_completions').update(payload).eq('id', existing.id);
+    roSchoolCompletions[taskKey] = { ...existing, ...payload };
+  } else {
+    const { data } = await sb.from('rollover_school_completions')
+      .insert({ record_id: roCurrentRecordId, task_key: taskKey, ...payload }).select().single();
+    roSchoolCompletions[taskKey] = data;
+  }
+  // Sync back to the all-completions cache so card progress updates on return
+  if (roAllSchoolCompletions[roCurrentRecordId]) {
+    roAllSchoolCompletions[roCurrentRecordId][taskKey] = roSchoolCompletions[taskKey];
+  }
+  renderRolloverSchoolChecklist();
+}
+
+function showRolloverList() {
+  document.getElementById('ro-detail-view').style.display = 'none';
+  document.getElementById('ro-list-view').style.display = 'block';
+  roCurrentSchool = null;
+  roCurrentRecordId = null;
+  roSchoolCompletions = {};
+  renderRolloverSchools();
 }
 
 // ── CTC Schedule Export ─────────────────────────────────────────────
