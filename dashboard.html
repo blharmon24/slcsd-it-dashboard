@@ -184,7 +184,7 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.21.16</div>
+      <div class="sidebar-version">v2026.04.21.17</div>
     </div>
     <div class="main">
 
@@ -1795,6 +1795,7 @@ function renderRolloverDistrictTasks() {
       <button class="task-note-btn ${note ? 'has-note' : ''}" onclick="toggleNoteArea('${noteId}')" title="${note ? 'Edit note' : 'Add note'}">&#9998;</button>
     </div>`;
   }).join('');
+  autoExpandAllNotes();
 }
 
 async function toggleDistrictTask(taskKey, checked) {
@@ -1915,6 +1916,7 @@ function renderRolloverSchoolChecklist() {
       <button class="task-note-btn ${note ? 'has-note' : ''}" onclick="toggleNoteArea('${noteId}')" title="${note ? 'Edit note' : 'Add note'}">&#9998;</button>
     </div>`;
   }).join('');
+  autoExpandAllNotes();
 }
 
 async function ensureRolloverRecord() {
@@ -1971,6 +1973,15 @@ function autoExpand(el) {
   el.style.height = el.scrollHeight + 'px';
 }
 
+function autoExpandAllNotes() {
+  // Use rAF so the browser has finished laying out before we measure
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.task-note-input').forEach(ta => {
+      if (ta.offsetParent !== null) autoExpand(ta);
+    });
+  });
+}
+
 function toggleNoteArea(id) {
   const el = document.getElementById(id);
   if (!el) return;
@@ -1978,7 +1989,7 @@ function toggleNoteArea(id) {
   el.style.display = opening ? 'block' : 'none';
   if (opening) {
     const ta = el.querySelector('textarea');
-    if (ta) { autoExpand(ta); ta.focus(); }
+    if (ta) { requestAnimationFrame(() => { autoExpand(ta); ta.focus(); }); }
   }
 }
 
