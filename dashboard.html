@@ -177,7 +177,7 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.21.9</div>
+      <div class="sidebar-version">v2026.04.21.10</div>
     </div>
     <div class="main">
 
@@ -1525,6 +1525,9 @@ let roCurrentSchool = null;      // { name, type }
 let roCurrentRecordId = null;
 let roFieldTasks = [];           // ordered list of custom field task records
 let roFieldCompletions = {};     // { field_task_id: completion_record } for current year
+let roDistrictNotes = {};        // { task_key: note_record } — year-agnostic
+let roAllSchoolNotes = {};       // { school_name: { task_key: note_record } } — year-agnostic
+let roSchoolNotes = {};          // notes for currently open school
 
 function getRolloverYear() {
   return parseInt(document.getElementById('sb-year-select').value) || new Date().getFullYear();
@@ -1566,6 +1569,18 @@ async function loadRolloverData() {
     const { data: fc } = await sb.from('rollover_field_completions').select('*').eq('academic_year', year);
     if (fc) fc.forEach(c => { roFieldCompletions[c.field_task_id] = c; });
   }
+
+  // Persistent notes — not tied to a year
+  roDistrictNotes = {};
+  const { data: dn } = await sb.from('rollover_district_notes').select('*');
+  if (dn) dn.forEach(n => { roDistrictNotes[n.task_key] = n; });
+
+  roAllSchoolNotes = {};
+  const { data: sn } = await sb.from('rollover_school_notes').select('*');
+  if (sn) sn.forEach(n => {
+    if (!roAllSchoolNotes[n.school_name]) roAllSchoolNotes[n.school_name] = {};
+    roAllSchoolNotes[n.school_name][n.task_key] = n;
+  });
 
   renderRolloverPage();
 }
@@ -1614,7 +1629,7 @@ function renderRolloverDistrictTasks() {
   document.getElementById('ro-district-tasks').innerHTML = ROLLOVER_DISTRICT_TASKS.map(task => {
     const comp = roDistrictCompletions[task.key];
     const checked = comp?.completed || false;
-    const note = comp?.notes || '';
+    const note = roDistrictNotes[task.key]?.notes || '';
     const noteId = `ro-note-d-${task.key}`;
     const meta = checked && comp?.completed_by_name
       ? `<div class="task-meta">${comp.completed_by_name} · ${new Date(comp.completed_at).toLocaleDateString()}</div>`
@@ -1748,10 +1763,11 @@ async function openRolloverSchool(name, type) {
   const rec = roRecords[name];
   roCurrentRecordId = rec?.id || null;
 
-  // Load school completions for detail view
+  // Load school completions and notes for detail view
   roSchoolCompletions = roCurrentRecordId
     ? (roAllSchoolCompletions[roCurrentRecordId] || {})
     : {};
+  roSchoolNotes = roAllSchoolNotes[name] || {};
 
   document.getElementById('ro-list-view').style.display = 'none';
   document.getElementById('ro-detail-view').style.display = 'block';
@@ -1767,7 +1783,7 @@ function renderRolloverSchoolChecklist() {
   document.getElementById('ro-school-tasks').innerHTML = ROLLOVER_SCHOOL_TASKS.map(task => {
     const comp = roSchoolCompletions[task.key];
     const checked = comp?.completed || false;
-    const note = comp?.notes || '';
+    const note = roSchoolNotes[task.key]?.notes || '';
     const noteId = `ro-note-s-${task.key}`;
     const meta = checked && comp?.completed_by_name
       ? `<div class="task-meta">${comp.completed_by_name} · ${new Date(comp.completed_at).toLocaleDateString()}</div>`
@@ -1843,35 +1859,35 @@ function toggleNoteArea(id) {
 
 async function saveDistrictTaskNote(taskKey, value) {
   const notes = value.trim() || null;
-  const existing = roDistrictCompletions[taskKey];
+  const existing = roDistrictNotes[taskKey];
+  const now = new Date().toISOString();
   if (existing) {
-    await sb.from('rollover_district_completions').update({ notes }).eq('id', existing.id);
-    roDistrictCompletions[taskKey] = { ...existing, notes };
+    await sb.from('rollover_district_notes').update({ notes, updated_at: now, updated_by: currentUser.id }).eq('task_key', taskKey);
+    roDistrictNotes[taskKey] = { ...existing, notes };
   } else {
-    const { data } = await sb.from('rollover_district_completions')
-      .insert({ academic_year: getRolloverYear(), task_key: taskKey, completed: false, notes }).select().single();
-    roDistrictCompletions[taskKey] = data;
+    const { data } = await sb.from('rollover_district_notes')
+      .insert({ task_key: taskKey, notes, updated_at: now, updated_by: currentUser.id }).select().single();
+    roDistrictNotes[taskKey] = data;
   }
-  // Update button style without full re-render
   const btn = document.querySelector(`button[onclick="toggleNoteArea('ro-note-d-${taskKey}')"]`);
   if (btn) { btn.classList.toggle('has-note', !!notes); btn.title = notes ? 'Edit note' : 'Add note'; }
 }
 
 async function saveSchoolTaskNote(taskKey, value) {
-  await ensureRolloverRecord();
   const notes = value.trim() || null;
-  const existing = roSchoolCompletions[taskKey];
+  const schoolName = roCurrentSchool.name;
+  const existing = roSchoolNotes[taskKey];
+  const now = new Date().toISOString();
   if (existing) {
-    await sb.from('rollover_school_completions').update({ notes }).eq('id', existing.id);
-    roSchoolCompletions[taskKey] = { ...existing, notes };
+    await sb.from('rollover_school_notes').update({ notes, updated_at: now, updated_by: currentUser.id }).eq('id', existing.id);
+    roSchoolNotes[taskKey] = { ...existing, notes };
   } else {
-    const { data } = await sb.from('rollover_school_completions')
-      .insert({ record_id: roCurrentRecordId, task_key: taskKey, completed: false, notes }).select().single();
-    roSchoolCompletions[taskKey] = data;
+    const { data } = await sb.from('rollover_school_notes')
+      .insert({ school_name: schoolName, task_key: taskKey, notes, updated_at: now, updated_by: currentUser.id }).select().single();
+    roSchoolNotes[taskKey] = data;
   }
-  if (roAllSchoolCompletions[roCurrentRecordId]) {
-    roAllSchoolCompletions[roCurrentRecordId][taskKey] = roSchoolCompletions[taskKey];
-  }
+  if (!roAllSchoolNotes[schoolName]) roAllSchoolNotes[schoolName] = {};
+  roAllSchoolNotes[schoolName][taskKey] = roSchoolNotes[taskKey];
   const btn = document.querySelector(`button[onclick="toggleNoteArea('ro-note-s-${taskKey}')"]`);
   if (btn) { btn.classList.toggle('has-note', !!notes); btn.title = notes ? 'Edit note' : 'Add note'; }
 }
