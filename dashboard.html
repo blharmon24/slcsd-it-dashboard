@@ -173,7 +173,7 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.17.4</div>
+      <div class="sidebar-version">v2026.04.21.1</div>
     </div>
     <div class="main">
 
@@ -358,6 +358,13 @@
                   <option value="complete">Complete</option>
                 </select>
               </div>
+            </div>
+            <!-- PowerScheduler collection method -->
+            <div style="margin-top:0.75rem;">
+              <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+                <input type="checkbox" id="sb-ps-check" onchange="saveSBPowerScheduler(this.checked)">
+                Using PowerScheduler to collect student course requests
+              </label>
             </div>
             <!-- CTC push confirmation — shown only for East, Highland, West HS -->
             <div id="sb-ctc-section" style="display:none; margin-top:0.75rem;">
@@ -1177,6 +1184,7 @@ function renderScheduleSchools() {
       const statusKey = rec ? rec.status : 'not_started';
       const statusObj = SB_STATUSES.find(s => s.key === statusKey) || SB_STATUSES[0];
       const person = rec && rec.responsible_person ? rec.responsible_person : '';
+      const usingPS = rec && rec.using_powerscheduler;
       const card = document.createElement('div');
       card.className = 'school-card sb-card';
       card.innerHTML = `
@@ -1185,7 +1193,10 @@ function renderScheduleSchools() {
             <div class="sname">${school.name}</div>
             <div class="sb-person ${person ? '' : 'sb-unassigned'}">${person || 'Unassigned'}</div>
           </div>
-          <div class="sstatus ${statusObj.cls}">${statusObj.label}</div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+            <div class="sstatus ${statusObj.cls}">${statusObj.label}</div>
+            ${usingPS ? '<div style="font-size:10px;font-weight:600;color:#1a6fa8;background:#e8f3fb;border:1px solid #b8d9f0;border-radius:4px;padding:2px 7px;white-space:nowrap;">PowerScheduler</div>' : ''}
+          </div>
         </div>
         <div class="sb-progress-bar">${renderSBProgressBar(statusKey)}</div>`;
       card.onclick = () => openScheduleSchool(school, type);
@@ -1221,6 +1232,7 @@ async function openScheduleSchool(school, type) {
   document.getElementById('sb-detail-year-badge').textContent = getSBYear();
   document.getElementById('sb-responsible').value = rec.responsible_person || '';
   document.getElementById('sb-status-select').value = rec.status || 'not_started';
+  document.getElementById('sb-ps-check').checked = rec.using_powerscheduler || false;
   document.getElementById('sb-save-error').style.display = 'none';
 
   // Show CTC push confirmation banner for the three high schools that require it
@@ -1256,13 +1268,26 @@ async function saveSBCTC(checked) {
   }
 }
 
+async function saveSBPowerScheduler(checked) {
+  await ensureSBRecord();
+  const { error } = await sb.from('schedule_build_records').update({
+    using_powerscheduler: checked,
+    updated_by: currentUser.id,
+  }).eq('id', sbCurrentRecordId);
+  if (error) { console.error('saveSBPowerScheduler error:', error.message); return; }
+  if (sbRecords[sbCurrentSchool.name]) {
+    sbRecords[sbCurrentSchool.name].using_powerscheduler = checked;
+  }
+}
+
 async function saveScheduleDetail() {
   const responsible = document.getElementById('sb-responsible').value.trim();
   const status = document.getElementById('sb-status-select').value;
   const errEl = document.getElementById('sb-save-error');
   errEl.style.display = 'none';
 
-  // Read CTC confirmation directly from the checkbox DOM — don't rely on cache
+  // Read checkboxes directly from DOM — don't rely on cache
+  const usingPS = document.getElementById('sb-ps-check').checked;
   const isCTCSchool = SB_CTC_SCHOOLS.includes(sbCurrentSchool.name);
   const ctcPushConfirmed = isCTCSchool
     ? document.getElementById('sb-ctc-check').checked
@@ -1279,6 +1304,7 @@ async function saveScheduleDetail() {
   const updates = {
     responsible_person: responsible,
     status,
+    using_powerscheduler: usingPS,
     updated_at: new Date().toISOString(),
     updated_by: currentUser.id,
   };
@@ -1295,6 +1321,7 @@ async function saveScheduleDetail() {
   // Update local cache
   sbRecords[sbCurrentSchool.name].responsible_person = responsible;
   sbRecords[sbCurrentSchool.name].status = status;
+  sbRecords[sbCurrentSchool.name].using_powerscheduler = usingPS;
   if (isCTCSchool) sbRecords[sbCurrentSchool.name].ctc_push_confirmed = ctcPushConfirmed;
 
   // Show or hide the commit checklist based on new status
