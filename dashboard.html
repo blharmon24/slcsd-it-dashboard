@@ -177,7 +177,7 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.21.8</div>
+      <div class="sidebar-version">v2026.04.21.9</div>
     </div>
     <div class="main">
 
@@ -1498,7 +1498,7 @@ const ROLLOVER_DISTRICT_TASKS = [
   { key: 'ro_d_graduates',            label: 'Change Graduates: enroll_status 2 → 3', required: true },
   { key: 'ro_d_next_school',          label: 'Assign Next School Indicator — All Students', required: true },
   { key: 'ro_d_next_grade',           label: 'Assign Next Year Grade — All Students', required: true },
-  { key: 'ro_d_clear_fields',         label: 'Clear Custom Student Fields (S_UT_STU_X, U_SLC_STUDENTS, etc.)', required: true },
+  { key: 'ro_d_clear_fields',         label: 'Clear Custom Student Fields (Review yearly with Sam)', required: true },
   { key: 'ro_d_eoy_process',          label: 'Run End of Year (EOY) Process', required: true },
   { key: 'ro_d_attendance_year',      label: 'Update Attendance Calculation Year (District Setup → Attendance Tracking)', required: true },
 ];
@@ -1523,6 +1523,8 @@ let roAllSchoolCompletions = {}; // { record_id: { task_key: record } }
 let roSchoolCompletions = {};    // completions for the currently open school
 let roCurrentSchool = null;      // { name, type }
 let roCurrentRecordId = null;
+let roFieldTasks = [];           // ordered list of custom field task records
+let roFieldCompletions = {};     // { field_task_id: completion_record } for current year
 
 function getRolloverYear() {
   return parseInt(document.getElementById('sb-year-select').value) || new Date().getFullYear();
@@ -1554,6 +1556,15 @@ async function loadRolloverData() {
       if (!roAllSchoolCompletions[c.record_id]) roAllSchoolCompletions[c.record_id] = {};
       roAllSchoolCompletions[c.record_id][c.task_key] = c;
     });
+  }
+
+  // Custom field tasks and their completions for this year
+  const { data: fts } = await sb.from('rollover_field_tasks').select('*').eq('active', true).order('sort_order');
+  roFieldTasks = fts || [];
+  roFieldCompletions = {};
+  if (roFieldTasks.length > 0) {
+    const { data: fc } = await sb.from('rollover_field_completions').select('*').eq('academic_year', year);
+    if (fc) fc.forEach(c => { roFieldCompletions[c.field_task_id] = c; });
   }
 
   renderRolloverPage();
@@ -1611,6 +1622,46 @@ function renderRolloverDistrictTasks() {
     const badge = task.required
       ? '<span style="font-size:10px;color:#1a6fa8;background:#e8f3fb;border:1px solid #b8d9f0;border-radius:3px;padding:1px 5px;margin-left:6px;">Required</span>'
       : '';
+
+    // Special case: clear fields task gets an expandable sub-checklist
+    if (task.key === 'ro_d_clear_fields') {
+      const fieldDone = roFieldTasks.filter(ft => roFieldCompletions[ft.id]?.completed).length;
+      const fieldTotal = roFieldTasks.length;
+      const subItems = roFieldTasks.map(ft => {
+        const fc = roFieldCompletions[ft.id];
+        const fChecked = fc?.completed || false;
+        const fBy = fChecked && fc?.completed_by_name ? `<span style="font-size:10px;color:#999;margin-left:6px;">${fc.completed_by_name}</span>` : '';
+        return `<div style="display:flex;align-items:center;gap:10px;padding:5px 12px;border-bottom:1px solid #f0f0f0;background:${fChecked ? '#f6fffc' : 'white'}">
+          <input type="checkbox" ${fChecked ? 'checked' : ''} onchange="toggleFieldCompletion('${ft.id}', this.checked)" style="width:14px;height:14px;cursor:pointer;accent-color:#10B981;flex-shrink:0;">
+          <span style="flex:1;font-size:12px;font-family:monospace;color:${fChecked ? '#999' : '#333'};${fChecked ? 'text-decoration:line-through;' : ''}">${ft.field_name}</span>
+          ${fBy}
+          <button onclick="removeFieldTask('${ft.id}')" style="background:none;border:none;cursor:pointer;color:#ccc;font-size:16px;line-height:1;padding:0 2px;" title="Remove field">&times;</button>
+        </div>`;
+      }).join('');
+      return `<div class="task-item">
+        <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleDistrictTask('${task.key}', this.checked)">
+        <div style="flex:1">
+          <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;">
+            <div class="task-label ${checked ? 'done' : ''}">${task.label}${badge}</div>
+            <span style="font-size:11px;color:#888;" class="ro-field-count">${fieldDone}/${fieldTotal} cleared</span>
+            <button style="background:none;border:none;cursor:pointer;font-size:11px;color:#4A7CFF;padding:0;" onclick="toggleNoteArea('ro-fields-sublist')">&#9660; Fields</button>
+          </div>
+          ${meta}
+          <div id="ro-fields-sublist" style="display:none;margin-top:8px;border:1px solid #e0e4ea;border-radius:6px;overflow:hidden;">
+            ${subItems}
+            <div style="padding:7px 12px;border-top:1px solid #e0e4ea;display:flex;gap:8px;background:#fafbfc;">
+              <input id="ro-add-field-input" placeholder="Field name..." style="flex:1;font-size:12px;border:1px solid #d0d5dd;border-radius:6px;padding:4px 8px;font-family:monospace;">
+              <button class="save-btn" onclick="addFieldTask()" style="margin:0;padding:4px 12px;font-size:12px;">Add</button>
+            </div>
+          </div>
+          <div id="${noteId}" style="display:${note ? 'block' : 'none'};">
+            <textarea class="task-note-input" onblur="saveDistrictTaskNote('${task.key}', this.value)" placeholder="Add a note...">${note}</textarea>
+          </div>
+        </div>
+        <button class="task-note-btn ${note ? 'has-note' : ''}" onclick="toggleNoteArea('${noteId}')" title="${note ? 'Edit note' : 'Add note'}">&#9998;</button>
+      </div>`;
+    }
+
     return `<div class="task-item">
       <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleDistrictTask('${task.key}', this.checked)">
       <div style="flex:1"><div class="task-label ${checked ? 'done' : ''}">${task.label}${badge}</div>${meta}
@@ -1823,6 +1874,59 @@ async function saveSchoolTaskNote(taskKey, value) {
   }
   const btn = document.querySelector(`button[onclick="toggleNoteArea('ro-note-s-${taskKey}')"]`);
   if (btn) { btn.classList.toggle('has-note', !!notes); btn.title = notes ? 'Edit note' : 'Add note'; }
+}
+
+function refreshDistrictTasks() {
+  // Preserve sub-list open state across re-render
+  const sublistOpen = document.getElementById('ro-fields-sublist')?.style.display !== 'none';
+  renderRolloverDistrictTasks();
+  if (sublistOpen) {
+    const el = document.getElementById('ro-fields-sublist');
+    if (el) el.style.display = 'block';
+  }
+}
+
+async function toggleFieldCompletion(fieldTaskId, checked) {
+  const year = getRolloverYear();
+  const now = new Date().toISOString();
+  const userName = currentUser.email.split('@')[0];
+  const existing = roFieldCompletions[fieldTaskId];
+  const payload = {
+    completed: checked,
+    completed_at: checked ? now : null,
+    completed_by: checked ? currentUser.id : null,
+    completed_by_name: checked ? userName : null,
+  };
+  if (existing) {
+    await sb.from('rollover_field_completions').update(payload).eq('id', existing.id);
+    roFieldCompletions[fieldTaskId] = { ...existing, ...payload };
+  } else {
+    const { data } = await sb.from('rollover_field_completions')
+      .insert({ academic_year: year, field_task_id: fieldTaskId, ...payload }).select().single();
+    roFieldCompletions[fieldTaskId] = data;
+  }
+  refreshDistrictTasks();
+}
+
+async function addFieldTask() {
+  const input = document.getElementById('ro-add-field-input');
+  const fieldName = input?.value.trim();
+  if (!fieldName) return;
+  const maxOrder = roFieldTasks.length > 0 ? Math.max(...roFieldTasks.map(ft => ft.sort_order)) : 0;
+  const { data } = await sb.from('rollover_field_tasks')
+    .insert({ field_name: fieldName, sort_order: maxOrder + 1 }).select().single();
+  roFieldTasks.push(data);
+  input.value = '';
+  refreshDistrictTasks();
+  document.getElementById('ro-fields-sublist').style.display = 'block';
+}
+
+async function removeFieldTask(fieldTaskId) {
+  if (!confirm('Remove this field from the list?')) return;
+  await sb.from('rollover_field_tasks').update({ active: false }).eq('id', fieldTaskId);
+  roFieldTasks = roFieldTasks.filter(ft => ft.id !== fieldTaskId);
+  refreshDistrictTasks();
+  document.getElementById('ro-fields-sublist').style.display = 'block';
 }
 
 // ── CTC Schedule Export ─────────────────────────────────────────────
