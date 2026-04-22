@@ -184,7 +184,9 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">School Schedule Build Tracker</div>
-      <div class="sidebar-version">v2026.04.21.17</div>
+      <div class="sidebar-section">Personal</div>
+      <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
+      <div class="sidebar-version">v2026.04.22.1</div>
     </div>
     <div class="main">
 
@@ -572,7 +574,10 @@
 
           <!-- School detail view -->
           <div id="ro-detail-view" style="display:none;">
-            <button class="back-btn" onclick="showRolloverList()">&#8592; Back to schools</button>
+            <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+              <button class="back-btn" onclick="showRolloverList()" style="margin-bottom:0;">&#8592; Back to schools</button>
+              <div id="ro-school-switcher" style="display:flex;gap:6px;flex-wrap:wrap;"></div>
+            </div>
             <div class="checklist-header">
               <h2 id="ro-detail-name"></h2>
               <div class="term-badge" id="ro-detail-year-badge"></div>
@@ -593,6 +598,15 @@
         </div> <!-- end tab-rollover -->
 
       </div> <!-- end page-schedule-commit -->
+
+      <!-- My Tasks page -->
+      <div class="page" id="page-my-tasks">
+        <div class="page-title">My Tasks</div>
+        <div class="page-sub">Your personal work queue — sorted by urgency.</div>
+        <div id="my-tasks-content">
+          <div style="color:#888;padding:2rem 0;">Loading…</div>
+        </div>
+      </div>
 
     </div>
   </div>
@@ -706,7 +720,7 @@ function showApp() {
   document.getElementById('user-label').textContent = currentUser.email.split('@')[0];
 
   // Restore the last active page, defaulting to grade-storing
-  const valid = ['grade-storing', 'schedule-commit'];
+  const valid = ['grade-storing', 'schedule-commit', 'my-tasks'];
   const saved = localStorage.getItem('it_dash_page');
   const page  = valid.includes(saved) ? saved : 'grade-storing';
 
@@ -1496,6 +1510,7 @@ function showPage(name, el) {
     const savedTab = localStorage.getItem('it_dash_sb_tab') || 'schedule';
     switchSBTab(savedTab);
   }
+  if (name === 'my-tasks') initMyTasksPage();
   localStorage.setItem('it_dash_page', name);
 }
 
@@ -1667,7 +1682,7 @@ async function saveRolloverDate() {
 }
 
 function getOrderedDistrictTasks() {
-  const custom = roCustomDistrictTasks.map(t => ({ key: t.task_key, label: t.label, custom: true }));
+  const custom = roCustomDistrictTasks.map(t => ({ key: t.task_key, label: t.label, custom: true, school_group: t.school_group }));
   const all = [...ROLLOVER_DISTRICT_TASKS, ...custom];
   return all
     .filter(t => roDistrictTaskOrder[t.key] !== -999)
@@ -1679,7 +1694,7 @@ function getOrderedDistrictTasks() {
 }
 
 function getOrderedSchoolTasks() {
-  const custom = roCustomSchoolTasks.map(t => ({ key: t.task_key, label: t.label, custom: true }));
+  const custom = roCustomSchoolTasks.map(t => ({ key: t.task_key, label: t.label, custom: true, school_group: t.school_group }));
   const all = [...ROLLOVER_SCHOOL_TASKS, ...custom];
   return all
     .filter(t => roSchoolTaskOrder[t.key] !== -999)
@@ -1690,9 +1705,14 @@ function getOrderedSchoolTasks() {
     });
 }
 
-// Returns tasks applicable to a given school (filters school-specific tasks)
+// Returns tasks applicable to a given school (filters school-specific and group-scoped tasks)
 function getSchoolTasks(schoolName) {
-  return getOrderedSchoolTasks().filter(t => !t.schools || t.schools.includes(schoolName));
+  const group = getSchoolGroup(schoolName);
+  return getOrderedSchoolTasks().filter(t => {
+    if (t.schools && !t.schools.includes(schoolName)) return false;
+    if (t.school_group && t.school_group !== group) return false;
+    return true;
+  });
 }
 
 async function moveTask(type, taskKey, direction) {
@@ -1869,6 +1889,13 @@ function renderRolloverSchools() {
   });
 }
 
+function getSchoolGroup(schoolName) {
+  for (const [group, names] of Object.entries(ROLLOVER_SCHOOLS)) {
+    if (names.includes(schoolName)) return group;
+  }
+  return null;
+}
+
 async function openRolloverSchool(name, type) {
   roCurrentSchool = { name, type };
   const rec = roRecords[name];
@@ -1884,6 +1911,18 @@ async function openRolloverSchool(name, type) {
   document.getElementById('ro-detail-view').style.display = 'block';
   document.getElementById('ro-detail-name').textContent = name;
   document.getElementById('ro-detail-year-badge').textContent = getRolloverYear();
+
+  // Render sibling school switcher pills
+  const siblings = ROLLOVER_SCHOOLS[type] || [];
+  document.getElementById('ro-school-switcher').innerHTML = siblings.map(s => {
+    const active = s === name;
+    return `<button onclick="openRolloverSchool('${s}','${type}')"
+      style="padding:4px 12px;font-size:12px;border-radius:20px;border:1px solid ${active ? '#4A7CFF' : '#d0d5dd'};
+             background:${active ? '#4A7CFF' : '#fff'};color:${active ? '#fff' : '#555'};
+             cursor:${active ? 'default' : 'pointer'};font-weight:${active ? '600' : '400'};"
+      ${active ? 'disabled' : ''}>${s}</button>`;
+  }).join('');
+
   renderRolloverSchoolChecklist();
 }
 
@@ -2142,8 +2181,9 @@ async function addCustomTask(type) {
   const label = input?.value.trim();
   if (!label) return;
   const taskKey = 'ro_custom_' + Date.now();
-  const { data } = await sb.from('rollover_custom_tasks')
-    .insert({ task_type: type, task_key: taskKey, label }).select().single();
+  const row = { task_type: type, task_key: taskKey, label };
+  if (type === 'school' && roCurrentSchool) row.school_group = roCurrentSchool.type;
+  const { data } = await sb.from('rollover_custom_tasks').insert(row).select().single();
   if (type === 'district') roCustomDistrictTasks.push(data);
   else roCustomSchoolTasks.push(data);
   input.value = '';
@@ -2612,6 +2652,91 @@ async function generateAllExports() {
 
   statusEl.textContent = 'All 9 files packaged and downloaded.';
   statusEl.style.color = '#065F46';
+}
+
+// ── My Tasks (personal work queue) ──────────────────────────────────
+
+const MY_TASKS_PRIORITIES = [
+  { key: 'urgent', label: 'Urgent', color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
+  { key: 'medium', label: 'Medium', color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
+  { key: 'low',    label: 'Low',    color: '#059669', bg: '#ECFDF5', border: '#A7F3D0' },
+];
+
+let myTasksItems = [];  // all work_queue_items for current user
+let myTasksLoaded = false;
+
+async function initMyTasksPage() {
+  if (!currentUser) return;
+  document.getElementById('my-tasks-content').innerHTML = '<div style="color:#888;padding:2rem 0;">Loading…</div>';
+  const { data } = await sb.from('work_queue_items')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('sort_order')
+    .order('created_at');
+  myTasksItems = data || [];
+  myTasksLoaded = true;
+  renderMyTasks();
+}
+
+function renderMyTasks() {
+  const el = document.getElementById('my-tasks-content');
+  el.innerHTML = MY_TASKS_PRIORITIES.map(p => {
+    const items = myTasksItems.filter(t => t.priority === p.key);
+    const itemsHtml = items.map(t => `
+      <div class="task-item" style="border-left:3px solid ${p.color};gap:8px;" id="mqitem-${t.id}">
+        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleMyTask('${t.id}', this.checked)">
+        <div style="flex:1;font-size:13px;${t.completed ? 'color:#aaa;text-decoration:line-through;' : ''}">${escapeHtml(t.label)}</div>
+        <button onclick="deleteMyTask('${t.id}')" title="Delete" style="background:none;border:none;cursor:pointer;color:#d0d0d0;font-size:14px;padding:2px 4px;">&#10005;</button>
+      </div>`).join('');
+    return `
+      <div style="margin-bottom:1.5rem;">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.5rem;">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${p.color};"></span>
+          <span style="font-size:13px;font-weight:600;color:${p.color};text-transform:uppercase;letter-spacing:0.06em;">${p.label}</span>
+          <span style="font-size:12px;color:#aaa;">${items.length} task${items.length !== 1 ? 's' : ''}</span>
+        </div>
+        <div style="background:${p.bg};border:1px solid ${p.border};border-radius:8px;overflow:hidden;">
+          ${itemsHtml || `<div style="padding:12px 1rem;font-size:13px;color:#aaa;font-style:italic;">No ${p.label.toLowerCase()} tasks</div>`}
+          <div style="padding:8px 1rem;border-top:1px solid ${p.border};display:flex;gap:8px;">
+            <input id="mq-add-${p.key}" placeholder="Add a ${p.label.toLowerCase()} task…"
+              style="flex:1;font-size:13px;border:1px solid #d0d5dd;border-radius:6px;padding:5px 8px;"
+              onkeydown="if(event.key==='Enter')addMyTask('${p.key}')">
+            <button class="save-btn" onclick="addMyTask('${p.key}')" style="margin:0;padding:5px 14px;font-size:12px;">Add</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function addMyTask(priority) {
+  const input = document.getElementById('mq-add-' + priority);
+  const label = input?.value.trim();
+  if (!label) return;
+  const maxOrder = myTasksItems.filter(t => t.priority === priority).reduce((m, t) => Math.max(m, t.sort_order || 0), 0);
+  const { data } = await sb.from('work_queue_items')
+    .insert({ user_id: currentUser.id, label, priority, completed: false, sort_order: maxOrder + 1 })
+    .select().single();
+  if (data) myTasksItems.push(data);
+  input.value = '';
+  renderMyTasks();
+}
+
+async function toggleMyTask(id, checked) {
+  await sb.from('work_queue_items').update({ completed: checked }).eq('id', id);
+  const item = myTasksItems.find(t => t.id === id);
+  if (item) item.completed = checked;
+  renderMyTasks();
+}
+
+async function deleteMyTask(id) {
+  if (!confirm('Delete this task?')) return;
+  await sb.from('work_queue_items').delete().eq('id', id);
+  myTasksItems = myTasksItems.filter(t => t.id !== id);
+  renderMyTasks();
 }
 
 sb.auth.getSession().then(({ data }) => {
