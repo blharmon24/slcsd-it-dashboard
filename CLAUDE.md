@@ -11,6 +11,8 @@ and managed by IT staff.
 - **Storing Grades** — PowerSchool grade storage tracker (first feature)
 - **Schedule Build Tracker** — next year schedule build progress (added 2026-04-15)
 - **CTC Schedule Export** — generates tab-delimited import files for CTC (added 2026-04-16)
+- **School Rollover** — tracks EOY PowerSchool rollover progress per school (added 2026-04-21)
+- **My Tasks** — personal per-user work queue with Urgent/Medium/Low lanes (added 2026-04-22)
 
 ## Tech Stack
 - **Frontend:** Single HTML file (`dashboard.html`) — HTML, CSS, and JavaScript
@@ -36,6 +38,23 @@ and managed by IT staff.
 ## Page Persistence
 - The last active page is saved to `localStorage` under key `it_dash_page`
 - On login, the saved page is restored; defaults to `grade-storing` if none saved
+- Valid page keys: `grade-storing`, `schedule-commit`, `my-tasks`
+
+## Sidebar Structure (as of 2026-04-22)
+**Grade Storing** (section header)
+- Storing Grades → `page-grade-storing`
+
+**Other Modules** (section header)
+- School Schedule Build Tracker → `page-schedule-commit`
+
+**Personal** (section header)
+- My Tasks → `page-my-tasks`
+
+Related features are grouped as tabs within a page rather than separate sidebar items:
+- **Storing Grades page:** "Storing Grades" tab + "Grade Store History" tab
+- **School Schedule Build Tracker page:** "Schedule Build" tab + "CTC Export" tab + "School Rollover" tab
+
+Active tab on the Schedule Build page persists to localStorage (`it_dash_sb_tab`).
 
 ## Audience
 - **IT Staff** — manage records, complete checklists, update progress
@@ -90,6 +109,8 @@ Accessible via the "Schedule Commit" nav item in the sidebar.
   transitioning from Building to Loading (`ctc_push_confirmed` flag)
 - When a school reaches Complete, a schedule commit checklist appears in the detail view
   (stored in `sb_checklist_completions`)
+- Each school card has a `using_powerscheduler` checkbox (bool on `schedule_build_records`);
+  when checked, a blue "PS Elec. Requests" badge appears on the card
 
 ---
 
@@ -121,9 +142,55 @@ uploaded master schedule. Accessible via "CTC Export" in the sidebar.
 
 ---
 
-## Planned Features
-- **School Rollover Procedures Dashboard** — track progress and monitor the workflow
-  for rolling schools over to a new academic year in PowerSchool
+## Feature: School Rollover
+
+### What it does
+Tracks the annual EOY PowerSchool rollover process — both district-wide prep steps and
+per-school steps. Third tab on the School Schedule Build Tracker page.
+
+### Schools included
+- **High Schools:** East HS, Highland HS, West HS
+- **Middle Schools:** Northwest Middle, Hillside Middle, Glendale Middle, Clayton Middle, Bryant Middle
+- **Other:** CTC, Salt Lake City Science Center
+- Horizonte excluded (different rollover process)
+
+### UX structure
+- **Target date bar** — configurable rollover date with live countdown; saves to `rollover_config`
+- **District-Wide Tasks card** — single checklist for tasks done once per year; inline check-off
+  with who/when tracking. One task (`ro_d_clear_fields`) has an expandable sub-checklist of
+  36 custom PS fields to clear (stored in `rollover_field_tasks`, add/removable)
+- **School cards** (grouped High/Middle/Other) — show X/Y tasks complete + progress bar;
+  click to drill into school detail view
+- **School detail view** — per-school checklist with same check-off pattern
+- **School switcher** — pill buttons at the top of the detail view let you jump between
+  schools of the same type group without going back to the list
+
+### Key behaviors
+- Tasks support drag-and-drop reordering (HTML5) + ▲▼ buttons; order saved to DB
+- Notes on tasks are **year-agnostic** (persist across years) — stored in `rollover_district_notes`
+  and `rollover_school_notes`, NOT in the completion records
+- Custom tasks can be added to either list (saved to `rollover_custom_tasks`)
+- **Custom school tasks are group-scoped** — tasks added at a High School appear only for
+  High Schools; Middle School tasks only for Middle Schools. Uses `school_group` column
+  (`'high'`, `'middle'`, `'other'`). Built-in tasks (no `school_group`) apply to all.
+- Any task (built-in or custom) can be removed; built-in tasks hidden via sort_order=-999
+- School-specific built-in task for East HS, Highland HS, West HS only:
+  `ro_s_ctc_enrollments` — "Copy Generic CTC Section enrollments to Real CTC sections"
+- `getSchoolGroup(schoolName)` helper derives group from `ROLLOVER_SCHOOLS` constant
+
+---
+
+## Feature: My Tasks
+
+### What it does
+A personal per-user work queue with three priority lanes: Urgent, Medium, Low.
+Each team member's list is completely independent — stored by `user_id`.
+
+### UX structure
+- Three color-coded lanes rendered in order: Urgent (red), Medium (amber), Low (green)
+- Each lane: task list + add-task input (Enter key supported) + Add button
+- Tasks can be checked off (strikethrough) or deleted (✕)
+- No sharing — lists are entirely user-scoped
 
 ---
 
@@ -156,7 +223,7 @@ Individual checklist task completions linked to a grade store record.
 One record per school per academic year for the schedule build process.
 - `id`, `school_name`, `school_type`, `academic_year`, `responsible_person`,
   `status` (text, default `not_started`), `ctc_push_confirmed` (boolean),
-  `created_at`, `updated_at`, `updated_by` (FK auth.users)
+  `using_powerscheduler` (boolean), `created_at`, `updated_at`, `updated_by` (FK auth.users)
 - Unique constraint on `(school_name, academic_year)`
 - RLS enabled — authenticated users can read, insert, and update
 
@@ -188,6 +255,63 @@ Term end dates per academic year, split by schedule type.
 - Unique constraint on `(academic_year, term_label, schedule_type)`
 - RLS enabled — authenticated users can read, insert, and delete
 
+### `rollover_config`
+Target rollover date per academic year.
+- `id`, `academic_year` (unique), `target_date` (date), `updated_at`, `updated_by`
+
+### `rollover_records`
+One row per school per academic year for the rollover process.
+- `id`, `school_name`, `school_type`, `academic_year`, `updated_by`, `created_at`
+
+### `rollover_district_completions`
+District-wide task completions per academic year.
+- `id`, `task_key`, `academic_year`, `completed` (boolean), `completed_at`,
+  `completed_by` (FK auth.users), `completed_by_name`
+- Unique constraint on `(task_key, academic_year)`
+
+### `rollover_school_completions`
+Per-school task completions linked to a rollover record.
+- `id`, `record_id` (FK rollover_records, cascade delete), `task_key`,
+  `completed` (boolean), `completed_at`, `completed_by` (FK auth.users), `completed_by_name`
+
+### `rollover_district_notes`
+Year-agnostic notes for district tasks, keyed by task_key.
+- `id`, `task_key` (unique), `notes`, `updated_at`, `updated_by` (FK auth.users)
+
+### `rollover_school_notes`
+Year-agnostic notes for school tasks, keyed by school + task.
+- `id`, `school_name`, `task_key`, `notes`, `updated_at`, `updated_by` (FK auth.users)
+- Unique constraint on `(school_name, task_key)`
+
+### `rollover_task_order`
+Custom sort order for district and school tasks.
+- `id`, `task_type` (`district` or `school`), `task_key`, `sort_order` (int)
+- sort_order = -999 means the task is hidden
+- Unique constraint on `(task_type, task_key)`
+
+### `rollover_custom_tasks`
+User-added custom tasks for district or school checklists.
+- `id`, `task_type` (`district` or `school`), `task_key`, `label`, `active` (boolean),
+  `school_group` (text: `'high'`, `'middle'`, or `'other'` — null means applies to all),
+  `created_at`
+
+### `rollover_field_tasks`
+The custom PS fields to clear during rollover (add/removable list).
+- `id`, `label`, `sort_order` (int), `active` (boolean), `created_at`
+
+### `rollover_field_completions`
+Completion state per field per academic year.
+- `id`, `field_task_id` (FK rollover_field_tasks), `academic_year`, `completed` (boolean),
+  `completed_at`, `completed_by` (FK auth.users), `completed_by_name`
+- Unique constraint on `(field_task_id, academic_year)`
+
+### `work_queue_items`
+Personal work queue tasks, one per user per item.
+- `id` (uuid), `user_id` (FK auth.users, cascade delete), `label` (text),
+  `priority` (text: `urgent` | `medium` | `low`), `completed` (boolean),
+  `sort_order` (int), `created_at`
+- RLS enabled — users can only read/write their own rows (`auth.uid() = user_id`)
+
 ---
 
 ## Important Rules
@@ -196,8 +320,11 @@ Term end dates per academic year, split by schedule type.
 - **schools cascade** to grade_store_records and terms — be careful with school-level changes
 - **grade_store_records cascade** to checklist_completions
 - **schedule_build_records cascade** to sb_checklist_completions
-- **task_key** values in checklist_completions and sb_checklist_completions are used to
-  track completion state — do not change existing task_key values
+- **rollover_records cascade** to rollover_school_completions
+- **task_key** values in all checklist tables are used to track completion state —
+  do not change existing task_key values
+- **Rollover task notes must stay year-agnostic** — always read/write from `rollover_district_notes`
+  and `rollover_school_notes`, never store notes inside the completion records
 - **Do not add new libraries or dependencies** without asking first
 - **The dashboard is publicly viewable** for progress tracking — do not add auth gates
   to the tracker/view portions without asking
@@ -217,3 +344,28 @@ Term end dates per academic year, split by schedule type.
 - GitHub credentials stored in Windows Credential Manager (no extra auth steps needed)
 - Commit changes with clear, descriptive commit messages
 - Always review changes before committing
+
+---
+
+## Collaboration Notes
+
+These are patterns and preferences established during development — treat them as standing rules.
+
+**Always bump the version on every commit.**
+Update `<div class="sidebar-version">` in `dashboard.html` with every single commit — never skip
+or batch it. Last digit increments for each change on the same date (e.g., `.1`, `.2`, `.3`).
+The user relies on this to confirm the latest version is deployed.
+
+**Tab merging pattern for related features.**
+When adding a feature closely related to an existing page, default to adding it as a tab rather
+than a new sidebar item. Established pattern:
+1. Remove any secondary sidebar nav item
+2. Add `.tab-bar` with `.tab-btn` buttons calling `switchXTab('name')`
+3. Wrap each content section in `<div class="tab-content [active]" id="tab-name">`
+4. Scope tab selectors to the parent page (`#page-id .tab-btn`) to avoid conflicts
+5. Persist the active tab to localStorage if it has a meaningful default
+User confirmed this pattern looks great; apply it by default for related features.
+
+**Rollover task notes must persist across years.**
+Notes on rollover tasks go in `rollover_district_notes` / `rollover_school_notes` — never inside
+completion records. Users write standing process instructions in notes that apply every year.
