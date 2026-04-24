@@ -186,7 +186,7 @@
       <div class="nav-item" onclick="showPage('schedule-commit', this)">PowerScheduler</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.04.22.2</div>
+      <div class="sidebar-version">v2026.04.24.1</div>
     </div>
     <div class="main">
 
@@ -334,6 +334,7 @@
           <button class="tab-btn active" id="tab-btn-schedule" onclick="switchSBTab('schedule')">Schedule Build</button>
           <button class="tab-btn" id="tab-btn-ctc" onclick="switchSBTab('ctc')">CTC Export</button>
           <button class="tab-btn" id="tab-btn-rollover" onclick="switchSBTab('rollover')">School Rollover</button>
+          <button class="tab-btn" id="tab-btn-classchoice" onclick="switchSBTab('classchoice')">Class Choice Processes</button>
         </div>
 
         <!-- Schedule Build tab -->
@@ -596,6 +597,41 @@
           </div>
 
         </div> <!-- end tab-rollover -->
+
+        <!-- Class Choice Processes tab -->
+        <div class="tab-content" id="tab-classchoice">
+          <div class="tasks-card" style="margin-bottom:1.5rem;">
+            <div class="tasks-card-title">Class Choice Shared Seats</div>
+            <div style="padding:1rem;">
+              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Upload the CTC master schedule file. Reads Course Number, Section_Number, EHS, HHS, WHS columns and generates a download with the Shared seats string (EHS=704, HHS=708, WHS=716; zeros excluded).</p>
+              <div id="cc-drop-zone"
+                   style="border:2px dashed #cbd5e1;border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;"
+                   onclick="document.getElementById('cc-file-input').click()"
+                   ondragover="ccDragOver(event)"
+                   ondragleave="ccDragLeave(event)"
+                   ondrop="ccDrop(event)">
+                <div style="font-size:24px;margin-bottom:0.5rem;">&#128196;</div>
+                <div style="font-size:13px;color:#64748b;">Drag a file here or <span style="color:#2563EB;text-decoration:underline;">click to browse</span></div>
+                <div id="cc-file-name" style="font-size:12px;color:#374151;margin-top:0.5rem;font-weight:500;"></div>
+                <input type="file" id="cc-file-input" accept=".txt,.tsv,.csv,.tab" onchange="handleCCFileSelect(event)" style="display:none;">
+              </div>
+              <div id="cc-row-count" style="margin-top:0.5rem;font-size:12px;color:#065F46;font-weight:500;"></div>
+              <div id="cc-upload-error" style="display:none;color:#c0392b;font-size:12px;margin-top:0.5rem;"></div>
+            </div>
+            <div id="cc-preview-wrap" style="display:none;overflow-x:auto;padding:0 1rem 1rem;border-top:1px solid #f0f0f0;">
+              <div style="font-size:12px;font-weight:600;color:#555;padding-top:0.75rem;margin-bottom:6px;">Preview (first 5 rows)</div>
+              <div id="cc-preview"></div>
+            </div>
+          </div>
+
+          <div class="tasks-card" id="cc-download-section" style="display:none;">
+            <div class="tasks-card-title">Download Processed File</div>
+            <div style="padding:1rem;">
+              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Tab-delimited file with headers: Course_number, Section_number, School_id, Shared.</p>
+              <button class="save-btn" onclick="downloadCCFile()">&#8595; Download class_choice_shared.txt</button>
+            </div>
+          </div>
+        </div> <!-- end tab-classchoice -->
 
       </div> <!-- end page-schedule-commit -->
 
@@ -1214,6 +1250,7 @@ function switchSBTab(tab) {
   if (tab === 'schedule') loadScheduleBuildRecords();
   if (tab === 'ctc')      initCTCPage();
   if (tab === 'rollover') loadRolloverData();
+  if (tab === 'classchoice') initClassChoicePage();
   localStorage.setItem('it_dash_sb_tab', tab);
 }
 
@@ -2737,6 +2774,129 @@ async function deleteMyTask(id) {
   await sb.from('work_queue_items').delete().eq('id', id);
   myTasksItems = myTasksItems.filter(t => t.id !== id);
   renderMyTasks();
+}
+
+// ── Class Choice Processes ────────────────────────────────────────────
+
+let ccParsedRows = [];
+
+function initClassChoicePage() { /* purely client-side */ }
+
+function ccDragOver(e) {
+  e.preventDefault();
+  const z = document.getElementById('cc-drop-zone');
+  z.style.borderColor = '#2563EB';
+  z.style.background = '#EFF6FF';
+}
+
+function ccDragLeave(e) {
+  const z = document.getElementById('cc-drop-zone');
+  z.style.borderColor = '#cbd5e1';
+  z.style.background = '';
+}
+
+function ccDrop(e) {
+  e.preventDefault();
+  ccDragLeave(e);
+  const file = e.dataTransfer.files[0];
+  if (file) processCCFile(file);
+}
+
+function handleCCFileSelect(event) {
+  const file = event.target.files[0];
+  if (file) processCCFile(file);
+}
+
+function processCCFile(file) {
+  document.getElementById('cc-file-name').textContent = file.name;
+  document.getElementById('cc-upload-error').style.display = 'none';
+  document.getElementById('cc-row-count').textContent = '';
+  document.getElementById('cc-preview-wrap').style.display = 'none';
+  document.getElementById('cc-download-section').style.display = 'none';
+  const reader = new FileReader();
+  reader.onload = e => parseCCFile(e.target.result);
+  reader.readAsText(file);
+}
+
+function parseCCFile(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { showCCError('File appears empty or has no data rows.'); return; }
+
+  function normCol(h) { return h.trim().toLowerCase().replace(/[\s_]+/g, '_'); }
+  const headers = lines[0].split('\t').map(normCol);
+
+  const courseIdx  = headers.indexOf('course_number');
+  const sectionIdx = headers.indexOf('section_number');
+  const ehsIdx     = headers.indexOf('ehs');
+  const hhsIdx     = headers.indexOf('hhs');
+  const whsIdx     = headers.indexOf('whs');
+
+  const missing = [];
+  if (courseIdx  === -1) missing.push('Course Number');
+  if (sectionIdx === -1) missing.push('SECTION_NUMBER');
+  if (ehsIdx     === -1) missing.push('EHS');
+  if (hhsIdx     === -1) missing.push('HHS');
+  if (whsIdx     === -1) missing.push('WHS');
+  if (missing.length) { showCCError('Could not find required columns: ' + missing.join(', ') + '.'); return; }
+
+  ccParsedRows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const cols = lines[i].split('\t');
+    const courseNum  = cols[courseIdx]?.trim()  || '';
+    const sectionNum = cols[sectionIdx]?.trim() || '';
+    if (!courseNum && !sectionNum) continue;
+
+    const ehs = parseInt(cols[ehsIdx])  || 0;
+    const hhs = parseInt(cols[hhsIdx])  || 0;
+    const whs = parseInt(cols[whsIdx])  || 0;
+
+    const parts = [];
+    if (ehs > 0) parts.push('704-' + ehs);
+    if (hhs > 0) parts.push('708-' + hhs);
+    if (whs > 0) parts.push('716-' + whs);
+    ccParsedRows.push({ courseNum, sectionNum, shared: '"' + parts.join(', ') + '"' });
+  }
+
+  document.getElementById('cc-row-count').textContent = ccParsedRows.length + ' data rows parsed.';
+
+  let html = '<table style="border-collapse:collapse;font-size:11px;width:100%;">';
+  html += '<tr style="background:#f8f9fa;">';
+  ['Course_number','Section_number','School_id','Shared'].forEach(h => {
+    html += '<th style="border:1px solid #e0e4ea;padding:4px 8px;text-align:left;white-space:nowrap;">' + h + '</th>';
+  });
+  html += '</tr>';
+  ccParsedRows.slice(0, 5).forEach(row => {
+    html += '<tr>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;">' + escapeHtml(row.courseNum)  + '</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;">' + escapeHtml(row.sectionNum) + '</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;">749</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;">' + escapeHtml(row.shared)     + '</td>'
+      + '</tr>';
+  });
+  html += '</table>';
+
+  document.getElementById('cc-preview').innerHTML = html;
+  document.getElementById('cc-preview-wrap').style.display = 'block';
+  document.getElementById('cc-download-section').style.display = 'block';
+}
+
+function showCCError(msg) {
+  const el = document.getElementById('cc-upload-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function downloadCCFile() {
+  if (!ccParsedRows.length) return;
+  const lines = ['Course_number\tSection_number\tSchool_id\tShared'];
+  ccParsedRows.forEach(r => lines.push(r.courseNum + '\t' + r.sectionNum + '\t749\t' + r.shared));
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'class_choice_shared.txt';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 sb.auth.getSession().then(({ data }) => {
