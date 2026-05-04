@@ -13,6 +13,7 @@ and managed by IT staff.
 - **CTC Schedule Export** — generates tab-delimited import files for CTC (added 2026-04-16)
 - **School Rollover** — tracks EOY PowerSchool rollover progress per school (added 2026-04-21)
 - **My Tasks** — personal per-user work queue with Urgent/Medium/Low lanes (added 2026-04-22)
+- **Class Choice Processes** — client-side file processor for CTC master schedule seat sharing (added 2026-04-24)
 
 ## Tech Stack
 - **Frontend:** Single HTML file (`dashboard.html`) — HTML, CSS, and JavaScript
@@ -52,7 +53,7 @@ and managed by IT staff.
 
 Related features are grouped as tabs within a page rather than separate sidebar items:
 - **Storing Grades page:** "Storing Grades" tab + "Grade Store History" tab
-- **School Schedule Build Tracker page:** "Schedule Build" tab + "CTC Export" tab + "School Rollover" tab
+- **School Schedule Build Tracker page:** "Schedule Build" tab + "CTC Export" tab + "School Rollover" tab + "Class Choice Processes" tab
 
 Active tab on the Schedule Build page persists to localStorage (`it_dash_sb_tab`).
 
@@ -191,6 +192,35 @@ Each team member's list is completely independent — stored by `user_id`.
 - Each lane: task list + add-task input (Enter key supported) + Add button
 - Tasks can be checked off (strikethrough) or deleted (✕)
 - No sharing — lists are entirely user-scoped
+
+---
+
+## Feature: Class Choice Processes
+
+### What it does
+A purely client-side file processor accessed via the "Class Choice Processes" tab on the
+PowerScheduler page. Accepts a drag-and-drop (or click-to-browse) upload of the CTC master
+schedule tab-delimited file, processes it, and generates a downloadable output file.
+
+### Input file
+Same tab-delimited master schedule file used by CTC Export, with headers:
+`TeachLastName`, `Teacher ID`, `Course Number`, `Room`, `SECTION_NUMBER`, `EXPRESSION`,
+`TermId`, `SCHOOLID`, `MaxCut`, `MAXENROLLMENT`, `EHS`, `HHS`, `WHS`
+
+### Processing logic
+- Reads columns: `Course Number`, `SECTION_NUMBER`, `EHS`, `HHS`, `WHS`
+- Column matching is case/space/underscore-insensitive
+- For each row, builds a `Shared` string mapping school IDs to seat counts:
+  - EHS → 704, HHS → 708, WHS → 716
+  - Schools with 0 seats are excluded from the string
+  - Formatted as `"704-3, 708-2, 716-5"` with literal surrounding quotes
+- No database interaction — entirely in-browser
+
+### Output file
+Downloaded as `class_choice_shared.txt`, tab-delimited, with headers:
+`Course_number`, `Section_number`, `School_id`, `Shared`
+- `School_id` is always hardcoded `749`
+- Preview of first 5 rows shown before download
 
 ---
 
