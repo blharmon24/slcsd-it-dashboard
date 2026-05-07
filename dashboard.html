@@ -184,9 +184,10 @@
       <div class="nav-item active" onclick="showPage('grade-storing', this)">Storing Grades</div>
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">PowerScheduler</div>
+      <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.04.1</div>
+      <div class="sidebar-version">v2026.05.07.1</div>
     </div>
     <div class="main">
 
@@ -635,6 +636,43 @@
 
       </div> <!-- end page-schedule-commit -->
 
+      <div class="page" id="page-cardtouta">
+        <div class="page-title">CardToUTA</div>
+        <div class="page-sub">Convert daily card access export to UTA activation format. All processing happens in your browser — no student data is uploaded.</div>
+
+        <div class="tasks-card" style="margin-bottom:1.5rem;">
+          <div class="tasks-card-title">Upload Source File</div>
+          <div style="padding:1rem;">
+            <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Upload the daily CSV export. Required columns: Campus, Student Id, Uid. Columns used: Reversed UID → Activate → (blank) → 20300630 → UID → Student ID → School Number.</p>
+            <div id="ctu-drop-zone"
+                 style="border:2px dashed #cbd5e1;border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;"
+                 onclick="document.getElementById('ctu-file-input').click()"
+                 ondragover="ctuDragOver(event)"
+                 ondragleave="ctuDragLeave(event)"
+                 ondrop="ctuDrop(event)">
+              <div style="font-size:24px;margin-bottom:0.5rem;">&#128196;</div>
+              <div style="font-size:13px;color:#64748b;">Drag a file here or <span style="color:#2563EB;text-decoration:underline;">click to browse</span></div>
+              <div id="ctu-file-name" style="font-size:12px;color:#374151;margin-top:0.5rem;font-weight:500;"></div>
+              <input type="file" id="ctu-file-input" accept=".csv" onchange="handleCTUFileSelect(event)" style="display:none;">
+            </div>
+            <div id="ctu-row-count" style="margin-top:0.5rem;font-size:12px;font-weight:500;"></div>
+            <div id="ctu-upload-error" style="display:none;color:#c0392b;font-size:12px;margin-top:0.5rem;"></div>
+          </div>
+          <div id="ctu-preview-wrap" style="display:none;overflow-x:auto;padding:0 1rem 1rem;border-top:1px solid #f0f0f0;">
+            <div style="font-size:12px;font-weight:600;color:#555;padding-top:0.75rem;margin-bottom:6px;">Preview (first 5 rows)</div>
+            <div id="ctu-preview"></div>
+          </div>
+        </div>
+
+        <div class="tasks-card" id="ctu-download-section" style="display:none;">
+          <div class="tasks-card-title">Download Output File</div>
+          <div style="padding:1rem;">
+            <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">CSV with no headers. Columns: Reversed UID, Activate, (blank), 20300630, UID, Student ID, School Number.</p>
+            <button class="save-btn" onclick="downloadCTUFile()">&#8595; Download <span id="ctu-filename-label"></span></button>
+          </div>
+        </div>
+      </div> <!-- end page-cardtouta -->
+
       <!-- My Tasks page -->
       <div class="page" id="page-my-tasks">
         <div class="page-title">My Tasks</div>
@@ -757,7 +795,7 @@ function showApp() {
   document.getElementById('user-label').textContent = currentUser.email.split('@')[0];
 
   // Restore the last active page, defaulting to grade-storing
-  const valid = ['grade-storing', 'schedule-commit', 'my-tasks'];
+  const valid = ['grade-storing', 'schedule-commit', 'my-tasks', 'cardtouta'];
   const saved = localStorage.getItem('it_dash_page');
   const page  = valid.includes(saved) ? saved : 'grade-storing';
 
@@ -1549,6 +1587,7 @@ function showPage(name, el) {
     switchSBTab(savedTab);
   }
   if (name === 'my-tasks') initMyTasksPage();
+  if (name === 'cardtouta') initCardToUTAPage();
   localStorage.setItem('it_dash_page', name);
 }
 
@@ -2896,6 +2935,175 @@ function downloadCCFile() {
   const a = document.createElement('a');
   a.href = url;
   a.download = 'class_choice_shared.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── CardToUTA ──────────────────────────────────────────────────────────
+
+const CTU_SCHOOL_MAP = {
+  'Bryant Middle': 404,
+  'Clayton Middle': 408,
+  'East High': 704,
+  'Glendale Middle': 412,
+  'Highland High': 708,
+  'Hillside Middle': 416,
+  'Horizonte Instruction and Training Center': 750,
+  'Innovations early College High': 748,
+  'Nibley Park': 224,
+  'Northwest Middle': 440,
+};
+
+let ctuParsedRows = [];
+
+function initCardToUTAPage() { /* purely client-side */ }
+
+function ctuDragOver(e) {
+  e.preventDefault();
+  const z = document.getElementById('ctu-drop-zone');
+  z.style.borderColor = '#2563EB';
+  z.style.background = '#EFF6FF';
+}
+
+function ctuDragLeave(e) {
+  const z = document.getElementById('ctu-drop-zone');
+  z.style.borderColor = '#cbd5e1';
+  z.style.background = '';
+}
+
+function ctuDrop(e) {
+  e.preventDefault();
+  ctuDragLeave(e);
+  const file = e.dataTransfer.files[0];
+  if (file) processCTUFile(file);
+}
+
+function handleCTUFileSelect(event) {
+  const file = event.target.files[0];
+  if (file) processCTUFile(file);
+}
+
+function processCTUFile(file) {
+  document.getElementById('ctu-file-name').textContent = file.name;
+  document.getElementById('ctu-upload-error').style.display = 'none';
+  document.getElementById('ctu-row-count').textContent = '';
+  document.getElementById('ctu-preview-wrap').style.display = 'none';
+  document.getElementById('ctu-download-section').style.display = 'none';
+  const reader = new FileReader();
+  reader.onload = e => parseCTUFile(e.target.result);
+  reader.readAsText(file);
+}
+
+function parseCTUCSVLine(line) {
+  const fields = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') { inQuotes = !inQuotes; }
+    else if (ch === ',' && !inQuotes) { fields.push(current.trim()); current = ''; }
+    else { current += ch; }
+  }
+  fields.push(current.trim());
+  return fields;
+}
+
+function reverseCTUUID(uid) {
+  // Reverse in 2-char chunks: 670A18E2 → E2180A67
+  if (uid.length !== 8) return uid;
+  return uid.slice(6, 8) + uid.slice(4, 6) + uid.slice(2, 4) + uid.slice(0, 2);
+}
+
+function ctuTodayYMD() {
+  const d = new Date();
+  return d.getFullYear().toString()
+    + String(d.getMonth() + 1).padStart(2, '0')
+    + String(d.getDate()).padStart(2, '0');
+}
+
+function parseCTUFile(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim());
+  if (lines.length < 2) { showCTUError('File appears empty or has no data rows.'); return; }
+
+  const rawHeaders = parseCTUCSVLine(lines[0]);
+  const headers = rawHeaders.map(h => h.toLowerCase().replace(/[\s_]+/g, ''));
+
+  const campusIdx    = headers.indexOf('campus');
+  const studentIdIdx = headers.findIndex(h => h === 'studentid');
+  const uidIdx       = headers.indexOf('uid');
+
+  const missing = [];
+  if (campusIdx    === -1) missing.push('Campus');
+  if (studentIdIdx === -1) missing.push('Student Id');
+  if (uidIdx       === -1) missing.push('Uid');
+  if (missing.length) { showCTUError('Could not find required columns: ' + missing.join(', ') + '.'); return; }
+
+  ctuParsedRows = [];
+  const unknownSchools = new Set();
+
+  for (let i = 1; i < lines.length; i++) {
+    const cols = parseCTUCSVLine(lines[i]);
+    const campus    = cols[campusIdx]?.trim()    || '';
+    const studentId = cols[studentIdIdx]?.trim() || '';
+    const uid       = cols[uidIdx]?.trim()       || '';
+    if (!uid && !studentId) continue;
+
+    const schoolNum = CTU_SCHOOL_MAP[campus];
+    if (campus && schoolNum === undefined) unknownSchools.add(campus);
+
+    ctuParsedRows.push({ reversedUid: reverseCTUUID(uid), uid, studentId, schoolNum: schoolNum ?? '' });
+  }
+
+  let msg = ctuParsedRows.length + ' data rows parsed.';
+  if (unknownSchools.size) msg += '  Warning — unknown campus name(s): ' + [...unknownSchools].join(', ') + '.';
+  const rowCountEl = document.getElementById('ctu-row-count');
+  rowCountEl.textContent = msg;
+  rowCountEl.style.color = unknownSchools.size ? '#b45309' : '#065F46';
+
+  const filename = 'SL School District_' + ctuTodayYMD() + '.csv';
+  document.getElementById('ctu-filename-label').textContent = filename;
+
+  let html = '<table style="border-collapse:collapse;font-size:11px;width:100%;">';
+  html += '<tr style="background:#f8f9fa;">';
+  ['Reversed UID', 'Action', '(blank)', 'Expiration', 'UID', 'Student ID', 'School #'].forEach(h => {
+    html += '<th style="border:1px solid #e0e4ea;padding:4px 8px;text-align:left;white-space:nowrap;">' + h + '</th>';
+  });
+  html += '</tr>';
+  ctuParsedRows.slice(0, 5).forEach(row => {
+    html += '<tr>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;">' + escapeHtml(row.reversedUid) + '</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;">Activate</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;color:#aaa;">(blank)</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;">20300630</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;">' + escapeHtml(row.uid) + '</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;">' + escapeHtml(row.studentId) + '</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;">' + escapeHtml(String(row.schoolNum)) + '</td>'
+      + '</tr>';
+  });
+  html += '</table>';
+
+  document.getElementById('ctu-preview').innerHTML = html;
+  document.getElementById('ctu-preview-wrap').style.display = 'block';
+  document.getElementById('ctu-download-section').style.display = 'block';
+}
+
+function showCTUError(msg) {
+  const el = document.getElementById('ctu-upload-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function downloadCTUFile() {
+  if (!ctuParsedRows.length) return;
+  const filename = 'SL School District_' + ctuTodayYMD() + '.csv';
+  const lines = ctuParsedRows.map(r =>
+    [r.reversedUid, 'Activate', '', '20300630', r.uid, r.studentId, r.schoolNum].join(',')
+  );
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
   a.click();
   URL.revokeObjectURL(url);
 }
