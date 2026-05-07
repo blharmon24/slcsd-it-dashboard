@@ -167,6 +167,35 @@
     </div>
     <button class="btn-primary" onclick="handleLogin()">Sign In</button>
     <div class="error-msg" id="login-error">Invalid email or password. Please try again.</div>
+    <div style="text-align:center;margin-top:0.75rem;">
+      <a href="#" onclick="showForgotPassword(event)" style="font-size:12px;color:#4A7CFF;text-decoration:none;">Forgot password?</a>
+    </div>
+    <div id="forgot-section" style="display:none;margin-top:1rem;border-top:1px solid #eee;padding-top:1rem;">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="forgot-email" placeholder="your@email.com" onkeydown="if(event.key==='Enter')handleSendReset()">
+      </div>
+      <button class="btn-primary" onclick="handleSendReset()">Send Reset Link</button>
+      <div id="forgot-msg" style="display:none;font-size:13px;margin-top:0.75rem;"></div>
+    </div>
+  </div>
+</div>
+
+<div id="reset-screen" style="display:none;align-items:center;justify-content:center;min-height:100vh;">
+  <div class="login-card">
+    <h1>IT Dashboard</h1>
+    <p>Enter a new password for your account.</p>
+    <div class="form-group">
+      <label>New Password</label>
+      <input type="password" id="reset-password" placeholder="New password" onkeydown="if(event.key==='Enter')handleResetPassword()">
+    </div>
+    <div class="form-group">
+      <label>Confirm Password</label>
+      <input type="password" id="reset-confirm" placeholder="Confirm new password" onkeydown="if(event.key==='Enter')handleResetPassword()">
+    </div>
+    <button class="btn-primary" onclick="handleResetPassword()">Set New Password</button>
+    <div class="error-msg" id="reset-error"></div>
+    <div id="reset-success" style="display:none;color:#065F46;font-size:13px;margin-top:0.75rem;"></div>
   </div>
 </div>
 
@@ -187,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.07.2</div>
+      <div class="sidebar-version">v2026.05.07.3</div>
     </div>
     <div class="main">
 
@@ -3111,8 +3140,90 @@ function downloadCTUFile() {
   URL.revokeObjectURL(url);
 }
 
+// ── Password Reset Flow ────────────────────────────────────────────────
+
+// Check synchronously so getSession() below doesn't call showApp() during a recovery redirect
+let isPasswordRecovery = window.location.hash.includes('type=recovery');
+
+sb.auth.onAuthStateChange((event) => {
+  if (event === 'PASSWORD_RECOVERY') {
+    isPasswordRecovery = true;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app-shell').style.display = 'none';
+    document.getElementById('reset-screen').style.display = 'flex';
+  }
+});
+
+function showForgotPassword(e) {
+  e.preventDefault();
+  document.getElementById('forgot-section').style.display = 'block';
+  document.getElementById('forgot-email').focus();
+}
+
+async function handleSendReset() {
+  const email = document.getElementById('forgot-email').value.trim();
+  const msgEl = document.getElementById('forgot-msg');
+  msgEl.style.display = 'none';
+  if (!email) {
+    msgEl.textContent = 'Please enter your email address.';
+    msgEl.style.color = '#c0392b';
+    msgEl.style.display = 'block';
+    return;
+  }
+  const redirectTo = window.location.origin + window.location.pathname;
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo });
+  if (error) {
+    msgEl.textContent = error.message;
+    msgEl.style.color = '#c0392b';
+    msgEl.style.display = 'block';
+    return;
+  }
+  msgEl.textContent = 'Reset link sent — check your email.';
+  msgEl.style.color = '#065F46';
+  msgEl.style.display = 'block';
+}
+
+async function handleResetPassword() {
+  const password  = document.getElementById('reset-password').value;
+  const confirm   = document.getElementById('reset-confirm').value;
+  const errEl     = document.getElementById('reset-error');
+  const successEl = document.getElementById('reset-success');
+  errEl.style.display = 'none';
+  successEl.style.display = 'none';
+
+  if (password.length < 6) {
+    errEl.textContent = 'Password must be at least 6 characters.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (password !== confirm) {
+    errEl.textContent = 'Passwords do not match.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const { error } = await sb.auth.updateUser({ password });
+  if (error) {
+    errEl.textContent = error.message;
+    errEl.style.display = 'block';
+    return;
+  }
+
+  successEl.textContent = 'Password updated successfully! Redirecting to sign in…';
+  successEl.style.display = 'block';
+  document.getElementById('reset-password').value = '';
+  document.getElementById('reset-confirm').value = '';
+
+  setTimeout(async () => {
+    await sb.auth.signOut();
+    isPasswordRecovery = false;
+    document.getElementById('reset-screen').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+  }, 2000);
+}
+
 sb.auth.getSession().then(({ data }) => {
-  if (data.session) { currentUser = data.session.user; showApp(); }
+  if (data.session && !isPasswordRecovery) { currentUser = data.session.user; showApp(); }
 });
 </script>
 </body>
