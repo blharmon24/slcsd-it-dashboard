@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.13.1</div>
+      <div class="sidebar-version">v2026.05.13.2</div>
     </div>
     <div class="main">
 
@@ -3113,34 +3113,46 @@ function parseK6File(text) {
     if (csToIdx[key] === undefined) csToIdx[key] = i;
   });
 
-  // Find anchor rows (non-empty DEPENDENT_SECS), group by grade
+  // Find anchor rows (non-empty DEPENDENT_SECS), group by grade.
+  // Only pull a dep-section into a bundle if it is taught by the SAME teacher as the anchor —
+  // cross-teacher references (e.g. specials sections shared by multiple homerooms) stay external.
   const byGrade = {};
   k6OrigRows.forEach((row, i) => {
     const dep = row[iDep]?.trim();
     if (!dep) return;
+    const anchorTeacher = row[iTeacher]?.trim() || '';
     const g = parseInt(row[iGrade]?.trim() ?? '');
     if (isNaN(g)) return;
-    (byGrade[g] = byGrade[g] || []).push(i);
+    (byGrade[g] = byGrade[g] || []).push({ anchorIdx: i, anchorTeacher });
   });
 
   // Within each grade, sort anchors by teacher ID then section number, assign 1, 2, 3…
   k6Bundles = [];
   Object.keys(byGrade).map(Number).sort((a, b) => a - b).forEach(grade => {
     const anchors = byGrade[grade].sort((a, b) => {
-      const tDiff = (parseInt(k6OrigRows[a][iTeacher]) || 0) - (parseInt(k6OrigRows[b][iTeacher]) || 0);
+      const tDiff = (parseInt(k6OrigRows[a.anchorIdx][iTeacher]) || 0) - (parseInt(k6OrigRows[b.anchorIdx][iTeacher]) || 0);
       return tDiff !== 0 ? tDiff
-           : (parseInt(k6OrigRows[a][iSec]) || 0) - (parseInt(k6OrigRows[b][iSec]) || 0);
+           : (parseInt(k6OrigRows[a.anchorIdx][iSec]) || 0) - (parseInt(k6OrigRows[b.anchorIdx][iSec]) || 0);
     });
-    anchors.forEach((anchorIdx, seq) => {
+    anchors.forEach(({ anchorIdx, anchorTeacher }, seq) => {
       const depStr = k6OrigRows[anchorIdx][iDep]?.trim() || '';
       const refs = depStr.split(',').map(s => s.trim()).filter(Boolean);
       const memberIdxs = [], externalRefs = [];
       refs.forEach(ref => {
-        csToIdx[ref] !== undefined ? memberIdxs.push(csToIdx[ref]) : externalRefs.push(ref);
+        const refIdx = csToIdx[ref];
+        if (refIdx === undefined) {
+          externalRefs.push({ ref, reason: 'not in file' });
+        } else if ((k6OrigRows[refIdx][iTeacher]?.trim() || '') !== anchorTeacher) {
+          // Different teacher — keep the ref so DEPENDENT_SECS can still be updated
+          // via the global depRemap, but don't include the row in this bundle
+          externalRefs.push({ ref, reason: 'different teacher (' + (k6OrigRows[refIdx][iTeacher]?.trim() || '?') + ')' });
+        } else {
+          memberIdxs.push(refIdx);
+        }
       });
       k6Bundles.push({
         grade,
-        teacherId:    k6OrigRows[anchorIdx][iTeacher]?.trim() || '?',
+        teacherId:    anchorTeacher,
         newSec:       seq + 1,
         anchorIdx,
         memberIdxs,
@@ -3159,11 +3171,12 @@ function parseK6File(text) {
   });
 
   // Rows in exactly one bundle get renamed; rows in multiple bundles are flagged
+  // (after same-teacher filtering these should be very rare)
   const rowRenameMap = {};   // rowIdx → newSec
-  const crossConflicts = []; // rowIdxs referenced by >1 bundle
+  const crossConflicts = []; // {rowIdx, competingBundles: [bundleIdx, ...]}
   Object.entries(rowToBundles).forEach(([ri, bundles]) => {
     if (bundles.length === 1) rowRenameMap[parseInt(ri)] = k6Bundles[bundles[0]].newSec;
-    else crossConflicts.push(parseInt(ri));
+    else crossConflicts.push({ rowIdx: parseInt(ri), competingBundles: bundles });
   });
 
   // Build DEPENDENT_SECS remap: "COURSE.OLDSEC" → "COURSE.NEWSEC" for renamed rows
@@ -3186,13 +3199,27 @@ function parseK6File(text) {
     return out;
   });
 
+  // Build rowIdx → bundle index for display lookups
+  const rowToBundleIdx = {};
+  k6Bundles.forEach((b, bi) => {
+    [b.anchorIdx, ...b.memberIdxs].forEach(ri => { if (rowRenameMap[ri] !== undefined) rowToBundleIdx[ri] = bi; });
+  });
+
   // Uniqueness check on output: COURSE_NUMBER + SECTION_NUMBER must be unique
   const seen = {};
   const uniqueConflicts = [];
   k6FinalRows.forEach((row, i) => {
     const key = (row[iCourse]?.trim() || '') + '.' + (row[iSec]?.trim() || '');
-    if (seen[key] !== undefined) uniqueConflicts.push({ key, r1: seen[key] + 2, r2: i + 2 });
-    else seen[key] = i;
+    if (seen[key] !== undefined) {
+      const r1 = seen[key], r2 = i;
+      const r1OrigSec = k6OrigRows[r1][iSec]?.trim() || '';
+      const r2OrigSec = k6OrigRows[r2][iSec]?.trim() || '';
+      const r1Bundle  = rowToBundleIdx[r1] !== undefined ? k6Bundles[rowToBundleIdx[r1]] : null;
+      const r2Bundle  = rowToBundleIdx[r2] !== undefined ? k6Bundles[rowToBundleIdx[r2]] : null;
+      uniqueConflicts.push({ key, r1: r1 + 2, r2: r2 + 2, r1OrigSec, r2OrigSec, r1Bundle, r2Bundle });
+    } else {
+      seen[key] = i;
+    }
   });
 
   const renamedSet = new Set(Object.keys(rowRenameMap).map(Number));
@@ -3210,6 +3237,7 @@ function k6GradeLabel(g) {
 function renderK6Summary(standaloneCount, uniqueConflicts, crossConflicts) {
   const iCourse  = k6ColIdx['COURSE_NUMBER'];
   const iSec     = k6ColIdx['SECTION_NUMBER'];
+  const iTeacher = k6ColIdx['TEACHER'];
   const renamedTotal = k6Bundles.reduce((s, b) => s + 1 + b.memberIdxs.length, 0);
   const hasConflicts = uniqueConflicts.length > 0 || crossConflicts.length > 0;
 
@@ -3221,6 +3249,7 @@ function renderK6Summary(standaloneCount, uniqueConflicts, crossConflicts) {
     (hasConflicts ? ' &nbsp;·&nbsp; <span style="color:#e74c3c;font-weight:600;">' + (uniqueConflicts.length + crossConflicts.length) + ' conflict(s)</span>' : '') +
     '</span>';
 
+  // Bundle plan table
   let html = '<table style="border-collapse:collapse;font-size:12px;width:100%;">';
   html += '<tr style="background:#f8f9fa;">';
   ['Grade','Teacher','Anchor Course','Old Sections → New #','In-file Deps','Ext Refs'].forEach(h => {
@@ -3239,9 +3268,9 @@ function renderK6Summary(standaloneCount, uniqueConflicts, crossConflicts) {
       + '<td style="border:1px solid #e0e4ea;padding:4px 8px;font-family:monospace;font-size:11px;">' + escapeHtml(b.anchorCourse) + '</td>'
       + '<td style="border:1px solid #e0e4ea;padding:4px 8px;font-size:11px;">'
         + '<span style="color:#6b7280;">' + escapeHtml(oldSecs) + '</span>'
-        + ' → <span style="font-weight:600;color:#2563EB;">' + b.newSec + '</span>'
+        + ' &rarr; <span style="font-weight:600;color:#2563EB;">' + b.newSec + '</span>'
       + '</td>'
-      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;font-family:monospace;font-size:11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escapeHtml(depCourses) + '">' + escapeHtml(depCourses) + '</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;font-family:monospace;font-size:11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escapeHtml(depCourses) + '">' + escapeHtml(depCourses || '—') + '</td>'
       + '<td style="border:1px solid #e0e4ea;padding:4px 8px;text-align:center;color:' + (b.externalRefs.length ? '#d97706' : '#6b7280') + ';">' + b.externalRefs.length + '</td>'
       + '</tr>';
   });
@@ -3250,15 +3279,58 @@ function renderK6Summary(standaloneCount, uniqueConflicts, crossConflicts) {
   document.getElementById('k6-summary-card').style.display = 'block';
 
   if (hasConflicts) {
-    let chtml = '<ul style="margin:0;padding-left:1.25rem;font-size:12px;color:#c0392b;">';
-    uniqueConflicts.forEach(c => {
-      chtml += '<li>Duplicate after rename: <code>' + escapeHtml(c.key) + '</code> at rows ' + c.r1 + ' and ' + c.r2 + '</li>';
-    });
-    crossConflicts.forEach(ri => {
-      const row = k6OrigRows[ri];
-      chtml += '<li>Row ' + (ri + 2) + ' (' + escapeHtml(row[k6ColIdx['COURSE_NUMBER']]?.trim() || '') + ' sec. ' + escapeHtml(row[k6ColIdx['SECTION_NUMBER']]?.trim() || '') + ') is referenced by multiple bundles — left unchanged</li>';
-    });
-    chtml += '</ul>';
+    let chtml = '';
+
+    // ── Uniqueness conflicts ─────────────────────────────────────────────
+    if (uniqueConflicts.length) {
+      chtml += '<p style="font-size:12px;font-weight:600;margin:0 0 6px;">Uniqueness conflicts — two rows would share the same Course.Section after renaming:</p>';
+      chtml += '<table style="border-collapse:collapse;font-size:11px;width:100%;margin-bottom:1rem;">';
+      chtml += '<tr style="background:#fef2f2;">'
+        + '<th style="border:1px solid #fca5a5;padding:4px 8px;text-align:left;">Final Course.Section</th>'
+        + '<th style="border:1px solid #fca5a5;padding:4px 8px;text-align:left;">Row ' + String.fromCharCode(9312) + '</th>'
+        + '<th style="border:1px solid #fca5a5;padding:4px 8px;text-align:left;">Row ' + String.fromCharCode(9313) + '</th>'
+        + '</tr>';
+      uniqueConflicts.forEach(c => {
+        function bundleTag(b, origSec) {
+          if (!b) return 'standalone (sec ' + escapeHtml(origSec) + ', unchanged)';
+          return escapeHtml(k6GradeLabel(b.grade)) + ' / Teacher ' + escapeHtml(b.teacherId) + ' bundle (was sec ' + escapeHtml(origSec) + ' → ' + b.newSec + ')';
+        }
+        chtml += '<tr>'
+          + '<td style="border:1px solid #fca5a5;padding:4px 8px;font-family:monospace;">' + escapeHtml(c.key) + '</td>'
+          + '<td style="border:1px solid #fca5a5;padding:4px 8px;">Row ' + c.r1 + ': ' + bundleTag(c.r1Bundle, c.r1OrigSec) + '</td>'
+          + '<td style="border:1px solid #fca5a5;padding:4px 8px;">Row ' + c.r2 + ': ' + bundleTag(c.r2Bundle, c.r2OrigSec) + '</td>'
+          + '</tr>';
+      });
+      chtml += '</table>';
+    }
+
+    // ── Cross-bundle conflicts ───────────────────────────────────────────
+    if (crossConflicts.length) {
+      chtml += '<p style="font-size:12px;font-weight:600;margin:0 0 6px;">Cross-bundle conflicts — same row claimed by more than one bundle (left unchanged):</p>';
+      chtml += '<table style="border-collapse:collapse;font-size:11px;width:100%;">';
+      chtml += '<tr style="background:#fef2f2;">'
+        + '<th style="border:1px solid #fca5a5;padding:4px 8px;text-align:left;">Section</th>'
+        + '<th style="border:1px solid #fca5a5;padding:4px 8px;text-align:left;">Course</th>'
+        + '<th style="border:1px solid #fca5a5;padding:4px 8px;text-align:left;">Claimed by</th>'
+        + '</tr>';
+      crossConflicts.forEach(c => {
+        const row = k6OrigRows[c.rowIdx];
+        const course = row[iCourse]?.trim() || '';
+        const sec    = row[iSec]?.trim() || '';
+        const teacher = row[iTeacher]?.trim() || '';
+        const claimedBy = c.competingBundles.map(bi => {
+          const b = k6Bundles[bi];
+          return escapeHtml(k6GradeLabel(b.grade)) + ' / Teacher ' + escapeHtml(b.teacherId) + ' (→' + b.newSec + ')';
+        }).join(', ');
+        chtml += '<tr>'
+          + '<td style="border:1px solid #fca5a5;padding:4px 8px;font-family:monospace;">' + escapeHtml(sec) + '</td>'
+          + '<td style="border:1px solid #fca5a5;padding:4px 8px;font-family:monospace;">' + escapeHtml(course) + '</td>'
+          + '<td style="border:1px solid #fca5a5;padding:4px 8px;">' + claimedBy + ' <span style="color:#9ca3af;">(teacher in file: ' + escapeHtml(teacher) + ')</span></td>'
+          + '</tr>';
+      });
+      chtml += '</table>';
+    }
+
     document.getElementById('k6-conflicts-list').innerHTML = chtml;
     document.getElementById('k6-conflicts-card').style.display = 'block';
   }
