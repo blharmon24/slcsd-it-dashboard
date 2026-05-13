@@ -14,12 +14,15 @@ and managed by IT staff.
 - **School Rollover** — tracks EOY PowerSchool rollover progress per school (added 2026-04-21)
 - **My Tasks** — personal per-user work queue with Urgent/Medium/Low lanes (added 2026-04-22)
 - **Class Choice Processes** — client-side file processor for CTC master schedule seat sharing (added 2026-04-24)
+- **CardToUTA** — client-side CSV processor converting daily card access export to UTA activation format (added 2026-05-07)
+- **Password Reset Flow** — self-service forgot password link + in-page reset screen (added 2026-05-07)
 
 ## Tech Stack
 - **Frontend:** Single HTML file (`dashboard.html`) — HTML, CSS, and JavaScript
 - **Backend/Database:** Supabase (PostgreSQL)
 - **Auth:** Supabase Auth (user references auth.users)
 - **Version Control:** GitHub — https://github.com/blharmon24/slcsd-it-dashboard
+- **Live URL:** https://blharmon24.github.io/slcsd-it-dashboard/dashboard.html
 - **Local Folder:** C:\ClaudeAI\IT-Dashboard
 - **Dependencies (CDN):**
   - Supabase JS v2
@@ -39,14 +42,15 @@ and managed by IT staff.
 ## Page Persistence
 - The last active page is saved to `localStorage` under key `it_dash_page`
 - On login, the saved page is restored; defaults to `grade-storing` if none saved
-- Valid page keys: `grade-storing`, `schedule-commit`, `my-tasks`
+- Valid page keys: `grade-storing`, `schedule-commit`, `my-tasks`, `cardtouta`
 
-## Sidebar Structure (as of 2026-04-22)
+## Sidebar Structure (as of 2026-05-07)
 **Grade Storing** (section header)
 - Storing Grades → `page-grade-storing`
 
 **Other Modules** (section header)
-- School Schedule Build Tracker → `page-schedule-commit`
+- PowerScheduler → `page-schedule-commit`
+- CardToUTA → `page-cardtouta`
 
 **Personal** (section header)
 - My Tasks → `page-my-tasks`
@@ -221,6 +225,77 @@ Downloaded as `class_choice_shared.txt`, tab-delimited, with headers:
 `Course_number`, `Section_number`, `School_id`, `Shared`
 - `School_id` is always hardcoded `749`
 - Preview of first 5 rows shown before download
+
+---
+
+## Feature: CardToUTA
+
+### What it does
+A purely client-side CSV processor under "Other Modules" in the sidebar (`page-cardtouta`).
+Accepts a drag-and-drop (or click-to-browse) upload of the daily card access CSV export,
+transforms it into UTA activation format, and downloads the result. No data ever leaves
+the browser — zero Supabase interaction.
+
+### Input file
+CSV with headers: `Campus`, `Student Id`, `User`, `Student Name`, `Grade`, `Uid`, `Timestamp`
+- Column matching normalizes to lowercase with spaces stripped (`Student Id` → `studentid`)
+
+### Processing logic
+- **Col A (Reversed UID):** 2-char chunk reversal of Uid — e.g. `670A18E2` → `E2180A67`
+- **Col B:** Hardcoded `Activate`
+- **Col C:** Blank
+- **Col D:** Hardcoded `20300630` (expiration date June 30 2030)
+- **Col E:** Original Uid
+- **Col F:** Student Id
+- **Col G:** School number from `CTU_SCHOOL_MAP` lookup on Campus name
+
+### School name → number map (`CTU_SCHOOL_MAP`)
+```
+Bryant Middle → 404, Clayton Middle → 408, East High → 704,
+Glendale Middle → 412, Highland High → 708, Hillside Middle → 416,
+Horizonte Instruction and Training Center → 750,
+Innovations early College High → 748, Nibley Park → 224,
+Northwest Middle → 440, Open Classroom → 240,
+Salt Lake Center for Science Education → 300, West High → 716
+```
+Unknown campus names surface as an amber warning — they don't silently drop data.
+
+### Output file
+Downloaded as `SL School District_YYYYMMDD.csv` with today's date auto-filled.
+No headers. Comma-delimited. Preview of first 5 rows shown before download.
+
+---
+
+## Feature: Password Reset Flow
+
+### What it does
+Self-service password reset accessible from the login screen. No admin action required
+once configured. Uses Supabase Auth's built-in recovery email mechanism.
+
+### UX flow
+1. Login screen has a **"Forgot password?"** link below the Sign In button
+2. Clicking it expands an inline email input + "Send Reset Link" button
+3. `supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin + window.location.pathname })`
+   sends the recovery email with the correct live URL as the redirect target
+4. User clicks link in email → lands on a **reset screen** (separate `div#reset-screen`)
+   instead of the login form
+5. User enters and confirms new password → `supabase.auth.updateUser({ password })`
+6. On success: user is signed out, reset screen hides, login screen shown after 2 seconds
+
+### Key implementation details
+- `isPasswordRecovery` flag is set synchronously via `window.location.hash.includes('type=recovery')`
+  AND via `sb.auth.onAuthStateChange` for `PASSWORD_RECOVERY` event — prevents `getSession`
+  from calling `showApp()` during a recovery redirect
+- After successful reset, `sb.auth.signOut()` clears the recovery session before returning
+  to the login screen
+- Passwords must be ≥ 6 characters and match confirmation field
+
+### Supabase configuration required
+- **Authentication → URL Configuration → Site URL:** `https://blharmon24.github.io/slcsd-it-dashboard/dashboard.html`
+- **Authentication → URL Configuration → Redirect URLs:** same URL above
+- **Custom SMTP recommended** — Supabase built-in email caps at 2 reset emails/hour;
+  configure a provider (Resend, SendGrid, Brevo, or district SMTP relay) under
+  Project Settings → Authentication → SMTP Settings
 
 ---
 

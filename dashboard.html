@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.07.3</div>
+      <div class="sidebar-version">v2026.05.13.1</div>
     </div>
     <div class="main">
 
@@ -365,6 +365,7 @@
           <button class="tab-btn" id="tab-btn-ctc" onclick="switchSBTab('ctc')">CTC Export</button>
           <button class="tab-btn" id="tab-btn-rollover" onclick="switchSBTab('rollover')">School Rollover</button>
           <button class="tab-btn" id="tab-btn-classchoice" onclick="switchSBTab('classchoice')">Class Choice Processes</button>
+          <button class="tab-btn" id="tab-btn-k6classes" onclick="switchSBTab('k6classes')">K-6 Classes to New Year</button>
         </div>
 
         <!-- Schedule Build tab -->
@@ -662,6 +663,51 @@
             </div>
           </div>
         </div> <!-- end tab-classchoice -->
+
+        <!-- K-6 Classes to New Year tab -->
+        <div class="tab-content" id="tab-k6classes">
+          <div class="tasks-card" style="margin-bottom:1.5rem;">
+            <div class="tasks-card-title">K-6 Section Renumbering</div>
+            <div style="padding:1rem;">
+              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Upload a single school's PowerSchool sections CSV. Sections that have DEPENDENT_SECS are treated as anchors. Each anchor and its in-file dependent sections are grouped by grade level and assigned a sequential section number (1, 2, 3…) sorted by teacher ID. Standalone sections with no dependency chain are left unchanged. DEPENDENT_SECS references are updated to match new section numbers.</p>
+              <div id="k6-drop-zone"
+                   style="border:2px dashed #cbd5e1;border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;"
+                   onclick="document.getElementById('k6-file-input').click()"
+                   ondragover="k6DragOver(event)"
+                   ondragleave="k6DragLeave(event)"
+                   ondrop="k6Drop(event)">
+                <div style="font-size:24px;margin-bottom:0.5rem;">&#128196;</div>
+                <div style="font-size:13px;color:#64748b;">Drag a CSV here or <span style="color:#2563EB;text-decoration:underline;">click to browse</span></div>
+                <div id="k6-file-name" style="font-size:12px;color:#374151;margin-top:0.5rem;font-weight:500;"></div>
+                <input type="file" id="k6-file-input" accept=".csv" onchange="handleK6FileSelect(event)" style="display:none;">
+              </div>
+              <div id="k6-upload-error" style="display:none;color:#c0392b;font-size:12px;margin-top:0.5rem;"></div>
+            </div>
+          </div>
+
+          <div class="tasks-card" id="k6-summary-card" style="display:none;margin-bottom:1.5rem;">
+            <div class="tasks-card-title">Renumbering Plan</div>
+            <div style="padding:1rem;">
+              <div id="k6-stats" style="margin-bottom:0.75rem;"></div>
+              <div id="k6-bundle-table" style="overflow-x:auto;"></div>
+            </div>
+          </div>
+
+          <div class="tasks-card" id="k6-conflicts-card" style="display:none;border-left:3px solid #e74c3c;margin-bottom:1.5rem;">
+            <div class="tasks-card-title" style="color:#c0392b;">Conflicts Detected</div>
+            <div style="padding:1rem;">
+              <div id="k6-conflicts-list"></div>
+            </div>
+          </div>
+
+          <div class="tasks-card" id="k6-download-section" style="display:none;">
+            <div class="tasks-card-title">Download Updated File</div>
+            <div style="padding:1rem;">
+              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Same format as the source file. SECTION_NUMBER updated for all bundled rows. DEPENDENT_SECS references updated to match new section numbers. External references (sections not found in this file) are left unchanged.</p>
+              <button class="save-btn" onclick="downloadK6File()">&#8595; Download <span id="k6-download-filename"></span></button>
+            </div>
+          </div>
+        </div> <!-- end tab-k6classes -->
 
       </div> <!-- end page-schedule-commit -->
 
@@ -1315,10 +1361,11 @@ function switchSBTab(tab) {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   document.getElementById('tab-btn-' + tab).classList.add('active');
   document.getElementById('tab-' + tab).classList.add('active');
-  if (tab === 'schedule') loadScheduleBuildRecords();
-  if (tab === 'ctc')      initCTCPage();
-  if (tab === 'rollover') loadRolloverData();
+  if (tab === 'schedule')   loadScheduleBuildRecords();
+  if (tab === 'ctc')        initCTCPage();
+  if (tab === 'rollover')   loadRolloverData();
   if (tab === 'classchoice') initClassChoicePage();
+  if (tab === 'k6classes')  initK6Page();
   localStorage.setItem('it_dash_sb_tab', tab);
 }
 
@@ -2964,6 +3011,278 @@ function downloadCCFile() {
   const a = document.createElement('a');
   a.href = url;
   a.download = 'class_choice_shared.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── K-6 Classes to New Year ───────────────────────────────────────────
+
+let k6RawHeaders = [];
+let k6OrigRows   = [];
+let k6ColIdx     = {};
+let k6Bundles    = [];
+let k6FinalRows  = [];
+let k6SourceFileName = '';
+
+function initK6Page() { /* client-side only */ }
+
+// RFC 4180-compliant CSV parser — handles quoted fields containing commas
+function parseCSVRows(text) {
+  const result = [];
+  let row = [], field = '', inQ = false;
+  for (let i = 0; i <= text.length; i++) {
+    const ch   = i < text.length ? text[i]     : null;
+    const next = i + 1 < text.length ? text[i + 1] : null;
+    if (ch === null) {
+      row.push(field);
+      if (row.some(f => f.trim())) result.push(row);
+      break;
+    }
+    if (inQ) {
+      if (ch === '"' && next === '"') { field += '"'; i++; }
+      else if (ch === '"') { inQ = false; }
+      else { field += ch; }
+    } else {
+      if      (ch === '"')                         { inQ = true; }
+      else if (ch === ',')                         { row.push(field); field = ''; }
+      else if (ch === '\r' && next === '\n')       { row.push(field); result.push(row); row = []; field = ''; i++; }
+      else if (ch === '\n' || ch === '\r')         { row.push(field); result.push(row); row = []; field = ''; }
+      else                                         { field += ch; }
+    }
+  }
+  return result.filter(r => r.some(f => f.trim()));
+}
+
+// Quote a CSV field only when needed
+function csvEncode(val) {
+  return /[,"\r\n]/.test(val) ? '"' + val.replace(/"/g, '""') + '"' : val;
+}
+
+function k6DragOver(e) {
+  e.preventDefault();
+  const z = document.getElementById('k6-drop-zone');
+  z.style.borderColor = '#2563EB'; z.style.background = '#EFF6FF';
+}
+function k6DragLeave(e) {
+  const z = document.getElementById('k6-drop-zone');
+  z.style.borderColor = '#cbd5e1'; z.style.background = '';
+}
+function k6Drop(e) {
+  e.preventDefault(); k6DragLeave(e);
+  const f = e.dataTransfer.files[0]; if (f) processK6File(f);
+}
+function handleK6FileSelect(ev) {
+  const f = ev.target.files[0]; if (f) processK6File(f);
+}
+
+function processK6File(file) {
+  k6SourceFileName = file.name;
+  document.getElementById('k6-file-name').textContent = file.name;
+  document.getElementById('k6-upload-error').style.display = 'none';
+  document.getElementById('k6-summary-card').style.display = 'none';
+  document.getElementById('k6-conflicts-card').style.display = 'none';
+  document.getElementById('k6-download-section').style.display = 'none';
+  const reader = new FileReader();
+  reader.onload = e => parseK6File(e.target.result);
+  reader.readAsText(file);
+}
+
+function parseK6File(text) {
+  const all = parseCSVRows(text);
+  if (all.length < 2) { showK6Error('File appears empty or has no data rows.'); return; }
+
+  k6RawHeaders = all[0].map(h => h.trim());
+  k6ColIdx = {};
+  k6RawHeaders.forEach((h, i) => { k6ColIdx[h.toUpperCase()] = i; });
+  k6OrigRows = all.slice(1);
+
+  const iSec     = k6ColIdx['SECTION_NUMBER'];
+  const iCourse  = k6ColIdx['COURSE_NUMBER'];
+  const iGrade   = k6ColIdx['GRADE_LEVEL'];
+  const iTeacher = k6ColIdx['TEACHER'];
+  const iDep     = k6ColIdx['DEPENDENT_SECS'];
+
+  const missing = ['SECTION_NUMBER','COURSE_NUMBER','GRADE_LEVEL','TEACHER','DEPENDENT_SECS']
+    .filter(h => k6ColIdx[h] === undefined);
+  if (missing.length) { showK6Error('Missing required columns: ' + missing.join(', ')); return; }
+
+  // Build lookup: "COURSE.SECTION" → first row index matching that pair
+  const csToIdx = {};
+  k6OrigRows.forEach((row, i) => {
+    const key = (row[iCourse]?.trim() || '') + '.' + (row[iSec]?.trim() || '');
+    if (csToIdx[key] === undefined) csToIdx[key] = i;
+  });
+
+  // Find anchor rows (non-empty DEPENDENT_SECS), group by grade
+  const byGrade = {};
+  k6OrigRows.forEach((row, i) => {
+    const dep = row[iDep]?.trim();
+    if (!dep) return;
+    const g = parseInt(row[iGrade]?.trim() ?? '');
+    if (isNaN(g)) return;
+    (byGrade[g] = byGrade[g] || []).push(i);
+  });
+
+  // Within each grade, sort anchors by teacher ID then section number, assign 1, 2, 3…
+  k6Bundles = [];
+  Object.keys(byGrade).map(Number).sort((a, b) => a - b).forEach(grade => {
+    const anchors = byGrade[grade].sort((a, b) => {
+      const tDiff = (parseInt(k6OrigRows[a][iTeacher]) || 0) - (parseInt(k6OrigRows[b][iTeacher]) || 0);
+      return tDiff !== 0 ? tDiff
+           : (parseInt(k6OrigRows[a][iSec]) || 0) - (parseInt(k6OrigRows[b][iSec]) || 0);
+    });
+    anchors.forEach((anchorIdx, seq) => {
+      const depStr = k6OrigRows[anchorIdx][iDep]?.trim() || '';
+      const refs = depStr.split(',').map(s => s.trim()).filter(Boolean);
+      const memberIdxs = [], externalRefs = [];
+      refs.forEach(ref => {
+        csToIdx[ref] !== undefined ? memberIdxs.push(csToIdx[ref]) : externalRefs.push(ref);
+      });
+      k6Bundles.push({
+        grade,
+        teacherId:    k6OrigRows[anchorIdx][iTeacher]?.trim() || '?',
+        newSec:       seq + 1,
+        anchorIdx,
+        memberIdxs,
+        externalRefs,
+        anchorCourse: k6OrigRows[anchorIdx][iCourse]?.trim() || ''
+      });
+    });
+  });
+
+  // Map each row index to the bundle(s) it belongs to
+  const rowToBundles = {};
+  k6Bundles.forEach((b, bi) => {
+    [b.anchorIdx, ...b.memberIdxs].forEach(ri => {
+      (rowToBundles[ri] = rowToBundles[ri] || []).push(bi);
+    });
+  });
+
+  // Rows in exactly one bundle get renamed; rows in multiple bundles are flagged
+  const rowRenameMap = {};   // rowIdx → newSec
+  const crossConflicts = []; // rowIdxs referenced by >1 bundle
+  Object.entries(rowToBundles).forEach(([ri, bundles]) => {
+    if (bundles.length === 1) rowRenameMap[parseInt(ri)] = k6Bundles[bundles[0]].newSec;
+    else crossConflicts.push(parseInt(ri));
+  });
+
+  // Build DEPENDENT_SECS remap: "COURSE.OLDSEC" → "COURSE.NEWSEC" for renamed rows
+  const depRemap = {};
+  Object.entries(rowRenameMap).forEach(([ri, newSec]) => {
+    const row = k6OrigRows[parseInt(ri)];
+    const oldKey = (row[iCourse]?.trim() || '') + '.' + (row[iSec]?.trim() || '');
+    depRemap[oldKey] = (row[iCourse]?.trim() || '') + '.' + newSec;
+  });
+
+  // Generate final output rows
+  const anchorIdxSet = new Set(k6Bundles.map(b => b.anchorIdx));
+  k6FinalRows = k6OrigRows.map((row, i) => {
+    const out = [...row];
+    if (rowRenameMap[i] !== undefined) out[iSec] = String(rowRenameMap[i]);
+    if (anchorIdxSet.has(i)) {
+      const dep = row[iDep]?.trim() || '';
+      out[iDep] = dep.split(',').map(s => depRemap[s.trim()] || s.trim()).join(',');
+    }
+    return out;
+  });
+
+  // Uniqueness check on output: COURSE_NUMBER + SECTION_NUMBER must be unique
+  const seen = {};
+  const uniqueConflicts = [];
+  k6FinalRows.forEach((row, i) => {
+    const key = (row[iCourse]?.trim() || '') + '.' + (row[iSec]?.trim() || '');
+    if (seen[key] !== undefined) uniqueConflicts.push({ key, r1: seen[key] + 2, r2: i + 2 });
+    else seen[key] = i;
+  });
+
+  const renamedSet = new Set(Object.keys(rowRenameMap).map(Number));
+  const standaloneCount = k6OrigRows.filter((_, i) => !renamedSet.has(i)).length;
+
+  renderK6Summary(standaloneCount, uniqueConflicts, crossConflicts);
+}
+
+function k6GradeLabel(g) {
+  if (g === 0) return 'K';
+  if (g < 0)  return 'Special';
+  return 'Grade ' + g;
+}
+
+function renderK6Summary(standaloneCount, uniqueConflicts, crossConflicts) {
+  const iCourse  = k6ColIdx['COURSE_NUMBER'];
+  const iSec     = k6ColIdx['SECTION_NUMBER'];
+  const renamedTotal = k6Bundles.reduce((s, b) => s + 1 + b.memberIdxs.length, 0);
+  const hasConflicts = uniqueConflicts.length > 0 || crossConflicts.length > 0;
+
+  document.getElementById('k6-stats').innerHTML =
+    '<span style="font-size:12px;color:#555;">' +
+    k6Bundles.length + ' bundles &nbsp;·&nbsp; ' +
+    renamedTotal + ' sections renumbered &nbsp;·&nbsp; ' +
+    standaloneCount + ' standalone unchanged' +
+    (hasConflicts ? ' &nbsp;·&nbsp; <span style="color:#e74c3c;font-weight:600;">' + (uniqueConflicts.length + crossConflicts.length) + ' conflict(s)</span>' : '') +
+    '</span>';
+
+  let html = '<table style="border-collapse:collapse;font-size:12px;width:100%;">';
+  html += '<tr style="background:#f8f9fa;">';
+  ['Grade','Teacher','Anchor Course','Old Sections → New #','In-file Deps','Ext Refs'].forEach(h => {
+    html += '<th style="border:1px solid #e0e4ea;padding:5px 8px;text-align:left;white-space:nowrap;">' + h + '</th>';
+  });
+  html += '</tr>';
+
+  k6Bundles.forEach(b => {
+    const oldSecs = [k6OrigRows[b.anchorIdx][iSec]?.trim(),
+                     ...b.memberIdxs.map(mi => k6OrigRows[mi][iSec]?.trim())]
+      .filter(Boolean).join(', ');
+    const depCourses = b.memberIdxs.map(mi => k6OrigRows[mi][iCourse]?.trim()).filter(Boolean).join(', ');
+    html += '<tr>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;white-space:nowrap;">' + escapeHtml(k6GradeLabel(b.grade)) + '</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;">' + escapeHtml(b.teacherId) + '</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;font-family:monospace;font-size:11px;">' + escapeHtml(b.anchorCourse) + '</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;font-size:11px;">'
+        + '<span style="color:#6b7280;">' + escapeHtml(oldSecs) + '</span>'
+        + ' → <span style="font-weight:600;color:#2563EB;">' + b.newSec + '</span>'
+      + '</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;font-family:monospace;font-size:11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + escapeHtml(depCourses) + '">' + escapeHtml(depCourses) + '</td>'
+      + '<td style="border:1px solid #e0e4ea;padding:4px 8px;text-align:center;color:' + (b.externalRefs.length ? '#d97706' : '#6b7280') + ';">' + b.externalRefs.length + '</td>'
+      + '</tr>';
+  });
+  html += '</table>';
+  document.getElementById('k6-bundle-table').innerHTML = html;
+  document.getElementById('k6-summary-card').style.display = 'block';
+
+  if (hasConflicts) {
+    let chtml = '<ul style="margin:0;padding-left:1.25rem;font-size:12px;color:#c0392b;">';
+    uniqueConflicts.forEach(c => {
+      chtml += '<li>Duplicate after rename: <code>' + escapeHtml(c.key) + '</code> at rows ' + c.r1 + ' and ' + c.r2 + '</li>';
+    });
+    crossConflicts.forEach(ri => {
+      const row = k6OrigRows[ri];
+      chtml += '<li>Row ' + (ri + 2) + ' (' + escapeHtml(row[k6ColIdx['COURSE_NUMBER']]?.trim() || '') + ' sec. ' + escapeHtml(row[k6ColIdx['SECTION_NUMBER']]?.trim() || '') + ') is referenced by multiple bundles — left unchanged</li>';
+    });
+    chtml += '</ul>';
+    document.getElementById('k6-conflicts-list').innerHTML = chtml;
+    document.getElementById('k6-conflicts-card').style.display = 'block';
+  }
+
+  const baseName = k6SourceFileName.replace(/\.csv$/i, '');
+  document.getElementById('k6-download-filename').textContent = baseName + '_updated.csv';
+  document.getElementById('k6-download-section').style.display = 'block';
+}
+
+function showK6Error(msg) {
+  const el = document.getElementById('k6-upload-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function downloadK6File() {
+  if (!k6FinalRows.length) return;
+  const lines = [k6RawHeaders.map(csvEncode).join(',')];
+  k6FinalRows.forEach(row => lines.push(row.map(csvEncode).join(',')));
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = k6SourceFileName.replace(/\.csv$/i, '') + '_updated.csv';
   a.click();
   URL.revokeObjectURL(url);
 }
