@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.18.5</div>
+      <div class="sidebar-version">v2026.05.18.6</div>
     </div>
     <div class="main">
 
@@ -3122,7 +3122,7 @@ function runK6CCheck(text, fileName) {
   });
 
   // Store for download
-  k6cLastRun = { headers, dataRows, allSections, issues, issuesByLine, iDep, iCourse, iSection, fileName: fileName || 'schedule' };
+  k6cLastRun = { headers, dataRows, allSections, issues, issuesByLine, iDep, iCourse, iSection, iTeacher, fileName: fileName || 'schedule' };
 
   // Render results
   const summaryEl  = document.getElementById('k6c-summary');
@@ -3178,19 +3178,28 @@ function runK6CCheck(text, fileName) {
 
 function downloadK6CReport() {
   if (!k6cLastRun) return;
-  const { headers, dataRows, issuesByLine, iDep, iCourse, iSection, fileName } = k6cLastRun;
+  const { headers, dataRows, issuesByLine, iDep, iCourse, iSection, iTeacher, fileName } = k6cLastRun;
 
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
-  // Determine sticky column order (whichever of section/course comes first in the file)
+  // Build column order: move DEPENDENT_SECS to immediately after LASTFIRST
+  const colOrder = [];
+  headers.forEach((_, ci) => {
+    if (ci === iDep) return; // skip here — inserted after iTeacher below
+    colOrder.push(ci);
+    if (ci === iTeacher) colOrder.push(iDep);
+  });
+  // Fallback: if iTeacher wasn't found, append iDep at the end
+  if (!colOrder.includes(iDep)) colOrder.push(iDep);
+
+  // Determine sticky columns (whichever of section/course comes first in the file)
   const stickyPairs = [{ idx: iSection }, { idx: iCourse }].sort((a, b) => a.idx - b.idx);
-  const sc1 = stickyPairs[0].idx; // leftmost sticky column
-  const sc2 = stickyPairs[1].idx; // second sticky column
-  // Fixed widths drive the left offsets
-  const sc1Width = 70;  // px — section numbers are short
-  const sc2Width = 105; // px — course numbers are 8 digits
+  const sc1 = stickyPairs[0].idx;
+  const sc2 = stickyPairs[1].idx;
+  const sc1Width = 70;  // px
+  const sc2Width = 105; // px
 
   function stickyClass(ci) {
     if (ci === sc1) return ' class="sc1"';
@@ -3198,16 +3207,16 @@ function downloadK6CReport() {
     return '';
   }
 
-  // Build header row
-  const thCells = headers.map((h, ci) => '<th' + stickyClass(ci) + '>' + esc(h) + '</th>').join('');
+  // Build header row using reordered columns
+  const thCells = colOrder.map(ci => '<th' + stickyClass(ci) + '>' + esc(headers[ci]) + '</th>').join('');
 
-  // Build data rows
+  // Build data rows using reordered columns
   const tbodyRows = dataRows.map(row => {
     const hasIssue = issuesByLine.has(row.lineNum);
     const missingSet = hasIssue ? issuesByLine.get(row.lineNum) : null;
     const rowClass = hasIssue ? ' class="has-issue"' : '';
 
-    const tds = headers.map((_, ci) => {
+    const tds = colOrder.map(ci => {
       const raw = (row.cells[ci] || '').trim().replace(/^"|"$/g, '');
       const cls = stickyClass(ci);
       if (ci === iDep && raw && hasIssue) {
