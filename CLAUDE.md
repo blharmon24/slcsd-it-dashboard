@@ -255,10 +255,14 @@ When issues are found, a "Download Highlighted Report" button appears. The repor
 - Full table of every row, with sticky header and horizontal scroll
 - `SECTION_NUMBER` and `COURSE_NUMBER` columns are sticky on the left (always visible
   while scrolling right to the `DEPENDENT_SECS` column)
+- `DEPENDENT_SECS` column is moved in the output to appear immediately after `LASTFIRST`
+  (original file column order is otherwise preserved)
 - Issue rows highlighted in salmon red (`#fca5a5`)
 - Missing dep refs rendered as white-on-navy badges; valid refs are plain gray text
 - Downloaded as `{filename}_dependency_check.html`
-- `k6cLastRun` module variable stores parsed data between check and download
+- `k6cLastRun` stores `{ headers, dataRows, allSections, issues, issuesByLine, iDep, iCourse, iSection, iTeacher, fileName }`
+- Table wrapper uses flex/viewport-height layout so the horizontal scrollbar stays
+  anchored to the bottom of the visible window (not the bottom of the full page)
 
 ---
 
