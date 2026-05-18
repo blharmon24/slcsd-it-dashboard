@@ -247,8 +247,12 @@ Tab-delimited PowerScheduler export (e.g., `Backman.dsv`) with headers including
 - Builds a Set of all `CourseNumber.SectionNumber` pairs present in the file
 - For each row with a non-empty `DEPENDENT_SECS` value, parses the comma-separated list
   of `coursenumber.sectionnumber` references
-- Flags any reference that does not exist in the Set
-- Results shown inline: all-clear message or per-row breakdown of missing refs
+- **Missing ref check:** flags any reference that does not exist in the Set
+- **Duplicate course number check:** flags any row where the same course number appears
+  in more than one dep entry (e.g., `MATH101.1, MATH101.2` in the same `DEPENDENT_SECS`)
+  — tracked separately in `dupIssues` / `dupIssuesByLine`
+- Results shown inline: all-clear message (confirms both checks passed) or per-row
+  breakdown grouped by issue type
 
 ### HTML report download
 When issues are found, a "Download Highlighted Report" button appears. The report:
@@ -258,9 +262,9 @@ When issues are found, a "Download Highlighted Report" button appears. The repor
 - `DEPENDENT_SECS` column is moved in the output to appear immediately after `LASTFIRST`
   (original file column order is otherwise preserved)
 - Issue rows highlighted in salmon red (`#fca5a5`)
-- Missing dep refs rendered as white-on-navy badges; valid refs are plain gray text
+- Missing dep refs rendered as white-on-navy badges; duplicate-course refs as amber badges; valid refs are plain gray text
 - Downloaded as `{filename}_dependency_check.html`
-- `k6cLastRun` stores `{ headers, dataRows, allSections, issues, issuesByLine, iDep, iCourse, iSection, iTeacher, fileName }`
+- `k6cLastRun` stores `{ headers, dataRows, allSections, issues, issuesByLine, dupIssues, dupIssuesByLine, iDep, iCourse, iSection, iTeacher, fileName }`
 - Table wrapper uses flex/viewport-height layout so the horizontal scrollbar stays
   anchored to the bottom of the visible window (not the bottom of the full page)
 
