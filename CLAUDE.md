@@ -16,7 +16,8 @@ and managed by IT staff.
 - **Class Choice Processes** — client-side file processor for CTC master schedule seat sharing (added 2026-04-24)
 - **CardToUTA** — client-side CSV processor converting daily card access export to UTA activation format (added 2026-05-07)
 - **Password Reset Flow** — self-service forgot password link + in-page reset screen (added 2026-05-07)
-- **Copyk6 Schedule Check** — client-side K-6 elementary schedule validator; verifies all DEPENDENT_SECS references exist in the file; downloads a highlighted HTML report (added 2026-05-18)
+- **Copy K-6 Schedule Check** — client-side K-6 elementary schedule validator; verifies DEPENDENT_SECS references, duplicate course numbers, and shared dep sections; downloads a highlighted HTML report (added 2026-05-18)
+- **K-6 School Clean Status** — per-school checkboxes on the Copy K-6 Schedule Check tab tracking which schools are 100% clean; saved to Supabase by academic year (added 2026-05-18)
 
 ## Tech Stack
 - **Frontend:** Single HTML file (`dashboard.html`) — HTML, CSS, and JavaScript
@@ -229,13 +230,13 @@ Downloaded as `class_choice_shared.txt`, tab-delimited, with headers:
 
 ---
 
-## Feature: Copyk6 Schedule Check
+## Feature: Copy K-6 Schedule Check
 
 ### What it does
-A purely client-side validator accessed via the "Copyk6 Schedule Check" tab on the
+A client-side validator accessed via the "Copy K-6 Schedule Check" tab on the
 PowerScheduler page. Accepts a drag-and-drop (or click-to-browse) upload of an elementary
-K-6 schedule file (.dsv/.txt/.tsv), checks every `DEPENDENT_SECS` reference against the
-sections actually present in the file, and reports missing references. No database interaction.
+K-6 schedule file (.dsv/.txt/.tsv), runs three checks against `DEPENDENT_SECS`, and reports
+issues. Also contains a per-school clean status tracker saved to Supabase.
 
 ### Input file
 Tab-delimited PowerScheduler export (e.g., `Backman.dsv`) with headers including:
@@ -251,8 +252,11 @@ Tab-delimited PowerScheduler export (e.g., `Backman.dsv`) with headers including
 - **Duplicate course number check:** flags any row where the same course number appears
   in more than one dep entry (e.g., `MATH101.1, MATH101.2` in the same `DEPENDENT_SECS`)
   — tracked separately in `dupIssues` / `dupIssuesByLine`
-- Results shown inline: all-clear message (confirms both checks passed) or per-row
-  breakdown grouped by issue type
+- **Shared dep section check:** flags any `CourseNumber.SectionNumber` dep ref that appears
+  in more than one row's `DEPENDENT_SECS` (two courses pointing at the same dep section)
+  — tracked in `sharedDepIssues` / `sharedDepIssuesByLine`; sorted alphabetically by dep ref
+- Results shown inline: all-clear message (confirms all three checks passed) or per-issue-type
+  breakdown grouped by check
 
 ### HTML report download
 When issues are found, a "Download Highlighted Report" button appears. The report:
@@ -261,12 +265,27 @@ When issues are found, a "Download Highlighted Report" button appears. The repor
   while scrolling right to the `DEPENDENT_SECS` column)
 - `DEPENDENT_SECS` column is moved in the output to appear immediately after `LASTFIRST`
   (original file column order is otherwise preserved)
-- Issue rows highlighted in salmon red (`#fca5a5`)
-- Missing dep refs rendered as white-on-navy badges; duplicate-course refs as amber badges; valid refs are plain gray text
+- Issue rows highlighted: red (`#fca5a5`) for missing deps, amber (`#fde68a`) for dup course #s,
+  purple (`#ede9fe`) for shared dep sections; red takes priority over amber over purple
+- Missing dep refs: dark navy badge; duplicate-course refs: amber badge; shared dep refs: purple badge; valid refs: plain gray
 - Downloaded as `{filename}_dependency_check.html`
-- `k6cLastRun` stores `{ headers, dataRows, allSections, issues, issuesByLine, dupIssues, dupIssuesByLine, iDep, iCourse, iSection, iTeacher, fileName }`
+- `k6cLastRun` stores `{ headers, dataRows, allSections, issues, issuesByLine, dupIssues, dupIssuesByLine, sharedDepIssues, sharedDepIssuesByLine, iDep, iCourse, iSection, iTeacher, fileName }`
 - Table wrapper uses flex/viewport-height layout so the horizontal scrollbar stays
   anchored to the bottom of the visible window (not the bottom of the full page)
+
+### K-6 School Clean Status (on the same tab)
+- 24 K-6 schools listed in a responsive grid below the file checker
+- Each school has a checkbox; checking it saves to `k6_clean_status` via upsert
+- Shows "X / 24 schools marked clean" counter (turns green when all are done)
+- Checked items record `marked_by_name` and `marked_at`; displayed under the school name
+- Reloads when the year selector changes; uses `getSBYear()` for the academic year
+- School list is the `K6_SCHOOLS` constant in JS:
+  Backman Elementary, Beacon Heights Elementary, Bonneville Elementary, Dilworth Elementary,
+  Edison Elementary, Emerson Elementary, Ensign Elementary, Escalante Elementary,
+  Franklin Elementary, Highland Park Elementary, Indian Hills Elementary, Liberty Elementary,
+  Meadowlark Elementary, Mountain View Elementary, Newman Elementary, Nibley Park,
+  North Star Elementary, Open Classroom, Parkview Elementary, Rose Park Elementary,
+  Uintah Elementary, Wasatch Elementary, Washington Elementary, Whittier Elementary
 
 ---
 
@@ -458,6 +477,14 @@ Personal work queue tasks, one per user per item.
   `priority` (text: `urgent` | `medium` | `low`), `completed` (boolean),
   `sort_order` (int), `created_at`
 - RLS enabled — users can only read/write their own rows (`auth.uid() = user_id`)
+
+### `k6_clean_status`
+Per-school "100% clean" flag for K-6 elementary schedule files, one row per school per year.
+- `id` (uuid), `school_name` (text), `academic_year` (int),
+  `marked_clean` (boolean, default false), `marked_at` (timestamptz),
+  `marked_by` (FK auth.users), `marked_by_name` (text)
+- Unique constraint on `(school_name, academic_year)`
+- RLS enabled — authenticated users can read, insert, and update
 
 ---
 
