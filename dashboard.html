@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.18.7</div>
+      <div class="sidebar-version">v2026.05.18.8</div>
     </div>
     <div class="main">
 
@@ -365,7 +365,7 @@
           <button class="tab-btn" id="tab-btn-ctc" onclick="switchSBTab('ctc')">CTC Export</button>
           <button class="tab-btn" id="tab-btn-rollover" onclick="switchSBTab('rollover')">School Rollover</button>
           <button class="tab-btn" id="tab-btn-classchoice" onclick="switchSBTab('classchoice')">Class Choice Processes</button>
-          <button class="tab-btn" id="tab-btn-k6check" onclick="switchSBTab('k6check')">Copyk6 Schedule Check</button>
+          <button class="tab-btn" id="tab-btn-k6check" onclick="switchSBTab('k6check')">Copy K-6 Schedule Check</button>
         </div>
 
         <!-- Schedule Build tab -->
@@ -664,7 +664,7 @@
           </div>
         </div> <!-- end tab-classchoice -->
 
-        <!-- Copyk6 Schedule Check tab -->
+        <!-- Copy K-6 Schedule Check tab -->
         <div class="tab-content" id="tab-k6check">
           <div class="tasks-card" style="margin-bottom:1.5rem;">
             <div class="tasks-card-title">K-6 Dependent Section Checker</div>
@@ -695,7 +695,7 @@
               <div id="k6c-summary" style="padding:0.75rem 1rem;font-size:13px;"></div>
             </div>
             <div id="k6c-issues-card" class="tasks-card" style="display:none;">
-              <div class="tasks-card-title" style="color:#c0392b;">Missing Dependent Sections</div>
+              <div class="tasks-card-title" style="color:#c0392b;">Issues Found</div>
               <div id="k6c-issues" style="padding:0.5rem 1rem 1rem;"></div>
             </div>
           </div>
@@ -3007,7 +3007,7 @@ function downloadCCFile() {
   URL.revokeObjectURL(url);
 }
 
-// ── Copyk6 Schedule Check ──────────────────────────────────────────────
+// ── Copy K-6 Schedule Check ──────────────────────────────────────────────
 
 let k6cLastRun = null; // stores parsed data for download
 
@@ -3105,6 +3105,7 @@ function runK6CCheck(text, fileName) {
   const issuesByLine = new Map(); // lineNum → Set of missing deps
   const dupIssues = [];
   const dupIssuesByLine = new Map(); // lineNum → { courseNum: [dep strings] }
+  const depRefUsers = new Map(); // depRef → [row] across all rows (for shared-dep detection)
   let totalChecked = 0;
   let rowsWithDeps = 0;
 
@@ -3122,6 +3123,9 @@ function runK6CCheck(text, fileName) {
       const depCourse = dotIdx >= 0 ? dep.substring(0, dotIdx) : dep;
       if (!courseNumSeen[depCourse]) courseNumSeen[depCourse] = [];
       courseNumSeen[depCourse].push(dep);
+      // Track across all rows for shared-dep detection
+      if (!depRefUsers.has(dep)) depRefUsers.set(dep, []);
+      depRefUsers.get(dep).push(row);
     });
     if (missing.length > 0) {
       issues.push({ row, missing });
@@ -3138,8 +3142,22 @@ function runK6CCheck(text, fileName) {
     }
   });
 
+  // Find dep refs shared across more than one row
+  const sharedDepIssues = [];
+  const sharedDepIssuesByLine = new Map(); // lineNum → Set<depRef>
+  depRefUsers.forEach((rows, depRef) => {
+    if (rows.length > 1) {
+      sharedDepIssues.push({ depRef, rows });
+      rows.forEach(row => {
+        if (!sharedDepIssuesByLine.has(row.lineNum)) sharedDepIssuesByLine.set(row.lineNum, new Set());
+        sharedDepIssuesByLine.get(row.lineNum).add(depRef);
+      });
+    }
+  });
+  sharedDepIssues.sort((a, b) => a.depRef.localeCompare(b.depRef));
+
   // Store for download
-  k6cLastRun = { headers, dataRows, allSections, issues, issuesByLine, dupIssues, dupIssuesByLine, iDep, iCourse, iSection, iTeacher, fileName: fileName || 'schedule' };
+  k6cLastRun = { headers, dataRows, allSections, issues, issuesByLine, dupIssues, dupIssuesByLine, sharedDepIssues, sharedDepIssuesByLine, iDep, iCourse, iSection, iTeacher, fileName: fileName || 'schedule' };
 
   // Render results
   const summaryEl  = document.getElementById('k6c-summary');
@@ -3150,12 +3168,12 @@ function runK6CCheck(text, fileName) {
 
   const totalSections = allSections.size;
 
-  const hasAnyIssue = issues.length > 0 || dupIssues.length > 0;
+  const hasAnyIssue = issues.length > 0 || dupIssues.length > 0 || sharedDepIssues.length > 0;
 
   if (!hasAnyIssue) {
     titleEl.innerHTML = 'Results <span style="color:#059669;">&#10003; All Clear</span>';
     summaryEl.innerHTML =
-      '<div style="color:#065F46;font-weight:500;">All dependent section references are valid. No duplicate course numbers detected.</div>' +
+      '<div style="color:#065F46;font-weight:500;">All dependent section references are valid. No duplicate course numbers or shared dependent sections detected.</div>' +
       '<div style="margin-top:6px;color:#374151;">' +
         totalSections + ' unique course.section pairs found &nbsp;|&nbsp; ' +
         rowsWithDeps + ' rows with dependencies &nbsp;|&nbsp; ' +
@@ -3167,6 +3185,7 @@ function runK6CCheck(text, fileName) {
     let summaryLines = [];
     if (issues.length > 0) summaryLines.push('<span style="color:#c0392b;font-weight:500;">' + issues.length + ' row(s) have missing dependent sections.</span>');
     if (dupIssues.length > 0) summaryLines.push('<span style="color:#92400e;font-weight:500;">' + dupIssues.length + ' row(s) have duplicate course numbers in DEPENDENT_SECS.</span>');
+    if (sharedDepIssues.length > 0) summaryLines.push('<span style="color:#6d28d9;font-weight:500;">' + sharedDepIssues.length + ' dep section(s) are referenced by more than one row.</span>');
     summaryEl.innerHTML =
       summaryLines.join('<br>') +
       '<div style="margin-top:6px;color:#374151;">' +
@@ -3213,6 +3232,22 @@ function runK6CCheck(text, fileName) {
       });
     }
 
+    if (sharedDepIssues.length > 0) {
+      if (issues.length > 0 || dupIssues.length > 0) html += '<div style="margin-top:12px;"></div>';
+      html += '<div style="font-size:12px;font-weight:700;color:#6d28d9;margin-bottom:6px;">Shared Dependent Sections (same dep section listed in more than one row)</div>';
+      sharedDepIssues.forEach(({ depRef, rows }) => {
+        html += '<div style="border:1px solid #c4b5fd;border-radius:6px;padding:0.6rem 0.75rem;margin-bottom:8px;background:#f5f3ff;">';
+        html += '<div style="font-size:12px;font-weight:600;color:#6d28d9;font-family:monospace;">' + depRef + '</div>';
+        html += '<div style="font-size:12px;color:#374151;margin-top:4px;">Referenced by ' + rows.length + ' rows:</div>';
+        html += '<ul style="margin:4px 0 0 1.1rem;padding:0;">';
+        rows.forEach(r => {
+          const teacherLabel = r.teacher ? ' &mdash; ' + r.teacher : '';
+          html += '<li style="font-size:12px;color:#6d28d9;">Row ' + r.lineNum + teacherLabel + ' &mdash; <code>' + r.course + '.' + r.section + '</code></li>';
+        });
+        html += '</ul></div>';
+      });
+    }
+
     issuesEl.innerHTML = html;
     issuesCard.style.display = 'block';
   }
@@ -3222,7 +3257,7 @@ function runK6CCheck(text, fileName) {
 
 function downloadK6CReport() {
   if (!k6cLastRun) return;
-  const { headers, dataRows, issuesByLine, dupIssuesByLine, iDep, iCourse, iSection, iTeacher, fileName } = k6cLastRun;
+  const { headers, dataRows, issuesByLine, dupIssuesByLine, sharedDepIssuesByLine, iDep, iCourse, iSection, iTeacher, fileName } = k6cLastRun;
 
   function esc(s) {
     return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -3256,17 +3291,19 @@ function downloadK6CReport() {
 
   // Build data rows using reordered columns
   const tbodyRows = dataRows.map(row => {
-    const hasIssue = issuesByLine.has(row.lineNum);
-    const hasDup   = dupIssuesByLine.has(row.lineNum);
-    const missingSet = hasIssue ? issuesByLine.get(row.lineNum) : null;
-    const dupMap     = hasDup   ? dupIssuesByLine.get(row.lineNum) : null;
-    // Red takes priority over amber
-    const rowClass = hasIssue ? ' class="has-issue"' : hasDup ? ' class="has-dup"' : '';
+    const hasIssue  = issuesByLine.has(row.lineNum);
+    const hasDup    = dupIssuesByLine.has(row.lineNum);
+    const hasShared = sharedDepIssuesByLine.has(row.lineNum);
+    const missingSet = hasIssue  ? issuesByLine.get(row.lineNum)       : null;
+    const dupMap     = hasDup    ? dupIssuesByLine.get(row.lineNum)    : null;
+    const sharedSet  = hasShared ? sharedDepIssuesByLine.get(row.lineNum) : null;
+    // Red > amber > purple
+    const rowClass = hasIssue ? ' class="has-issue"' : hasDup ? ' class="has-dup"' : hasShared ? ' class="has-shared"' : '';
 
     const tds = colOrder.map(ci => {
       const raw = (row.cells[ci] || '').trim().replace(/^"|"$/g, '');
       const cls = stickyClass(ci);
-      if (ci === iDep && raw && (hasIssue || hasDup)) {
+      if (ci === iDep && raw && (hasIssue || hasDup || hasShared)) {
         const parts = raw.split(',').map(dep => {
           const d = dep.trim();
           if (missingSet && missingSet.has(d)) return '<span class="dep-missing">' + esc(d) + '</span>';
@@ -3275,6 +3312,7 @@ function downloadK6CReport() {
             const depCourse = dotIdx >= 0 ? d.substring(0, dotIdx) : d;
             if (dupMap[depCourse]) return '<span class="dep-dup">' + esc(d) + '</span>';
           }
+          if (sharedSet && sharedSet.has(d)) return '<span class="dep-shared">' + esc(d) + '</span>';
           return '<span class="dep-ok">' + esc(d) + '</span>';
         });
         return '<td' + cls + '>' + parts.join(', ') + '</td>';
@@ -3285,9 +3323,15 @@ function downloadK6CReport() {
     return '<tr' + rowClass + '>' + tds + '</tr>';
   }).join('\n');
 
-  const issueCount = issuesByLine.size;
-  const dupCount   = dupIssuesByLine.size;
+  const issueCount  = issuesByLine.size;
+  const dupCount    = dupIssuesByLine.size;
+  const sharedCount = sharedDepIssuesByLine.size;
   const now = new Date().toLocaleString();
+  const summaryParts = [];
+  if (issueCount  > 0) summaryParts.push(issueCount  + ' row(s) with missing dep sections');
+  if (dupCount    > 0) summaryParts.push(dupCount    + ' row(s) with duplicate course #s in DEPENDENT_SECS');
+  if (sharedCount > 0) summaryParts.push(sharedCount + ' row(s) with shared dependent sections');
+  const summaryBarHTML = '&#9888; ' + summaryParts.join(' &nbsp;|&nbsp; ') + ' — highlighted below. Missing refs: dark navy badge &nbsp;|&nbsp; Duplicate course #: amber badge &nbsp;|&nbsp; Shared dep: purple badge.';
   const baseName = fileName.replace(/\.[^.]+$/, '');
 
   const html = `<!DOCTYPE html>
@@ -3305,11 +3349,12 @@ function downloadK6CReport() {
   table { border-collapse: collapse; min-width: 100%; }
   th { background: #1e3a5f; color: #fff; padding: 5px 8px; text-align: left; font-size: 11px; position: sticky; top: 0; z-index: 1; white-space: nowrap; }
   td { padding: 3px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; white-space: nowrap; }
-  /* Issue rows — red for missing deps, amber for duplicate course numbers */
+  /* Issue rows — red for missing deps, amber for dup course #s, purple for shared deps */
   tr.has-issue td { background: #fca5a5; }
   tr.has-dup td { background: #fde68a; }
-  tr:not(.has-issue):not(.has-dup):nth-child(even) td { background: #f9fafb; }
-  tr:not(.has-issue):not(.has-dup):nth-child(odd) td { background: #ffffff; }
+  tr.has-shared td { background: #ede9fe; }
+  tr:not(.has-issue):not(.has-dup):not(.has-shared):nth-child(even) td { background: #f9fafb; }
+  tr:not(.has-issue):not(.has-dup):not(.has-shared):nth-child(odd) td { background: #ffffff; }
   /* Sticky course/section columns */
   td.sc1 { position: sticky; left: 0; z-index: 1; min-width: ${sc1Width}px; box-shadow: 2px 0 0 #cbd5e1; }
   td.sc2 { position: sticky; left: ${sc1Width}px; z-index: 1; min-width: ${sc2Width}px; border-right: 2px solid #94a3b8; }
@@ -3320,16 +3365,18 @@ function downloadK6CReport() {
   tr:nth-child(even) td.sc1, tr:nth-child(even) td.sc2 { background: #f9fafb; }
   tr.has-issue td.sc1, tr.has-issue td.sc2 { background: #fca5a5; }
   tr.has-dup td.sc1, tr.has-dup td.sc2 { background: #fde68a; }
+  tr.has-shared td.sc1, tr.has-shared td.sc2 { background: #ede9fe; }
   /* Dep ref coloring */
   .dep-missing { background: #1e3a5f; color: #fff; font-weight: 700; padding: 1px 5px; border-radius: 3px; font-family: monospace; }
   .dep-dup { background: #d97706; color: #fff; font-weight: 700; padding: 1px 5px; border-radius: 3px; font-family: monospace; }
+  .dep-shared { background: #6d28d9; color: #fff; font-weight: 700; padding: 1px 5px; border-radius: 3px; font-family: monospace; }
   .dep-ok { color: #374151; }
 </style>
 </head>
 <body>
 <h1>K-6 Schedule Dependent Section Check</h1>
 <div class="meta">File: ${esc(fileName)} &nbsp;&bull;&nbsp; Generated: ${esc(now)}</div>
-<div class="summary">&#9888; ${issueCount} row(s) with missing dependent sections${dupCount > 0 ? ' &nbsp;|&nbsp; ' + dupCount + ' row(s) with duplicate course numbers in DEPENDENT_SECS' : ''} — highlighted below. Missing refs: dark navy badge &nbsp;|&nbsp; Duplicate course #: amber badge.</div>
+<div class="summary">${summaryBarHTML}</div>
 <div class="wrap">
 <table>
 <thead><tr>${thCells}</tr></thead>
