@@ -16,6 +16,7 @@ and managed by IT staff.
 - **Class Choice Processes** — client-side file processor for CTC master schedule seat sharing (added 2026-04-24)
 - **CardToUTA** — client-side CSV processor converting daily card access export to UTA activation format (added 2026-05-07)
 - **Password Reset Flow** — self-service forgot password link + in-page reset screen (added 2026-05-07)
+- **Copyk6 Schedule Check** — client-side K-6 elementary schedule validator; verifies all DEPENDENT_SECS references exist in the file; downloads a highlighted HTML report (added 2026-05-18)
 
 ## Tech Stack
 - **Frontend:** Single HTML file (`dashboard.html`) — HTML, CSS, and JavaScript
@@ -225,6 +226,39 @@ Downloaded as `class_choice_shared.txt`, tab-delimited, with headers:
 `Course_number`, `Section_number`, `School_id`, `Shared`
 - `School_id` is always hardcoded `749`
 - Preview of first 5 rows shown before download
+
+---
+
+## Feature: Copyk6 Schedule Check
+
+### What it does
+A purely client-side validator accessed via the "Copyk6 Schedule Check" tab on the
+PowerScheduler page. Accepts a drag-and-drop (or click-to-browse) upload of an elementary
+K-6 schedule file (.dsv/.txt/.tsv), checks every `DEPENDENT_SECS` reference against the
+sections actually present in the file, and reports missing references. No database interaction.
+
+### Input file
+Tab-delimited PowerScheduler export (e.g., `Backman.dsv`) with headers including:
+`SECTION_NUMBER`, `COURSE_NUMBER`, `DEPENDENT_SECS`, `LASTFIRST`
+- First column is a numeric row counter (auto-detected and skipped)
+- Column matching is case/space/underscore-insensitive
+
+### Processing logic
+- Builds a Set of all `CourseNumber.SectionNumber` pairs present in the file
+- For each row with a non-empty `DEPENDENT_SECS` value, parses the comma-separated list
+  of `coursenumber.sectionnumber` references
+- Flags any reference that does not exist in the Set
+- Results shown inline: all-clear message or per-row breakdown of missing refs
+
+### HTML report download
+When issues are found, a "Download Highlighted Report" button appears. The report:
+- Full table of every row, with sticky header and horizontal scroll
+- `SECTION_NUMBER` and `COURSE_NUMBER` columns are sticky on the left (always visible
+  while scrolling right to the `DEPENDENT_SECS` column)
+- Issue rows highlighted in salmon red (`#fca5a5`)
+- Missing dep refs rendered as white-on-navy badges; valid refs are plain gray text
+- Downloaded as `{filename}_dependency_check.html`
+- `k6cLastRun` module variable stores parsed data between check and download
 
 ---
 
