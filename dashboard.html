@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.18.1</div>
+      <div class="sidebar-version">v2026.05.18.2</div>
     </div>
     <div class="main">
 
@@ -3009,6 +3009,8 @@ function downloadCCFile() {
 
 // ── Copyk6 Schedule Check ──────────────────────────────────────────────
 
+let k6cLastRun = null; // stores parsed data for download
+
 function k6cDragOver(e) {
   e.preventDefault();
   document.getElementById('k6c-drop-zone').style.borderColor = '#2563EB';
@@ -3045,7 +3047,7 @@ function processK6CFile(file) {
   const reader = new FileReader();
   reader.onload = function(e) {
     try {
-      runK6CCheck(e.target.result);
+      runK6CCheck(e.target.result, file.name);
     } catch (err) {
       errEl.textContent = 'Error processing file: ' + err.message;
       errEl.style.display = 'block';
@@ -3054,7 +3056,7 @@ function processK6CFile(file) {
   reader.readAsText(file);
 }
 
-function runK6CCheck(text) {
+function runK6CCheck(text, fileName) {
   const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
   if (lines.length < 2) throw new Error('File appears empty or has no data rows.');
 
@@ -3080,7 +3082,7 @@ function runK6CCheck(text) {
 
   // Build set of all course.section pairs in the file
   const allSections = new Set();
-  const dataRows = []; // { course, section, teacher, depStr, lineNum }
+  const dataRows = []; // { cells, course, section, teacher, depStr, lineNum }
 
   for (let i = 1; i < lines.length; i++) {
     const raw = lines[i].split('\t');
@@ -3095,11 +3097,12 @@ function runK6CCheck(text) {
     if (courseNum && sectionNum) {
       allSections.add(courseNum + '.' + sectionNum);
     }
-    dataRows.push({ course: courseNum, section: sectionNum, teacher, depStr: depRaw, lineNum: i + 1 });
+    dataRows.push({ cells, course: courseNum, section: sectionNum, teacher, depStr: depRaw, lineNum: i + 1 });
   }
 
   // Check dependencies
   const issues = [];
+  const issuesByLine = new Map(); // lineNum → Set of missing deps
   let totalChecked = 0;
   let rowsWithDeps = 0;
 
@@ -3110,18 +3113,20 @@ function runK6CCheck(text) {
     const missing = [];
     deps.forEach(dep => {
       totalChecked++;
-      if (!allSections.has(dep)) {
-        missing.push(dep);
-      }
+      if (!allSections.has(dep)) missing.push(dep);
     });
     if (missing.length > 0) {
       issues.push({ row, missing });
+      issuesByLine.set(row.lineNum, new Set(missing));
     }
   });
 
+  // Store for download
+  k6cLastRun = { headers, dataRows, allSections, issues, issuesByLine, iDep, fileName: fileName || 'schedule' };
+
   // Render results
-  const summaryEl = document.getElementById('k6c-summary');
-  const titleEl   = document.getElementById('k6c-summary-title');
+  const summaryEl  = document.getElementById('k6c-summary');
+  const titleEl    = document.getElementById('k6c-summary-title');
   const issuesCard = document.getElementById('k6c-issues-card');
   const issuesEl   = document.getElementById('k6c-issues');
   const resultsWrap = document.getElementById('k6c-results-wrap');
@@ -3146,6 +3151,9 @@ function runK6CCheck(text) {
         totalSections + ' unique course.section pairs found &nbsp;|&nbsp; ' +
         rowsWithDeps + ' rows with dependencies &nbsp;|&nbsp; ' +
         totalChecked + ' references checked' +
+      '</div>' +
+      '<div style="margin-top:10px;">' +
+        '<button class="save-btn" onclick="downloadK6CReport()" style="font-size:12px;padding:5px 14px;">&#8595; Download Highlighted Report</button>' +
       '</div>';
 
     let html = '';
@@ -3166,6 +3174,87 @@ function runK6CCheck(text) {
   }
 
   resultsWrap.style.display = 'block';
+}
+
+function downloadK6CReport() {
+  if (!k6cLastRun) return;
+  const { headers, dataRows, issuesByLine, iDep, fileName } = k6cLastRun;
+
+  function esc(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Build header row
+  const thCells = headers.map(h => '<th>' + esc(h) + '</th>').join('');
+
+  // Build data rows
+  const tbodyRows = dataRows.map(row => {
+    const hasIssue = issuesByLine.has(row.lineNum);
+    const missingSet = hasIssue ? issuesByLine.get(row.lineNum) : null;
+    const rowStyle = hasIssue ? ' class="has-issue"' : '';
+
+    const tds = headers.map((_, ci) => {
+      const raw = (row.cells[ci] || '').trim().replace(/^"|"$/g, '');
+      if (ci === iDep && raw && hasIssue) {
+        // Color each dep ref individually
+        const parts = raw.split(',').map(dep => {
+          const d = dep.trim();
+          if (missingSet.has(d)) {
+            return '<span class="dep-missing">' + esc(d) + '</span>';
+          }
+          return '<span class="dep-ok">' + esc(d) + '</span>';
+        });
+        return '<td>' + parts.join(', ') + '</td>';
+      }
+      return '<td>' + esc(raw) + '</td>';
+    }).join('');
+
+    return '<tr' + rowStyle + '>' + tds + '</tr>';
+  }).join('\n');
+
+  const issueCount = issuesByLine.size;
+  const now = new Date().toLocaleString();
+  const baseName = fileName.replace(/\.[^.]+$/, '');
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>K-6 Schedule Check — ${esc(baseName)}</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 12px; padding: 1rem; }
+  h1 { font-size: 15px; margin-bottom: 4px; }
+  .meta { color: #555; margin-bottom: 0.75rem; font-size: 11px; }
+  .summary { background: #fff5f5; border: 1px solid #fecaca; border-radius: 6px; padding: 8px 12px; margin-bottom: 1rem; color: #991b1b; font-weight: 600; }
+  table { border-collapse: collapse; width: 100%; }
+  th { background: #1e3a5f; color: #fff; padding: 5px 8px; text-align: left; font-size: 11px; position: sticky; top: 0; white-space: nowrap; }
+  td { padding: 3px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; white-space: nowrap; }
+  tr.has-issue td { background: #fff5f5; }
+  tr:not(.has-issue):nth-child(even) td { background: #f9fafb; }
+  .dep-missing { color: #c0392b; font-weight: 700; }
+  .dep-ok { color: #374151; }
+</style>
+</head>
+<body>
+<h1>K-6 Schedule Dependent Section Check</h1>
+<div class="meta">File: ${esc(fileName)} &nbsp;&bull;&nbsp; Generated: ${esc(now)}</div>
+<div class="summary">&#9888; ${issueCount} row(s) with missing dependent sections — highlighted below. Missing references shown in red.</div>
+<table>
+<thead><tr>${thCells}</tr></thead>
+<tbody>
+${tbodyRows}
+</tbody>
+</table>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = baseName + '_dependency_check.html';
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 // ── CardToUTA ──────────────────────────────────────────────────────────
