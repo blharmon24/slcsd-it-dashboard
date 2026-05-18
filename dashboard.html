@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.13.3</div>
+      <div class="sidebar-version">v2026.05.18.1</div>
     </div>
     <div class="main">
 
@@ -365,6 +365,7 @@
           <button class="tab-btn" id="tab-btn-ctc" onclick="switchSBTab('ctc')">CTC Export</button>
           <button class="tab-btn" id="tab-btn-rollover" onclick="switchSBTab('rollover')">School Rollover</button>
           <button class="tab-btn" id="tab-btn-classchoice" onclick="switchSBTab('classchoice')">Class Choice Processes</button>
+          <button class="tab-btn" id="tab-btn-k6check" onclick="switchSBTab('k6check')">Copyk6 Schedule Check</button>
         </div>
 
         <!-- Schedule Build tab -->
@@ -662,6 +663,43 @@
             </div>
           </div>
         </div> <!-- end tab-classchoice -->
+
+        <!-- Copyk6 Schedule Check tab -->
+        <div class="tab-content" id="tab-k6check">
+          <div class="tasks-card" style="margin-bottom:1.5rem;">
+            <div class="tasks-card-title">K-6 Dependent Section Checker</div>
+            <div style="padding:1rem;">
+              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">
+                Upload an elementary K-6 schedule file (.dsv/.txt/.tsv). For every row that has a
+                <strong>DEPENDENT_SECS</strong> value, each referenced <code>CourseNumber.SectionNumber</code>
+                is verified to exist elsewhere in the file. Missing references are flagged below.
+              </p>
+              <div id="k6c-drop-zone"
+                   style="border:2px dashed #cbd5e1;border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;"
+                   onclick="document.getElementById('k6c-file-input').click()"
+                   ondragover="k6cDragOver(event)"
+                   ondragleave="k6cDragLeave(event)"
+                   ondrop="k6cDrop(event)">
+                <div style="font-size:24px;margin-bottom:0.5rem;">&#128196;</div>
+                <div style="font-size:13px;color:#64748b;">Drag a schedule file here or <span style="color:#2563EB;text-decoration:underline;">click to browse</span></div>
+                <div id="k6c-file-name" style="font-size:12px;color:#374151;margin-top:0.5rem;font-weight:500;"></div>
+                <input type="file" id="k6c-file-input" accept=".dsv,.txt,.tsv,.tab,.csv" onchange="handleK6CFileSelect(event)" style="display:none;">
+              </div>
+              <div id="k6c-upload-error" style="display:none;color:#c0392b;font-size:12px;margin-top:0.5rem;"></div>
+            </div>
+          </div>
+
+          <div id="k6c-results-wrap" style="display:none;">
+            <div class="tasks-card" style="margin-bottom:1rem;">
+              <div class="tasks-card-title" id="k6c-summary-title">Results</div>
+              <div id="k6c-summary" style="padding:0.75rem 1rem;font-size:13px;"></div>
+            </div>
+            <div id="k6c-issues-card" class="tasks-card" style="display:none;">
+              <div class="tasks-card-title" style="color:#c0392b;">Missing Dependent Sections</div>
+              <div id="k6c-issues" style="padding:0.5rem 1rem 1rem;"></div>
+            </div>
+          </div>
+        </div> <!-- end tab-k6check -->
 
       </div> <!-- end page-schedule-commit -->
 
@@ -1319,6 +1357,7 @@ function switchSBTab(tab) {
   if (tab === 'ctc')        initCTCPage();
   if (tab === 'rollover')   loadRolloverData();
   if (tab === 'classchoice') initClassChoicePage();
+  // k6check is purely client-side; no init needed
   localStorage.setItem('it_dash_sb_tab', tab);
 }
 
@@ -2966,6 +3005,167 @@ function downloadCCFile() {
   a.download = 'class_choice_shared.txt';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ── Copyk6 Schedule Check ──────────────────────────────────────────────
+
+function k6cDragOver(e) {
+  e.preventDefault();
+  document.getElementById('k6c-drop-zone').style.borderColor = '#2563EB';
+  document.getElementById('k6c-drop-zone').style.background = '#eff6ff';
+}
+
+function k6cDragLeave(e) {
+  const z = document.getElementById('k6c-drop-zone');
+  z.style.borderColor = '#cbd5e1';
+  z.style.background = '';
+}
+
+function k6cDrop(e) {
+  e.preventDefault();
+  k6cDragLeave(e);
+  const file = e.dataTransfer.files[0];
+  if (file) processK6CFile(file);
+}
+
+function handleK6CFileSelect(event) {
+  const file = event.target.files[0];
+  if (file) processK6CFile(file);
+  event.target.value = '';
+}
+
+function processK6CFile(file) {
+  const errEl = document.getElementById('k6c-upload-error');
+  const nameEl = document.getElementById('k6c-file-name');
+  const resultsWrap = document.getElementById('k6c-results-wrap');
+  errEl.style.display = 'none';
+  resultsWrap.style.display = 'none';
+  nameEl.textContent = file.name;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      runK6CCheck(e.target.result);
+    } catch (err) {
+      errEl.textContent = 'Error processing file: ' + err.message;
+      errEl.style.display = 'block';
+    }
+  };
+  reader.readAsText(file);
+}
+
+function runK6CCheck(text) {
+  const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+  if (lines.length < 2) throw new Error('File appears empty or has no data rows.');
+
+  // Parse headers — first row, strip leading row-number column if it looks like "1\t..."
+  const rawHeader = lines[0].split('\t');
+  // If the first cell is a number (row counter), skip it
+  const headerOffset = /^\d+$/.test(rawHeader[0].trim()) ? 1 : 0;
+  const headers = rawHeader.slice(headerOffset).map(h => h.trim().replace(/^"|"$/g, ''));
+
+  function colIdx(name) {
+    const key = name.toLowerCase().replace(/[\s_]/g, '');
+    return headers.findIndex(h => h.toLowerCase().replace(/[\s_]/g, '') === key);
+  }
+
+  const iCourse  = colIdx('COURSE_NUMBER');
+  const iSection = colIdx('SECTION_NUMBER');
+  const iDep     = colIdx('DEPENDENT_SECS');
+  const iTeacher = colIdx('LASTFIRST');
+
+  if (iCourse < 0)  throw new Error('Could not find COURSE_NUMBER column.');
+  if (iSection < 0) throw new Error('Could not find SECTION_NUMBER column.');
+  if (iDep < 0)     throw new Error('Could not find DEPENDENT_SECS column.');
+
+  // Build set of all course.section pairs in the file
+  const allSections = new Set();
+  const dataRows = []; // { course, section, teacher, depStr, lineNum }
+
+  for (let i = 1; i < lines.length; i++) {
+    const raw = lines[i].split('\t');
+    const cells = raw.slice(headerOffset);
+    if (cells.length <= Math.max(iCourse, iSection)) continue;
+
+    const courseNum  = cells[iCourse]  ? cells[iCourse].trim().replace(/^"|"$/g, '')  : '';
+    const sectionNum = cells[iSection] ? cells[iSection].trim().replace(/^"|"$/g, '') : '';
+    const depRaw     = cells[iDep]     ? cells[iDep].trim().replace(/^"|"$/g, '')     : '';
+    const teacher    = iTeacher >= 0 && cells[iTeacher] ? cells[iTeacher].trim().replace(/^"|"$/g, '') : '';
+
+    if (courseNum && sectionNum) {
+      allSections.add(courseNum + '.' + sectionNum);
+    }
+    dataRows.push({ course: courseNum, section: sectionNum, teacher, depStr: depRaw, lineNum: i + 1 });
+  }
+
+  // Check dependencies
+  const issues = [];
+  let totalChecked = 0;
+  let rowsWithDeps = 0;
+
+  dataRows.forEach(row => {
+    if (!row.depStr) return;
+    rowsWithDeps++;
+    const deps = row.depStr.split(',').map(d => d.trim()).filter(d => d);
+    const missing = [];
+    deps.forEach(dep => {
+      totalChecked++;
+      if (!allSections.has(dep)) {
+        missing.push(dep);
+      }
+    });
+    if (missing.length > 0) {
+      issues.push({ row, missing });
+    }
+  });
+
+  // Render results
+  const summaryEl = document.getElementById('k6c-summary');
+  const titleEl   = document.getElementById('k6c-summary-title');
+  const issuesCard = document.getElementById('k6c-issues-card');
+  const issuesEl   = document.getElementById('k6c-issues');
+  const resultsWrap = document.getElementById('k6c-results-wrap');
+
+  const totalSections = allSections.size;
+
+  if (issues.length === 0) {
+    titleEl.innerHTML = 'Results <span style="color:#059669;">&#10003; All Clear</span>';
+    summaryEl.innerHTML =
+      '<div style="color:#065F46;font-weight:500;">All dependent section references are valid.</div>' +
+      '<div style="margin-top:6px;color:#374151;">' +
+        totalSections + ' unique course.section pairs found &nbsp;|&nbsp; ' +
+        rowsWithDeps + ' rows with dependencies &nbsp;|&nbsp; ' +
+        totalChecked + ' references checked' +
+      '</div>';
+    issuesCard.style.display = 'none';
+  } else {
+    titleEl.innerHTML = 'Results <span style="color:#c0392b;">&#9888; Issues Found</span>';
+    summaryEl.innerHTML =
+      '<div style="color:#c0392b;font-weight:500;">' + issues.length + ' row(s) have missing dependent sections.</div>' +
+      '<div style="margin-top:6px;color:#374151;">' +
+        totalSections + ' unique course.section pairs found &nbsp;|&nbsp; ' +
+        rowsWithDeps + ' rows with dependencies &nbsp;|&nbsp; ' +
+        totalChecked + ' references checked' +
+      '</div>';
+
+    let html = '';
+    issues.forEach(({ row, missing }) => {
+      const teacherLabel = row.teacher ? ' &mdash; ' + row.teacher : '';
+      html += '<div style="border:1px solid #fecaca;border-radius:6px;padding:0.6rem 0.75rem;margin-bottom:8px;background:#fff5f5;">';
+      html += '<div style="font-size:12px;font-weight:600;color:#991b1b;">Row ' + row.lineNum + teacherLabel + '</div>';
+      html += '<div style="font-size:12px;color:#374151;margin-top:2px;">Source section: <code>' + row.course + '.' + row.section + '</code></div>';
+      html += '<div style="font-size:12px;color:#374151;margin-top:4px;">Missing references:</div>';
+      html += '<ul style="margin:4px 0 0 1.1rem;padding:0;">';
+      missing.forEach(m => {
+        html += '<li style="font-size:12px;color:#c0392b;font-family:monospace;">' + m + '</li>';
+      });
+      html += '</ul></div>';
+    });
+    issuesEl.innerHTML = html;
+    issuesCard.style.display = 'block';
+  }
+
+  resultsWrap.style.display = 'block';
 }
 
 // ── CardToUTA ──────────────────────────────────────────────────────────
