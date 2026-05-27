@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.27.14</div>
+      <div class="sidebar-version">v2026.05.27.15</div>
     </div>
     <div class="main">
 
@@ -821,7 +821,7 @@ const MH_TASKS = [
   { key: 'class_rank', label: 'Update Class Rank (School Management>Academics>Recalculation Frequency>Recalculate Now)' },
   { key: 'honor_rolls', label: 'Run Honor Rolls' },
   { key: 'report_cards', label: 'Print and send report cards to DB team (Select all students>Print a student report>Report Card. Send PDF to S:\\536_shared\\InfoSys\\ThereFore\\Student Report Cards\\Term folder)' },
-  { key: 'advance_progress_reports', label: 'Advance Progress Reports to next term in PowerSchool' },
+  { key: 'advance_progress_reports', label: 'Advance Progress Reports to next term in PowerSchool (System Management>Reports>Report Card Templates)' },
 ];
 const HS_ONLY_TASKS = [
   { key: 'grad_plan', label: 'Run Graduation Plan Progress Report Data Capture' },
@@ -864,12 +864,14 @@ function getTasksForSchool(type, schoolName, term) {
     const tasks = [...MH_TASKS, ...HS_ONLY_TASKS];
     if (isFinalTerm(schoolName, term)) {
       tasks.push(STORE_CLASS_RANK_TASK);
-      return tasks.filter(t => t.key !== 'grade_display');
+      const hide = ['grade_display'];
+      if (schoolName !== 'Horizonte') hide.push('advance_progress_reports');
+      return tasks.filter(t => !hide.includes(t.key));
     }
     return tasks;
   }
-  // Middle schools: filter out grade_display on final term
-  if (isFinalTerm(schoolName, term)) return [...MH_TASKS].filter(t => t.key !== 'grade_display');
+  // Middle schools: filter out grade_display and advance_progress_reports on final term (T4)
+  if (isFinalTerm(schoolName, term)) return [...MH_TASKS].filter(t => !['grade_display', 'advance_progress_reports'].includes(t.key));
   return [...MH_TASKS];
 }
 
