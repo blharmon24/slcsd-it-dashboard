@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.27.7</div>
+      <div class="sidebar-version">v2026.05.27.8</div>
     </div>
     <div class="main">
 
@@ -816,7 +816,7 @@ const MH_TASKS = [
   { key: 'enrollment_audit', label: 'Verify School Enrollment Audits have been run' },
   { key: 'i_to_f', label: 'Change previous I letter grades to F' },
   { key: 'store_grades', label: 'Store Grades' },
-  { key: 'grade_display', label: 'Update Grade Display settings in PowerSchool' },
+  { key: 'grade_display', label: 'Update Current Grade Display in PS  (School Management>Academics>Set Current Grade Display)' },
   { key: 'quick_lookup', label: 'Update Quick Lookup Display' },
   { key: 'class_rank', label: 'Update Class Rank' },
   { key: 'honor_rolls', label: 'Run Honor Rolls' },
@@ -862,9 +862,14 @@ function getTasksForSchool(type, schoolName, term) {
   }
   if (type === 'high') {
     const tasks = [...MH_TASKS, ...HS_ONLY_TASKS];
-    if (isFinalTerm(schoolName, term)) tasks.push(STORE_CLASS_RANK_TASK);
+    if (isFinalTerm(schoolName, term)) {
+      tasks.push(STORE_CLASS_RANK_TASK);
+      return tasks.filter(t => t.key !== 'grade_display');
+    }
     return tasks;
   }
+  // Middle schools: filter out grade_display on final term
+  if (isFinalTerm(schoolName, term)) return [...MH_TASKS].filter(t => t.key !== 'grade_display');
   return [...MH_TASKS];
 }
 
