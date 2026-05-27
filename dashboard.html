@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.27.16</div>
+      <div class="sidebar-version">v2026.05.27.17</div>
     </div>
     <div class="main">
 
@@ -1236,7 +1236,7 @@ function renderTasks(school, type, record) {
   document.getElementById('cl-tasks').innerHTML = tasks.map(t => {
     const comp = completions[t.key];
     const done = comp && comp.completed;
-    const meta = done && comp.completed_at ? 'Completed on ' + new Date(comp.completed_at).toLocaleDateString() : '';
+    const meta = done && comp.completed_at ? (comp.completed_by_name ? comp.completed_by_name + ' · ' : '') + new Date(comp.completed_at).toLocaleDateString() : '';
     const linkHtml = t.link ? ` <a href="${t.link.url}" target="_blank" rel="noopener" style="font-size:11px;color:#4A7CFF;text-decoration:none;margin-left:6px;font-weight:500;">${t.link.label} ↗</a>` : '';
     return `<div class="task-item ${locked ? 'task-locked' : ''}">
       <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleTask('${t.key}', this.checked)">
@@ -1248,12 +1248,13 @@ function renderTasks(school, type, record) {
 async function toggleTask(taskKey, checked) {
   await ensureRecord();
   const now = new Date().toISOString();
+  const userName = currentUser.email.split('@')[0];
   const existing = completions[taskKey];
   if (existing) {
-    await sb.from('checklist_completions').update({ completed: checked, completed_at: checked ? now : null, completed_by: currentUser.id }).eq('id', existing.id);
-    completions[taskKey] = { ...existing, completed: checked, completed_at: checked ? now : null };
+    await sb.from('checklist_completions').update({ completed: checked, completed_at: checked ? now : null, completed_by: checked ? currentUser.id : null, completed_by_name: checked ? userName : null }).eq('id', existing.id);
+    completions[taskKey] = { ...existing, completed: checked, completed_at: checked ? now : null, completed_by_name: checked ? userName : null };
   } else {
-    const { data } = await sb.from('checklist_completions').insert({ record_id: currentRecordId, task_key: taskKey, completed: checked, completed_at: checked ? now : null, completed_by: currentUser.id }).select().single();
+    const { data } = await sb.from('checklist_completions').insert({ record_id: currentRecordId, task_key: taskKey, completed: checked, completed_at: checked ? now : null, completed_by: checked ? currentUser.id : null, completed_by_name: checked ? userName : null }).select().single();
     completions[taskKey] = data;
   }
   renderTasks(currentSchoolObj, currentSchoolObj.type, records[currentSchool] || {});
@@ -2860,6 +2861,7 @@ const MY_TASKS_PRIORITIES = [
 
 let myTasksItems = [];  // all work_queue_items for current user
 let myTasksLoaded = false;
+let myTasksEditingId = null;
 
 async function initMyTasksPage() {
   if (!currentUser) return;
@@ -2878,12 +2880,26 @@ function renderMyTasks() {
   const el = document.getElementById('my-tasks-content');
   el.innerHTML = MY_TASKS_PRIORITIES.map(p => {
     const items = myTasksItems.filter(t => t.priority === p.key);
-    const itemsHtml = items.map(t => `
+    const itemsHtml = items.map(t => {
+      if (t.id === myTasksEditingId) {
+        return `
+      <div class="task-item" style="border-left:3px solid ${p.color};gap:8px;" id="mqitem-${t.id}">
+        <input type="checkbox" ${t.completed ? 'checked' : ''} disabled style="opacity:0.4;">
+        <input id="mq-edit-input-${t.id}" type="text" value="${escapeHtml(t.label)}"
+          style="flex:1;font-size:13px;border:1px solid #93c5fd;border-radius:5px;padding:3px 7px;outline:none;"
+          onkeydown="if(event.key==='Enter')saveEditMyTask('${t.id}');if(event.key==='Escape')cancelEditMyTask();">
+        <button onclick="saveEditMyTask('${t.id}')" title="Save" style="background:none;border:none;cursor:pointer;color:#22c55e;font-size:15px;padding:2px 4px;">&#10003;</button>
+        <button onclick="cancelEditMyTask()" title="Cancel" style="background:none;border:none;cursor:pointer;color:#d0d0d0;font-size:14px;padding:2px 4px;">&#10005;</button>
+      </div>`;
+      }
+      return `
       <div class="task-item" style="border-left:3px solid ${p.color};gap:8px;" id="mqitem-${t.id}">
         <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleMyTask('${t.id}', this.checked)">
         <div style="flex:1;font-size:13px;${t.completed ? 'color:#aaa;text-decoration:line-through;' : ''}">${escapeHtml(t.label)}</div>
-        <button onclick="deleteMyTask('${t.id}')" title="Delete" style="background:none;border:none;cursor:pointer;color:#d0d0d0;font-size:14px;padding:2px 4px;">&#10005;</button>
-      </div>`).join('');
+        <button onclick="startEditMyTask('${t.id}')" title="Edit" style="background:none;border:none;cursor:pointer;color:#d0d0d0;font-size:13px;padding:2px 4px;" onmouseover="this.style.color='#6b7280'" onmouseout="this.style.color='#d0d0d0'">&#9998;</button>
+        <button onclick="deleteMyTask('${t.id}')" title="Delete" style="background:none;border:none;cursor:pointer;color:#d0d0d0;font-size:14px;padding:2px 4px;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#d0d0d0'">&#10005;</button>
+      </div>`;
+    }).join('');
     return `
       <div style="margin-bottom:1.5rem;">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:0.5rem;">
@@ -2932,6 +2948,31 @@ async function deleteMyTask(id) {
   if (!confirm('Delete this task?')) return;
   await sb.from('work_queue_items').delete().eq('id', id);
   myTasksItems = myTasksItems.filter(t => t.id !== id);
+  renderMyTasks();
+}
+
+function startEditMyTask(id) {
+  myTasksEditingId = id;
+  renderMyTasks();
+  setTimeout(() => {
+    const inp = document.getElementById('mq-edit-input-' + id);
+    if (inp) { inp.focus(); inp.select(); }
+  }, 0);
+}
+
+function cancelEditMyTask() {
+  myTasksEditingId = null;
+  renderMyTasks();
+}
+
+async function saveEditMyTask(id) {
+  const inp = document.getElementById('mq-edit-input-' + id);
+  const newLabel = inp ? inp.value.trim() : '';
+  if (!newLabel) return;
+  await sb.from('work_queue_items').update({ label: newLabel }).eq('id', id);
+  const item = myTasksItems.find(t => t.id === id);
+  if (item) item.label = newLabel;
+  myTasksEditingId = null;
   renderMyTasks();
 }
 
