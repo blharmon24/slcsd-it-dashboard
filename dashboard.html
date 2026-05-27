@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.27.5</div>
+      <div class="sidebar-version">v2026.05.27.6</div>
     </div>
     <div class="main">
 
@@ -1130,6 +1130,9 @@ async function openSchool(school, type) {
   currentSchoolObj = { ...school, type };
   document.getElementById('school-list-view').style.display = 'none';
   document.getElementById('checklist-view').style.display = 'block';
+  // Push a history entry so the browser back button returns to the school list
+  // instead of navigating away from the dashboard entirely
+  history.pushState({ gsView: 'school-detail' }, '');
   document.getElementById('cl-school-name').textContent = school.name;
   document.getElementById('cl-term-badge').textContent = getTerm() + ' ' + getYear();
 
@@ -3774,6 +3777,15 @@ async function handleResetPassword() {
     document.getElementById('login-screen').style.display = 'flex';
   }, 2000);
 }
+
+// Intercept the browser/mouse back button while inside a school detail view
+// so it returns to the school list instead of leaving the dashboard
+window.addEventListener('popstate', function() {
+  const checklistView = document.getElementById('checklist-view');
+  if (checklistView && checklistView.style.display !== 'none') {
+    showSchoolList();
+  }
+});
 
 sb.auth.getSession().then(({ data }) => {
   if (data.session && !isPasswordRecovery) { currentUser = data.session.user; showApp(); }
