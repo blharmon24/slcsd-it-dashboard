@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.27.6</div>
+      <div class="sidebar-version">v2026.05.27.7</div>
     </div>
     <div class="main">
 
@@ -834,7 +834,7 @@ const STORE_CLASS_RANK_TASK = {
 };
 const ELEM_TASKS = [
   { key: 'report_cards_printed', label: 'Print and upload report cards to DB team' },
-  { key: 'grade_display_elem', label: 'Update Current Grade Display in PowerSchool' },
+  { key: 'grade_display_elem', label: 'Update Current Grade Display in PS  (School Management>Academics>Set Current Grade Display)' },
 ];
 
 let currentUser = null;
@@ -855,7 +855,11 @@ function isFinalTerm(schoolName, term) {
   return schoolName === 'Horizonte' ? t === 'T6' : t === 'T4';
 }
 function getTasksForSchool(type, schoolName, term) {
-  if (type === 'elementary') return ELEM_TASKS;
+  if (type === 'elementary') {
+    // Hide 'Update Current Grade Display' on the final term (T4) — not needed after grades are stored for good
+    if (isFinalTerm(schoolName, term)) return ELEM_TASKS.filter(t => t.key !== 'grade_display_elem');
+    return ELEM_TASKS;
+  }
   if (type === 'high') {
     const tasks = [...MH_TASKS, ...HS_ONLY_TASKS];
     if (isFinalTerm(schoolName, term)) tasks.push(STORE_CLASS_RANK_TASK);
