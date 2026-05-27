@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.27.4</div>
+      <div class="sidebar-version">v2026.05.27.5</div>
     </div>
     <div class="main">
 
@@ -826,6 +826,12 @@ const MH_TASKS = [
 const HS_ONLY_TASKS = [
   { key: 'grad_plan', label: 'Run Graduation Plan Progress Report Data Capture' },
 ];
+// Final-term-only task for high schools (T4 for traditional schools, T6 for Horizonte)
+const STORE_CLASS_RANK_TASK = {
+  key: 'store_class_rank',
+  label: 'Store Class Rank',
+  link: { label: 'How to', url: 'https://slcsd-my.sharepoint.com/personal/brian_harmon_slcschools_org/_layouts/Doc.aspx?sourcedoc=%7b72D693F5-1706-449F-93D2-49183080CC8C%7d&wd=target%28PS%2FPS%20SIS%2FPowerSchool%20Documentation.one%7C9046E6CD-99D0-4AF6-99B1-7F6B1D471A9C%2FStoring%20Grades%5C%2FClass%20Rank%7C57D106F5-3127-40FE-AA44-0FA89CF145A2%2F%29&wdpartid=%7b27EC9453-7A90-072C-34C3-ABB806B1AF1C%7d%7b1%7d&wdsectionfileid=%7b3DE4D0FD-65CE-4747-BFC8-ADCC5C7EE743%7d&end' }
+};
 const ELEM_TASKS = [
   { key: 'report_cards_printed', label: 'Print and upload report cards to DB team' },
   { key: 'grade_display_elem', label: 'Update Current Grade Display in PowerSchool' },
@@ -843,9 +849,18 @@ let currentRecordId = null;
 
 function getTerm() { return document.getElementById('term-select').value; }
 function getYear() { return document.getElementById('year-select').value; }
-function getTasksForSchool(type) {
+// Returns true if the given term is the final term for the school (T4 for all, T6 for Horizonte)
+function isFinalTerm(schoolName, term) {
+  const t = term || getTerm();
+  return schoolName === 'Horizonte' ? t === 'T6' : t === 'T4';
+}
+function getTasksForSchool(type, schoolName, term) {
   if (type === 'elementary') return ELEM_TASKS;
-  if (type === 'high') return [...MH_TASKS, ...HS_ONLY_TASKS];
+  if (type === 'high') {
+    const tasks = [...MH_TASKS, ...HS_ONLY_TASKS];
+    if (isFinalTerm(schoolName, term)) tasks.push(STORE_CLASS_RANK_TASK);
+    return tasks;
+  }
   return [...MH_TASKS];
 }
 
@@ -1075,7 +1090,7 @@ function renderSchools() {
       const rec = records[school.name];
       // Checklist progress indicator for this school
       const recComps = rec ? (allCompletions[rec.id] || {}) : {};
-      const tasks = getTasksForSchool(type);
+      const tasks = getTasksForSchool(type, school.name);
       const doneTasks = tasks.filter(t => recComps[t.key] && recComps[t.key].completed).length;
       let taskHtml = '';
       if (rec) {
@@ -1200,7 +1215,7 @@ function updateTaskLock(record) {
 }
 
 function renderTasks(school, type, record) {
-  const tasks = getTasksForSchool(type);
+  const tasks = getTasksForSchool(type, school.name);
   const locked = school.ctc && !record.ctc_confirmed;
   const doneCount = tasks.filter(t => completions[t.key] && completions[t.key].completed).length;
   document.getElementById('cl-progress').textContent = doneCount + ' of ' + tasks.length + ' complete';
@@ -1208,9 +1223,10 @@ function renderTasks(school, type, record) {
     const comp = completions[t.key];
     const done = comp && comp.completed;
     const meta = done && comp.completed_at ? 'Completed on ' + new Date(comp.completed_at).toLocaleDateString() : '';
+    const linkHtml = t.link ? ` <a href="${t.link.url}" target="_blank" rel="noopener" style="font-size:11px;color:#4A7CFF;text-decoration:none;margin-left:6px;font-weight:500;">${t.link.label} ↗</a>` : '';
     return `<div class="task-item ${locked ? 'task-locked' : ''}">
       <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleTask('${t.key}', this.checked)">
-      <div><div class="task-label ${done ? 'done' : ''}">${t.label}</div>${meta ? '<div class="task-meta">' + meta + '</div>' : ''}</div>
+      <div><div class="task-label ${done ? 'done' : ''}">${t.label}${linkHtml}</div>${meta ? '<div class="task-meta">' + meta + '</div>' : ''}</div>
     </div>`;
   }).join('');
 }
@@ -1232,7 +1248,7 @@ async function toggleTask(taskKey, checked) {
 }
 
 async function checkAndMarkComplete() {
-  const tasks = getTasksForSchool(currentSchoolObj.type);
+  const tasks = getTasksForSchool(currentSchoolObj.type, currentSchoolObj.name);
   const allDone = tasks.every(t => completions[t.key] && completions[t.key].completed);
   if (records[currentSchool] && allDone !== records[currentSchool].completed) {
     await sb.from('grade_store_records').update({ completed: allDone }).eq('id', currentRecordId);
@@ -1332,16 +1348,17 @@ async function viewHistoryDetail(recordId, schoolName, schoolType, term, year) {
     `<div class="detail-row"><div class="detail-label">${r.label}</div><div class="detail-value">${r.value}</div></div>`
   ).join('');
   const schoolObj = [...SCHOOLS.high, ...SCHOOLS.middle, ...SCHOOLS.elementary].find(s => s.name === schoolName) || {};
-  const tasks = getTasksForSchool(schoolType);
+  const tasks = getTasksForSchool(schoolType, schoolName, term);
   const doneCount = tasks.filter(t => compMap[t.key] && compMap[t.key].completed).length;
   document.getElementById('hd-progress').textContent = doneCount + ' of ' + tasks.length + ' complete';
   document.getElementById('hd-tasks').innerHTML = tasks.map(t => {
     const comp = compMap[t.key];
     const done = comp && comp.completed;
     const meta = done && comp.completed_at ? ' — ' + new Date(comp.completed_at).toLocaleDateString() : '';
+    const linkHtml = t.link ? ` <a href="${t.link.url}" target="_blank" rel="noopener" style="font-size:11px;color:#4A7CFF;text-decoration:none;margin-left:6px;font-weight:500;">${t.link.label} ↗</a>` : '';
     return `<div class="detail-task">
       <span class="check-icon ${done ? 'check-done' : 'check-pending'}">${done ? '&#10003;' : '&#8211;'}</span>
-      <span style="font-size:13px;${done ? '' : 'color:#aaa'}">${t.label}${meta}</span>
+      <span style="font-size:13px;${done ? '' : 'color:#aaa'}">${t.label}${linkHtml}${meta}</span>
     </div>`;
   }).join('');
 }
