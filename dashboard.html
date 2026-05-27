@@ -216,7 +216,7 @@
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.27.1</div>
+      <div class="sidebar-version">v2026.05.27.3</div>
     </div>
     <div class="main">
 
@@ -815,6 +815,7 @@ const MH_TASKS = [
   { key: 'overlaps', label: 'Verify Overlaps are Cleared in PowerSchool' },
   { key: 'enrollment_audit', label: 'Verify School Enrollment Audits have been run' },
   { key: 'i_to_f', label: 'Change previous I letter grades to F' },
+  { key: 'store_grades', label: 'Store Grades' },
   { key: 'grade_display', label: 'Update Grade Display settings in PowerSchool' },
   { key: 'quick_lookup', label: 'Update Quick Lookup Display' },
   { key: 'class_rank', label: 'Update Class Rank' },
@@ -935,14 +936,17 @@ function renderTermDatesForm() {
     ${horizFields}`;
 }
 
-// Set the term dropdown to the most recently ended traditional term (if any)
+// Set the term dropdown to the most recently ended traditional term (if any).
+// Also activates up to 7 days before a term ends so staff can begin prep work early.
 function autoSelectTerm() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const lookahead = new Date(today);
+  lookahead.setDate(lookahead.getDate() + 7);
   let bestTerm = null, bestDate = null;
   Object.entries(termDatesTraditional).forEach(([label, endDateStr]) => {
     const d = new Date(endDateStr);
-    if (d < today && (!bestDate || d > bestDate)) { bestDate = d; bestTerm = label; }
+    if (d < lookahead && (!bestDate || d > bestDate)) { bestDate = d; bestTerm = label; }
   });
   if (bestTerm) document.getElementById('term-select').value = bestTerm;
 }
