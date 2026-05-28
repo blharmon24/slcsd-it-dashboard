@@ -149,6 +149,27 @@
   .gs-stat-value { font-size:22px; font-weight:700; color:#222; line-height:1.1; }
   .gs-stat-label { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; }
   .gs-stat-divider { width:1px; background:#e0e4ea; align-self:stretch; margin:0 0.5rem; }
+  /* Graduation Plans page */
+  .gp-section-label { font-size:13px; font-weight:600; color:#555; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:0.875rem; display:flex; align-items:center; gap:10px; }
+  .gp-total-badge { font-size:11px; font-weight:500; background:#e0e7ff; color:#3730a3; padding:2px 10px; border-radius:10px; text-transform:none; letter-spacing:0; }
+  .gp-bucket-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(230px,1fr)); gap:12px; margin-bottom:2rem; }
+  .gp-bucket-card { background:white; border:1px solid #e0e4ea; border-radius:8px; border-left:4px solid #ccc; padding:0.875rem 1rem; }
+  .gp-bucket-header { display:flex; align-items:center; justify-content:space-between; }
+  .gp-bucket-name { font-size:13px; font-weight:600; color:#222; }
+  .gp-bucket-credits { font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; background:#f3f4f6; color:#374151; white-space:nowrap; }
+  .gp-sub-list { border-top:1px solid #f0f0f0; padding-top:0.5rem; margin-top:0.5rem; display:flex; flex-direction:column; gap:2px; }
+  .gp-sub-row { display:flex; justify-content:space-between; align-items:center; padding:1px 0; font-size:12px; color:#555; }
+  .gp-sub-credits { color:#888; font-weight:500; }
+  .gp-flow-table-wrap { background:white; border:1px solid #e0e4ea; border-radius:8px; overflow:hidden; }
+  .gp-flow-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .gp-flow-table th { background:#f8f9fb; padding:10px 1rem; text-align:left; font-size:11px; font-weight:600; color:#555; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #e0e4ea; white-space:nowrap; }
+  .gp-flow-table td { padding:8px 1rem; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
+  .gp-flow-table tr:last-child td { border-bottom:none; }
+  .gp-flow-table tr:hover td { background:#f8f9fb; }
+  .gp-type-badge { font-size:11px; font-weight:600; font-family:monospace; background:#f1f5f9; color:#334155; padding:2px 8px; border-radius:4px; border:1px solid #e2e8f0; white-space:nowrap; }
+  .gp-flow-chain { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
+  .gp-pill { font-size:11px; font-weight:500; padding:2px 8px; border-radius:10px; border:1px solid; white-space:nowrap; }
+  .gp-arrow { color:#bbb; font-size:12px; flex-shrink:0; }
 </style>
 </head>
 <body>
@@ -214,9 +235,10 @@
       <div class="sidebar-section">Other Modules</div>
       <div class="nav-item" onclick="showPage('schedule-commit', this)">PowerScheduler</div>
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
+      <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.27.17</div>
+      <div class="sidebar-version">v2026.05.28.1</div>
     </div>
     <div class="main">
 
@@ -749,6 +771,43 @@
           </div>
         </div>
       </div> <!-- end page-cardtouta -->
+
+      <!-- Grad Plans page -->
+      <div class="page" id="page-grad-plans">
+        <div class="page-title">Graduation Plans</div>
+        <div class="page-sub">Credit bucket structure and overflow rules for each graduation plan. Credits fill the first available bucket in priority order; overflow moves to the next.</div>
+        <div class="tab-bar">
+          <button class="tab-btn active" id="gp-tab-btn-2021" onclick="switchGPTab('2021')">2021–2025</button>
+          <button class="tab-btn" id="gp-tab-btn-2026" onclick="switchGPTab('2026')">Beginning 2026</button>
+          <button class="tab-btn" id="gp-tab-btn-2027" onclick="switchGPTab('2027')">Beginning 2027</button>
+        </div>
+
+        <div class="tab-content active" id="gp-tab-2021">
+          <div class="gp-section-label">Bucket Requirements <span class="gp-total-badge">24.0 credits total</span></div>
+          <div class="gp-bucket-grid" id="gp-2021-buckets"></div>
+          <div class="gp-section-label">Credit Type Flow</div>
+          <div class="gp-flow-table-wrap">
+            <table class="gp-flow-table">
+              <thead>
+                <tr>
+                  <th>Course Group</th>
+                  <th>Credit Type</th>
+                  <th>Bucket Flow (priority order)</th>
+                </tr>
+              </thead>
+              <tbody id="gp-2021-flow"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="tab-content" id="gp-tab-2026">
+          <div class="coming-soon"><h2>Coming Soon</h2><p>Plan details for Beginning 2026 will be added here.</p></div>
+        </div>
+
+        <div class="tab-content" id="gp-tab-2027">
+          <div class="coming-soon"><h2>Coming Soon</h2><p>Plan details for Beginning 2027 will be added here.</p></div>
+        </div>
+      </div> <!-- end page-grad-plans -->
 
       <!-- My Tasks page -->
       <div class="page" id="page-my-tasks">
@@ -1696,6 +1755,172 @@ async function toggleSBTask(taskKey, checked) {
   renderSBChecklist();
 }
 
+// ── Graduation Plans ─────────────────────────────────────────────────
+
+const GP_COLORS = {
+  'Language Arts 9':               { bg:'#dbeafe', text:'#1e3a8a', border:'#3b82f6' },
+  'Language Arts 10':              { bg:'#dbeafe', text:'#1e3a8a', border:'#3b82f6' },
+  'Language Arts 11':              { bg:'#dbeafe', text:'#1e3a8a', border:'#3b82f6' },
+  'Language Arts 12':              { bg:'#dbeafe', text:'#1e3a8a', border:'#3b82f6' },
+  'Mathematics':                   { bg:'#ede9fe', text:'#3b0764', border:'#7c3aed' },
+  'Mathematics AA':                { bg:'#ede9fe', text:'#3b0764', border:'#7c3aed' },
+  'Science':                       { bg:'#d1fae5', text:'#064e3b', border:'#059669' },
+  'Science AA':                    { bg:'#d1fae5', text:'#064e3b', border:'#059669' },
+  'World Geography':               { bg:'#fef3c7', text:'#78350f', border:'#d97706' },
+  'World History':                 { bg:'#fef3c7', text:'#78350f', border:'#d97706' },
+  'United States History':         { bg:'#fef3c7', text:'#78350f', border:'#d97706' },
+  "U S Gov't Citizen":             { bg:'#fef3c7', text:'#78350f', border:'#d97706' },
+  'Soc Studies Elect':             { bg:'#fef3c7', text:'#78350f', border:'#d97706' },
+  'Fine Arts':                     { bg:'#fce7f3', text:'#831843', border:'#db2777' },
+  'Career Tech Ed':                { bg:'#ffedd5', text:'#7c2d12', border:'#ea580c' },
+  'Computer Tech/Digital Studies': { bg:'#cffafe', text:'#164e63', border:'#0891b2' },
+  'Financial Literacy':            { bg:'#ccfbf1', text:'#134e4a', border:'#0d9488' },
+  'Health':                        { bg:'#fee2e2', text:'#7f1d1d', border:'#dc2626' },
+  'Part Skills & Fitness':         { bg:'#e0e7ff', text:'#1e1b4b', border:'#4338ca' },
+  'Lifetime Activities':           { bg:'#e0e7ff', text:'#1e1b4b', border:'#4338ca' },
+  'Elective':                      { bg:'#f3f4f6', text:'#374151', border:'#9ca3af' },
+};
+
+const GP_BUCKET_BORDER = {
+  'Language Arts':                 '#3b82f6',
+  'Mathematics':                   '#7c3aed',
+  'Science':                       '#059669',
+  'Social Studies':                '#d97706',
+  'Fine Arts':                     '#db2777',
+  'Career Tech Ed':                '#ea580c',
+  'Computer Tech/Digital Studies': '#0891b2',
+  'Financial Literacy':            '#0d9488',
+  'Health':                        '#dc2626',
+  'Physical Education':            '#4338ca',
+  'Elective':                      '#9ca3af',
+};
+
+const GP_PLAN_2021 = {
+  totalCredits: 24.0,
+  buckets: [
+    { name:'Language Arts', credits:4.0, subs:[
+      {name:'Language Arts 9',  credits:1.0},
+      {name:'Language Arts 10', credits:1.0},
+      {name:'Language Arts 11', credits:1.0},
+      {name:'Language Arts 12', credits:1.0},
+    ]},
+    { name:'Mathematics', credits:3.0, subs:[
+      {name:'Mathematics',    credits:2.0},
+      {name:'Mathematics AA', credits:1.0},
+    ]},
+    { name:'Science', credits:3.0, subs:[
+      {name:'Science',    credits:2.0},
+      {name:'Science AA', credits:1.0},
+    ]},
+    { name:'Social Studies', credits:3.0, subs:[
+      {name:'World Geography',       credits:0.5},
+      {name:'World History',         credits:0.5},
+      {name:'United States History', credits:1.0},
+      {name:"U S Gov't Citizen",     credits:0.5},
+      {name:'Soc Studies Elect',     credits:0.5},
+    ]},
+    { name:'Fine Arts',                    credits:1.5, subs:[] },
+    { name:'Career Tech Ed',               credits:1.0, subs:[] },
+    { name:'Computer Tech/Digital Studies',credits:0.5, subs:[] },
+    { name:'Financial Literacy',           credits:0.5, subs:[] },
+    { name:'Health',                       credits:0.5, subs:[] },
+    { name:'Physical Education', credits:1.5, subs:[
+      {name:'Part Skills & Fitness', credits:1.0},
+      {name:'Lifetime Activities',   credits:0.5},
+    ]},
+    { name:'Elective', credits:5.5, subs:[] },
+  ],
+  creditTypes: [
+    { group:'Elective ELE',              type:'ELE',          flow:['Elective'] },
+    { group:'Language Arts 9 L09',       type:'L09',          flow:['Language Arts 9','Elective'] },
+    { group:'Language Arts 9 L09',       type:'L10',          flow:['Language Arts 10','Elective'] },
+    { group:'Language Arts 11 L12',      type:'L11',          flow:['Language Arts 11','Elective'] },
+    { group:'Language Arts 12 L12',      type:'L12',          flow:['Language Arts 12','Elective'] },
+    { group:'Mathematics AA MAA',        type:'MAA',          flow:['Mathematics AA','Elective'] },
+    { group:'Mathematics MAT',           type:'MAT',          flow:['Mathematics','Mathematics AA','Elective'] },
+    { group:'Science AA SAA',            type:'SAA',          flow:['Science AA','Elective'] },
+    { group:'Science SCI',               type:'SCI',          flow:['Science','Science AA','Elective'] },
+    { group:'Soc Studies Elect SSE',     type:'SSE',          flow:['Soc Studies Elect','Elective'] },
+    { group:'World Civilization WCI',    type:'WCI',          flow:['World History','Soc Studies Elect','Elective'] },
+    { group:'Geography GEO',             type:'GEO',          flow:['World Geography','Soc Studies Elect','Elective'] },
+    { group:'U S History USH',           type:'USH',          flow:['United States History','Soc Studies Elect','Elective'] },
+    { group:"U S Gov't Citizen USG",     type:'USG',          flow:["U S Gov't Citizen",'Soc Studies Elect','Elective'] },
+    { group:'Fine Arts FA',              type:'FA',           flow:['Fine Arts','Elective'] },
+    { group:'Career Tech Ed CTE',        type:'CTE',          flow:['Career Tech Ed','Elective'] },
+    { group:'Financial Literacy FL',     type:'FL',           flow:['Financial Literacy','Elective'] },
+    { group:'Health HE',                 type:'HE',           flow:['Health','Elective'] },
+    { group:'Part Skills & Fitness PSF', type:'PSF',          flow:['Part Skills & Fitness','Elective'] },
+    { group:'Lifetime Activities LA',    type:'LA',           flow:['Lifetime Activities','Elective'] },
+    { group:'Fine Arts CTEFA',           type:'CTEFA',        flow:['Career Tech Ed','Fine Arts','Elective'] },
+    { group:'Financial Literacy CTEFL',  type:'CTEFL',        flow:['Financial Literacy','Career Tech Ed','Elective'] },
+    { group:'Career Tech Ed CTEMAA',     type:'CTEMAA',       flow:['Career Tech Ed','Mathematics AA','Elective'] },
+    { group:'Career Tech Ed CTESAA',     type:'CTESAA',       flow:['Career Tech Ed','Science AA','Elective'] },
+    { group:'Career Tech Ed CTESSE',     type:'CTESSE',       flow:['Career Tech Ed','Soc Studies Elect','Elective'] },
+    { group:'Fine Arts FALA',            type:'FALA',         flow:['Fine Arts','Lifetime Activities','Elective'] },
+    { group:'Language Arts 11 L11L12',   type:'L11L12',       flow:['Language Arts 11','Language Arts 12','Elective'] },
+    { group:'Language Arts 12 L12CTE',   type:'L12CTE',       flow:['Language Arts 12','Career Tech Ed','Elective'] },
+    { group:'Science CTESCI',            type:'CTESCI',       flow:['Science','Science AA','Career Tech Ed','Elective'] },
+    { group:'Career Tech Ed DSMAA',      type:'DSMAA',        flow:['Computer Tech/Digital Studies','Career Tech Ed','Mathematics AA','Elective'] },
+    { group:'Computer Tech DS',          type:'DS',           flow:['Computer Tech/Digital Studies','Career Tech Ed','Elective'] },
+    { group:'Directed Studies DSCTESAA', type:'DSCTESAA',     flow:['Computer Tech/Digital Studies','Career Tech Ed','Science AA','Elective'] },
+    { group:'Language Arts 12 L12SSE',   type:'L12SSE',       flow:['Language Arts 12','Soc Studies Elect','Elective'] },
+    { group:'Mat1 and MAT2',             type:'MAT1 OR MAT2', flow:['Mathematics','Mathematics AA','Elective'] },
+    { group:'Fit Credit Type FIT',       type:'FIT',          flow:['Part Skills & Fitness','Elective'] },
+    { group:'EEMath',                    type:'EEMATH',       flow:['Mathematics','Mathematics AA','Elective'] },
+    { group:'EEL',                       type:'EEL',          flow:['Language Arts 9','Language Arts 10','Language Arts 11','Language Arts 12','Elective'] },
+    { group:'EESCI',                     type:'EESCI',        flow:['Science','Science AA','Elective'] },
+    { group:'EEELE',                     type:'EEELE',        flow:['Elective'] },
+  ],
+};
+
+function gpFmt(n) { return n % 1 === 0 ? n.toFixed(0) : String(n); }
+
+function renderGPBuckets(plan, containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = plan.buckets.map(b => {
+    const bc = GP_BUCKET_BORDER[b.name] || '#ccc';
+    const subs = b.subs.length ? `<div class="gp-sub-list">${b.subs.map(s =>
+      `<div class="gp-sub-row"><span>${s.name}</span><span class="gp-sub-credits">${gpFmt(s.credits)} cr</span></div>`
+    ).join('')}</div>` : '';
+    return `<div class="gp-bucket-card" style="border-left-color:${bc}">
+      <div class="gp-bucket-header">
+        <span class="gp-bucket-name">${b.name}</span>
+        <span class="gp-bucket-credits">${gpFmt(b.credits)} cr</span>
+      </div>${subs}
+    </div>`;
+  }).join('');
+}
+
+function renderGPFlow(plan, tbodyId) {
+  const el = document.getElementById(tbodyId);
+  if (!el) return;
+  el.innerHTML = plan.creditTypes.map(ct => {
+    const chain = ct.flow.map((bucket, i) => {
+      const c = GP_COLORS[bucket] || {bg:'#f3f4f6',text:'#374151',border:'#9ca3af'};
+      const arrow = i < ct.flow.length - 1 ? '<span class="gp-arrow">&#8594;</span>' : '';
+      return `<span class="gp-pill" style="background:${c.bg};color:${c.text};border-color:${c.border}">${bucket}</span>${arrow}`;
+    }).join('');
+    return `<tr>
+      <td>${ct.group}</td>
+      <td><span class="gp-type-badge">${ct.type}</span></td>
+      <td><div class="gp-flow-chain">${chain}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+function initGradPlansPage() {
+  renderGPBuckets(GP_PLAN_2021, 'gp-2021-buckets');
+  renderGPFlow(GP_PLAN_2021, 'gp-2021-flow');
+}
+
+function switchGPTab(tab) {
+  document.querySelectorAll('#page-grad-plans .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-grad-plans .tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('gp-tab-btn-' + tab).classList.add('active');
+  document.getElementById('gp-tab-' + tab).classList.add('active');
+}
+
 function showPage(name, el) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
@@ -1708,6 +1933,7 @@ function showPage(name, el) {
   }
   if (name === 'my-tasks') initMyTasksPage();
   if (name === 'cardtouta') initCardToUTAPage();
+  if (name === 'grad-plans') initGradPlansPage();
   localStorage.setItem('it_dash_page', name);
 }
 
