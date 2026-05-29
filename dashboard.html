@@ -261,6 +261,43 @@
   .gp-impossible-vs-icon { font-size:20px; color:#dc2626; line-height:1; }
   .gp-impossible-vs-label { font-size:10px; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.06em; }
   .gp-sort-diagram { display:flex; flex-direction:column; gap:6px; }
+  /* Flow comparison cards */
+  .gp-flow-compare { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.25rem; }
+  .gp-flow-card { background:white; border:1px solid #e0e4ea; border-radius:8px; overflow:hidden; }
+  .gp-flow-card-header { display:flex; align-items:center; justify-content:space-between; padding:0.6rem 1rem; border-bottom:1px solid #e0e4ea; }
+  .gp-flow-card-header.ok { background:#f0fdf4; border-bottom-color:#bbf7d0; }
+  .gp-flow-card-header.fail { background:#fef2f2; border-bottom-color:#fecaca; }
+  .gp-flow-card-result { font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; }
+  .gp-flow-card-result.ok { background:#dcfce7; color:#166534; }
+  .gp-flow-card-result.fail { background:#fee2e2; color:#991b1b; }
+  .gp-flow-tbl { width:100%; border-collapse:collapse; font-size:12px; }
+  .gp-flow-tbl th { background:#f8f9fb; padding:5px 10px; text-align:left; font-size:10px; font-weight:600; color:#888; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #e0e4ea; }
+  .gp-flow-tbl td { padding:7px 10px; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
+  .gp-flow-tbl tr:last-child td { border-bottom:none; }
+  .gp-flow-tbl tr.conflict-row td { background:#fef2f2; }
+  .gp-flow-tbl td.step-num { color:#9ca3af; font-weight:600; width:30px; }
+  .gp-flow-tbl tr.conflict-row td.step-num { color:#dc2626; }
+  .gp-flow-tbl td.sort-num { font-weight:700; color:#374151; width:50px; }
+  .gp-flow-tbl tr.conflict-row td.sort-num { color:#dc2626; }
+  .gp-flow-tbl td.cc-order { width:90px; }
+  .gp-flow-cc-match { font-size:11px; color:#166534; font-weight:600; }
+  .gp-flow-cc-conflict { font-size:11px; color:#dc2626; font-weight:600; }
+  .gp-flow-card-note { padding:0.5rem 1rem; font-size:11px; line-height:1.4; border-top:1px solid #e0e4ea; }
+  .gp-flow-card-note.ok { background:#f0fdf4; color:#166534; }
+  .gp-flow-card-note.fail { background:#fef2f2; color:#991b1b; }
+  /* Swap proof */
+  .gp-swap-box { background:#f8f9fb; border:1px solid #e0e4ea; border-radius:8px; padding:1rem; margin-bottom:1.25rem; }
+  .gp-swap-box-title { font-size:12px; font-weight:700; color:#111; margin-bottom:0.75rem; }
+  .gp-swap-cols { display:grid; grid-template-columns:1fr auto 1fr; gap:0.75rem; align-items:center; margin-bottom:0.75rem; }
+  .gp-swap-col { background:white; border:1px solid #e0e4ea; border-radius:6px; padding:0.75rem; }
+  .gp-swap-col.current { border-color:#f97316; }
+  .gp-swap-col.swapped { border-color:#94a3b8; }
+  .gp-swap-col-title { font-size:11px; font-weight:700; color:#555; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:0.04em; }
+  .gp-swap-row { font-size:12px; margin-bottom:4px; display:flex; align-items:center; gap:5px; }
+  .gp-swap-row .badge-ok { background:#dcfce7; color:#166534; font-size:10px; font-weight:700; padding:1px 6px; border-radius:8px; }
+  .gp-swap-row .badge-fail { background:#fee2e2; color:#991b1b; font-size:10px; font-weight:700; padding:1px 6px; border-radius:8px; }
+  .gp-swap-divider { text-align:center; font-size:18px; color:#9ca3af; }
+  .gp-swap-conclusion { background:#fef9c3; border:1px solid #fde047; border-radius:6px; padding:0.5rem 0.75rem; font-size:12px; color:#713f12; font-weight:500; }
   .gp-sort-option { display:flex; align-items:center; gap:8px; background:white; border:1px solid #e0e4ea; border-radius:6px; padding:7px 10px; font-size:12px; }
   .gp-sort-option-label { font-weight:600; color:#555; min-width:70px; flex-shrink:0; }
   .gp-sort-option .gp-sort-buckets { display:flex; align-items:center; gap:4px; flex:1; }
@@ -429,7 +466,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.26</div>
+      <div class="sidebar-version">v2026.05.29.27</div>
     </div>
     <div class="main">
 
@@ -1084,111 +1121,120 @@
               </div>
             </div>
 
-            <!-- Conflict credit types table -->
-            <div class="gp-section-label" style="font-size:12px;margin-bottom:0.75rem;">
-              Remaining Sort Order Conflict
+            <!-- Flow comparison cards -->
+            <div class=”gp-section-label” style=”font-size:12px;margin-bottom:0.75rem;”>Remaining Conflict — Two Credit Types, Opposite Bucket Order</div>
+            <div class=”gp-flow-compare”>
+
+              <!-- CTESAA card -->
+              <div class=”gp-flow-card”>
+                <div class=”gp-flow-card-header ok”>
+                  <div>
+                    <span class=”gp-type-badge”>CTESAA</span>
+                    <span style=”font-size:11px;color:#555;margin-left:6px;”>Career Tech Science AA</span>
+                  </div>
+                  <span class=”gp-flow-card-result ok”>&#10003; ClassChoice order matches</span>
+                </div>
+                <table class=”gp-flow-tbl”>
+                  <thead>
+                    <tr>
+                      <th>PS Step</th>
+                      <th>Bucket</th>
+                      <th>CC Sort #</th>
+                      <th>CC Actual Order</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class=”step-num”>1</td>
+                      <td><strong>Career Tech Ed</strong></td>
+                      <td class=”sort-num”>13</td>
+                      <td><span class=”gp-flow-cc-match”>1st &#10003;</span></td>
+                    </tr>
+                    <tr>
+                      <td class=”step-num”>2</td>
+                      <td>Science AA</td>
+                      <td class=”sort-num”>16</td>
+                      <td><span class=”gp-flow-cc-match”>2nd &#10003;</span></td>
+                    </tr>
+                    <tr>
+                      <td class=”step-num”>3</td>
+                      <td style=”color:#9ca3af;”>Elective</td>
+                      <td class=”sort-num” style=”color:#9ca3af;”>99</td>
+                      <td><span style=”font-size:11px;color:#9ca3af;”>3rd</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class=”gp-flow-card-note ok”>Sort 13 &rarr; 16: ClassChoice fills Career Tech Ed first, then Science AA — same order PowerSchool expects.</div>
+              </div>
+
+              <!-- CTESCI card -->
+              <div class=”gp-flow-card”>
+                <div class=”gp-flow-card-header fail”>
+                  <div>
+                    <span class=”gp-type-badge”>CTESCI</span>
+                    <span style=”font-size:11px;color:#555;margin-left:6px;”>Career Tech Science</span>
+                  </div>
+                  <span class=”gp-flow-card-result fail”>&#10007; ClassChoice order wrong</span>
+                </div>
+                <table class=”gp-flow-tbl”>
+                  <thead>
+                    <tr>
+                      <th>PS Step</th>
+                      <th>Bucket</th>
+                      <th>CC Sort #</th>
+                      <th>CC Actual Order</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td class=”step-num”>1</td>
+                      <td>Science</td>
+                      <td class=”sort-num”>6</td>
+                      <td><span class=”gp-flow-cc-match”>1st &#10003;</span></td>
+                    </tr>
+                    <tr class=”conflict-row”>
+                      <td class=”step-num”>2</td>
+                      <td><strong>Science AA</strong> &mdash; PS wants this 2nd</td>
+                      <td class=”sort-num”>16</td>
+                      <td><span class=”gp-flow-cc-conflict”>3rd &#10007;</span></td>
+                    </tr>
+                    <tr class=”conflict-row”>
+                      <td class=”step-num”>3</td>
+                      <td><strong>Career Tech Ed</strong> &mdash; PS wants this 3rd</td>
+                      <td class=”sort-num”>13</td>
+                      <td><span class=”gp-flow-cc-conflict”>2nd &#10007;</span></td>
+                    </tr>
+                    <tr>
+                      <td class=”step-num”>4</td>
+                      <td style=”color:#9ca3af;”>Elective</td>
+                      <td class=”sort-num” style=”color:#9ca3af;”>99</td>
+                      <td><span style=”font-size:11px;color:#9ca3af;”>4th</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div class=”gp-flow-card-note fail”>Sort 13 &lt; Sort 16: ClassChoice reaches Career Tech Ed before Science AA. PowerSchool expects the opposite for this credit type.</div>
+              </div>
+
             </div>
-            <div class="gp-conflict-table-wrap">
-              <table class="gp-conflict-table">
-                <thead>
-                  <tr>
-                    <th>Credit Type</th>
-                    <th>PowerSchool fills in this order</th>
-                    <th>ClassChoice fills in this order</th>
-                    <th>Issue</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><span class="gp-type-badge">CTESCI</span></td>
-                    <td>Science &rarr; <strong>Science AA (2nd)</strong> &rarr; Career Tech Ed (3rd)</td>
-                    <td>Science &rarr; <strong>Career Tech Ed (sort 13, 2nd)</strong> &rarr; Science AA (sort 16, 3rd)</td>
-                    <td><span class="gp-conflict-pill mismatch">Unsolvable</span><div class="gp-conflict-note">CTESCI needs Science AA before Career Tech Ed. But CTESAA (below) needs the opposite order. No single sort order can satisfy both.</div></td>
-                  </tr>
-                  <tr>
-                    <td><span class="gp-type-badge">CTESAA</span></td>
-                    <td><strong>Career Tech Ed (1st)</strong> &rarr; Science AA (2nd)</td>
-                    <td><strong>Career Tech Ed (sort 13, 1st)</strong> &rarr; Science AA (sort 16, 2nd)</td>
-                    <td><span class="gp-conflict-pill mismatch">Unsolvable</span><div class="gp-conflict-note">CTESAA needs Career Tech Ed before Science AA. But CTESCI (above) needs the opposite order. No single sort order can satisfy both.</div></td>
-                  </tr>
-                </tbody>
-              </table>
+
+            <!-- Swap proof -->
+            <div class=”gp-swap-box”>
+              <div class=”gp-swap-box-title”>Why Moving the Sort Order Won't Fix This</div>
+              <div class=”gp-swap-cols”>
+                <div class=”gp-swap-col current”>
+                  <div class=”gp-swap-col-title”>Current &mdash; CTE sort 13 &lt; SciAA sort 16</div>
+                  <div class=”gp-swap-row”><span class=”badge-ok”>CTESAA &#10003;</span> CTE fills 1st, Science AA fills 2nd &mdash; matches PS</div>
+                  <div class=”gp-swap-row”><span class=”badge-fail”>CTESCI &#10007;</span> CTE fills 2nd, Science AA fills 3rd &mdash; PS wants reverse</div>
+                </div>
+                <div class=”gp-swap-divider”>&#8597;</div>
+                <div class=”gp-swap-col swapped”>
+                  <div class=”gp-swap-col-title”>If Swapped &mdash; SciAA sort &lt; CTE sort</div>
+                  <div class=”gp-swap-row”><span class=”badge-ok”>CTESCI &#10003;</span> Science AA fills first, CTE fills later &mdash; matches PS</div>
+                  <div class=”gp-swap-row”><span class=”badge-fail”>CTESAA &#10007;</span> Science AA fills before CTE &mdash; PS wants CTE first</div>
+                </div>
+              </div>
+              <div class=”gp-swap-conclusion”>Fixing one always breaks the other. These two credit types require the same two buckets in opposite priority order &mdash; something a single global sort cannot satisfy. This requires per-credit-type routing rules.</div>
             </div>
-            <!-- Structural impossibility proof -->
-            <div class="gp-impossible-box">
-              <div class="gp-impossible-eyebrow">Structural Impossibility</div>
-              <div class="gp-impossible-title">No Sort Order Can Fix This</div>
-              <div class="gp-impossible-subtitle">
-                The wrong-order conflicts above cannot be fixed by simply reordering requirements - the problem below is mathematically irreconcilable.
-                Both <strong>CTESCI</strong> and <strong>CTESAA</strong> are accepted in the same two buckets (Career Tech Ed and Science AA),
-                but PowerSchool routes them in <em>opposite priority orders</em> through those two buckets.
-                No single sort order can place Career Tech Ed and Science AA in an order that satisfies both credit types at once.
-              </div>
-
-              <div class="gp-impossible-proof">
-                <div class="gp-impossible-card">
-                  <div class="gp-impossible-ct">CTESAA</div>
-                  <div class="gp-impossible-chain">
-                    PowerSchool chain:<br>
-                    <strong>Career Tech Ed</strong> &rarr; Science AA &rarr; Elective
-                  </div>
-                  <span class="gp-impossible-needs needs-cte-first">Requires: Career Tech Ed before Science AA</span>
-                </div>
-
-                <div class="gp-impossible-vs">
-                  <div class="gp-impossible-vs-icon">&#8646;</div>
-                  <div class="gp-impossible-vs-label">Conflict</div>
-                </div>
-
-                <div class="gp-impossible-card">
-                  <div class="gp-impossible-ct">CTESCI</div>
-                  <div class="gp-impossible-chain">
-                    PowerSchool chain:<br>
-                    Science &rarr; <strong>Science AA &rarr; Career Tech Ed</strong> &rarr; Elective
-                  </div>
-                  <span class="gp-impossible-needs needs-sciaa-first">Requires: Science AA before Career Tech Ed</span>
-                </div>
-              </div>
-
-              <div class="gp-section-label" style="font-size:11px;margin-bottom:0.5rem;">The conflict is the relative sort position of Career Tech Ed (sort 11) vs. Science AA (sort 16)</div>
-              <div style="font-size:11px;color:#555;margin-bottom:0.75rem;line-height:1.5;">
-                ClassChoice processes requirements in sort-number order, lowest first. Both sort values below are confirmed. Because Career Tech Ed (sort 13) is lower than Science AA (sort 16), ClassChoice processes Career Tech Ed first - which is correct for CTESAA but wrong for CTESCI. Swapping them would fix CTESCI but break CTESAA.
-              </div>
-              <div class="gp-sort-diagram">
-                <div class="gp-sort-option" style="border-color:#f97316;background:#fff7ed;">
-                  <span class="gp-sort-option-label">Current<br><span style="font-size:10px;font-weight:400;color:#9a3412;">Career Tech Ed (11)<br>before Science AA (16)</span></span>
-                  <div class=”gp-sort-buckets”>
-                    <span class=”gp-sort-bucket sci”>Science<br><span style=”font-weight:400;font-size:10px;”>sort 6 ✓</span></span>
-                    <span class=”gp-sort-arr”>&rarr;</span>
-                    <span class=”gp-sort-bucket cte”>Career Tech Ed<br><span style=”font-weight:400;font-size:10px;”>sort 13 ✓</span></span>
-                    <span class=”gp-sort-arr”>&rarr;</span>
-                    <span class=”gp-sort-bucket sciaa”>Science AA<br><span style=”font-weight:400;font-size:10px;”>sort 16 ✓</span></span>
-                    <span class=”gp-sort-arr”>&rarr;</span>
-                    <span class=”gp-sort-bucket elec”>Elective<br><span style=”font-weight:400;font-size:10px;”>sort 99 ✓</span></span>
-                  </div>
-                  <div style=”display:flex;flex-direction:column;gap:3px;margin-left:6px;”>
-                    <span class=”gp-sort-result ok”>CTESAA ✓</span>
-                    <span class=”gp-sort-result fail”>CTESCI ✗</span>
-                  </div>
-                </div>
-                <div class="gp-sort-option">
-                  <span class="gp-sort-option-label">If swapped<br><span style="font-size:10px;font-weight:400;color:#888;">Science AA moved<br>before Career Tech Ed</span></span>
-                  <div class=”gp-sort-buckets”>
-                    <span class=”gp-sort-bucket sci”>Science<br><span style=”font-weight:400;font-size:10px;”>sort 6 ✓</span></span>
-                    <span class=”gp-sort-arr”>&rarr;</span>
-                    <span class=”gp-sort-bucket sciaa”>Science AA<br><span style=”font-weight:400;font-size:10px;”>sort &lt;11</span></span>
-                    <span class=”gp-sort-arr”>&rarr;</span>
-                    <span class=”gp-sort-bucket cte”>Career Tech Ed<br><span style=”font-weight:400;font-size:10px;”>sort 11 ✓</span></span>
-                    <span class=”gp-sort-arr”>&rarr;</span>
-                    <span class=”gp-sort-bucket elec”>Elective<br><span style=”font-weight:400;font-size:10px;”>sort 99</span></span>
-                  </div>
-                  <div style=”display:flex;flex-direction:column;gap:3px;margin-left:6px;”>
-                    <span class=”gp-sort-result fail”>CTESAA ✗</span>
-                    <span class=”gp-sort-result ok”>CTESCI ✓</span>
-                  </div>
-                </div>
-              </div>
-              <div style="font-size:10px;color:#9ca3af;margin-top:4px;">✓ all sort values confirmed from the ClassChoice 2021-2025 plan configuration</div>
 
               <!-- Concrete student scenario for the impossibility -->
               <div class="gp-student-scenario">
