@@ -294,6 +294,54 @@
   .gp-req-fill.wrong { background:#dc2626; width:100%; }
   .gp-vs-bar-legend { display:flex; gap:12px; flex-wrap:wrap; font-size:10px; color:#6b7280; margin-top:8px; align-items:center; }
   .gp-vs-legend-swatch { display:inline-block; width:16px; height:9px; border-radius:2px; margin-right:3px; vertical-align:middle; }
+  /* Grad Plan Simulator */
+  .gp-sim-wrap { margin-top:1.5rem; border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; background:#fff; }
+  .gp-sim-head { padding:0.875rem 1.25rem 0.75rem; border-bottom:1px solid #e2e8f0; }
+  .gp-sim-eyebrow-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#6366f1; margin-bottom:3px; }
+  .gp-sim-heading { font-size:14px; font-weight:700; color:#1e293b; margin-bottom:2px; }
+  .gp-sim-subtext { font-size:11px; color:#64748b; line-height:1.4; }
+  .gp-sim-controls { background:#f8fafc; border-bottom:2px solid #e2e8f0; padding:0.75rem 1.25rem; }
+  .gp-sim-controls-lbl { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.05em; color:#374151; margin-bottom:7px; }
+  .gp-sim-entry-row { display:flex; align-items:center; gap:7px; margin-bottom:6px; }
+  .gp-sim-type-sel { font-size:12px; border:1px solid #d1d5db; border-radius:5px; padding:4px 7px; background:#fff; color:#1e293b; flex:1; max-width:280px; cursor:pointer; }
+  .gp-sim-amt-inp { font-size:12px; border:1px solid #d1d5db; border-radius:5px; padding:4px 7px; background:#fff; color:#1e293b; width:68px; }
+  .gp-sim-cr-lbl { font-size:11px; color:#6b7280; white-space:nowrap; }
+  .gp-sim-del-btn { background:none; border:1px solid transparent; color:#ef4444; cursor:pointer; font-size:13px; padding:2px 6px; border-radius:4px; line-height:1; }
+  .gp-sim-del-btn:hover { background:#fee2e2; border-color:#fca5a5; }
+  .gp-sim-add-btn { margin-top:2px; font-size:12px; font-weight:600; color:#6366f1; background:#eef2ff; border:1px solid #c7d2fe; border-radius:6px; padding:5px 14px; cursor:pointer; }
+  .gp-sim-add-btn:hover { background:#e0e7ff; }
+  .gp-sim-empty-msg { font-size:12px; color:#94a3b8; font-style:italic; padding:2px 0 7px; }
+  .gp-sim-plans { display:grid; grid-template-columns:1fr 1fr; }
+  .gp-sim-plan-col:first-child { border-right:2px solid #e2e8f0; }
+  .gp-sim-plan-col-hdr { padding:8px 12px; border-bottom:2px solid #e2e8f0; }
+  .gp-sim-plan-col-hdr.ps { background:#f0f9ff; }
+  .gp-sim-plan-col-hdr.arena { background:#faf5ff; }
+  .gp-sim-plan-col-name { font-size:12px; font-weight:700; }
+  .gp-sim-plan-col-hdr.ps .gp-sim-plan-col-name { color:#0c4a6e; }
+  .gp-sim-plan-col-hdr.arena .gp-sim-plan-col-name { color:#4c1d95; }
+  .gp-sim-plan-col-desc { font-size:10px; color:#64748b; margin-top:2px; line-height:1.35; }
+  .gp-sim-plan-reqs { padding:4px 10px 8px; }
+  .gp-sim-group { margin:7px 0; }
+  .gp-sim-group-meta { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px; }
+  .gp-sim-group-name { font-size:12px; font-weight:600; color:#2563eb; display:flex; align-items:center; gap:4px; }
+  .gp-sim-group-status { font-size:10px; color:#6b7280; display:flex; align-items:center; gap:4px; }
+  .gp-sim-met-badge { color:#16a34a; font-weight:700; }
+  .gp-sim-bar-track { height:10px; background:#f1f5f9; border-radius:3px; overflow:hidden; }
+  .gp-sim-bar-fill { height:100%; border-radius:3px; transition:width 0.25s; }
+  .gp-sim-sub-rows { padding-left:10px; border-left:2px solid #e2e8f0; margin-top:4px; }
+  .gp-sim-sub-row { margin:5px 0; }
+  .gp-sim-sub-meta { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:2px; }
+  .gp-sim-sub-name { font-size:11px; color:#374151; display:flex; align-items:center; gap:4px; }
+  .gp-sim-sub-status { font-size:10px; color:#6b7280; }
+  .gp-sim-sort-badge { font-size:9px; color:#9ca3af; }
+  .gp-sim-sort-badge.known { color:#6366f1; font-weight:700; }
+  .gp-sim-sub-bar-track { height:8px; background:#f1f5f9; border-radius:2px; overflow:hidden; }
+  .gp-sim-sub-bar-fill { height:100%; border-radius:2px; transition:width 0.25s; }
+  .gp-sim-src-tags { display:flex; flex-wrap:wrap; gap:3px; margin-top:3px; }
+  .gp-sim-src-tag { font-size:9px; background:#e0e7ff; color:#3730a3; padding:1px 5px; border-radius:8px; font-weight:600; }
+  .gp-sim-diff-row { background:#fff7ed; border-radius:4px; padding:3px 5px; margin:2px -5px; }
+  .gp-sim-diff-badge { font-size:9px; background:#fed7aa; color:#9a3412; padding:1px 5px; border-radius:8px; font-weight:700; }
+  .gp-sim-footnote { font-size:10px; color:#9ca3af; padding:5px 12px 8px; border-top:1px solid #f1f5f9; font-style:italic; }
 </style>
 </head>
 <body>
@@ -362,7 +410,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.9</div>
+      <div class="sidebar-version">v2026.05.29.10</div>
     </div>
     <div class="main">
 
@@ -1276,6 +1324,38 @@
 
           </div>
           <!-- end Arena Scheduling Comparison -->
+
+          <!-- Grad Plan Simulator -->
+          <div class="gp-sim-wrap" id="gp-sim">
+            <div class="gp-sim-head">
+              <div class="gp-sim-eyebrow-lbl">Interactive Simulator</div>
+              <div class="gp-sim-heading">Grad Plan Credit Simulator</div>
+              <div class="gp-sim-subtext">Add courses below and see how PowerSchool and Arena Scheduling each apply those credits to the full graduation plan. Buckets that differ between the two systems are highlighted in the Arena column.</div>
+            </div>
+            <div class="gp-sim-controls">
+              <div class="gp-sim-controls-lbl">Courses to apply</div>
+              <div id="gp-sim-entries"></div>
+              <button class="gp-sim-add-btn" onclick="simAdd()">+ Add Course</button>
+            </div>
+            <div class="gp-sim-plans">
+              <div class="gp-sim-plan-col">
+                <div class="gp-sim-plan-col-hdr ps">
+                  <div class="gp-sim-plan-col-name">PowerSchool</div>
+                  <div class="gp-sim-plan-col-desc">Credit-type chain model — each type fills its own priority chain</div>
+                </div>
+                <div class="gp-sim-plan-reqs" id="gp-sim-ps-reqs"></div>
+              </div>
+              <div class="gp-sim-plan-col">
+                <div class="gp-sim-plan-col-hdr arena">
+                  <div class="gp-sim-plan-col-name">Arena Scheduling</div>
+                  <div class="gp-sim-plan-col-desc">Sort-order model — requirements claim credits by sort # &nbsp;(★ = confirmed value)</div>
+                </div>
+                <div class="gp-sim-plan-reqs" id="gp-sim-arena-reqs"></div>
+              </div>
+            </div>
+            <div class="gp-sim-footnote">Arena sort #s marked ★ are confirmed for this district: Career Tech Ed (sort 11), Computer Tech/Digital Studies (sort 14). All other sort values are approximate.</div>
+          </div>
+          <!-- end Grad Plan Simulator -->
 
         </div>
 
@@ -4546,6 +4626,213 @@ window.addEventListener('popstate', function() {
 
 sb.auth.getSession().then(({ data }) => {
   if (data.session && !isPasswordRecovery) { currentUser = data.session.user; showApp(); }
+});
+
+// ─────────────────────────────────────────────
+//  Grad Plan Simulator
+// ─────────────────────────────────────────────
+
+const SIM_GROUPS = [
+  { name:'Language Arts', total:4.0, buckets:[
+    { id:'la9',       name:'Language Arts 9',               required:1.0, arenaSort:1,  sortKnown:false },
+    { id:'la10',      name:'Language Arts 10',              required:1.0, arenaSort:2,  sortKnown:false },
+    { id:'la11',      name:'Language Arts 11',              required:1.0, arenaSort:3,  sortKnown:false },
+    { id:'la12',      name:'Language Arts 12',              required:1.0, arenaSort:4,  sortKnown:false },
+  ]},
+  { name:'Mathematics', total:3.0, buckets:[
+    { id:'math',      name:'Mathematics',                   required:2.0, arenaSort:5,  sortKnown:false },
+    { id:'math_aa',   name:'Mathematics AA',                required:1.0, arenaSort:6,  sortKnown:false },
+  ]},
+  { name:'Science', total:3.0, buckets:[
+    { id:'science',   name:'Science',                       required:2.0, arenaSort:7,  sortKnown:false },
+    { id:'sci_aa',    name:'Science AA',                    required:1.0, arenaSort:8,  sortKnown:false },
+  ]},
+  { name:'Social Studies', total:3.0, buckets:[
+    { id:'world_geo', name:'World Geography',               required:0.5, arenaSort:9,  sortKnown:false },
+    { id:'world_his', name:'World History',                 required:0.5, arenaSort:10, sortKnown:false },
+    { id:'us_his',    name:'United States History',         required:1.0, arenaSort:12, sortKnown:false },
+    { id:'us_gov',    name:"U S Gov't Citizen",             required:0.5, arenaSort:13, sortKnown:false },
+    { id:'soc_elect', name:'Soc Studies Elect',             required:0.5, arenaSort:17, sortKnown:false },
+  ]},
+  { name:'Fine Arts', total:1.5, buckets:[
+    { id:'fine_arts', name:'Fine Arts',                     required:1.5, arenaSort:15, sortKnown:false },
+  ]},
+  { name:'Career Tech Ed', total:1.0, buckets:[
+    { id:'cte',       name:'Career Tech Ed',                required:1.0, arenaSort:11, sortKnown:true  },
+  ]},
+  { name:'Computer Tech/Digital Studies', total:0.5, buckets:[
+    { id:'comp_tech', name:'Computer Tech/Digital Studies', required:0.5, arenaSort:14, sortKnown:true  },
+  ]},
+  { name:'Financial Literacy', total:0.5, buckets:[
+    { id:'fin_lit',   name:'Financial Literacy',            required:0.5, arenaSort:16, sortKnown:false },
+  ]},
+  { name:'Health', total:0.5, buckets:[
+    { id:'health',    name:'Health',                        required:0.5, arenaSort:18, sortKnown:false },
+  ]},
+  { name:'Physical Education', total:1.5, buckets:[
+    { id:'psf',       name:'Part Skills & Fitness',         required:1.0, arenaSort:19, sortKnown:false },
+    { id:'lifetime',  name:'Lifetime Activities',           required:0.5, arenaSort:20, sortKnown:false },
+  ]},
+  { name:'Elective', total:5.5, buckets:[
+    { id:'elective',  name:'Elective',                      required:5.5, arenaSort:99, sortKnown:false },
+  ]},
+];
+
+// Build name→id map and flat sorted bucket list
+const SIM_NAME_TO_ID = {};
+SIM_GROUPS.forEach(g => g.buckets.forEach(b => { SIM_NAME_TO_ID[b.name] = b.id; }));
+const SIM_FLAT = SIM_GROUPS.flatMap(g => g.buckets).sort((a,b) => a.arenaSort - b.arenaSort);
+
+// Arena exclusions: credit types Arena does NOT accept in a bucket despite being in the PS chain
+const SIM_ARENA_EXCL = { cte: ['CTESCI','DSCTESAA'] };
+
+// Build PS chain map lazily from GP_PLAN_2021 (defined earlier in file)
+let _simChains = null;
+function getSimChains() {
+  if (_simChains) return _simChains;
+  _simChains = {};
+  (GP_PLAN_2021.creditTypes || []).forEach(ct => {
+    _simChains[ct.type] = ct.flow.map(n => SIM_NAME_TO_ID[n]).filter(id => id !== undefined);
+  });
+  return _simChains;
+}
+
+// State
+let simEntries = [], simNextId = 0;
+
+function simAdd(type, amount) {
+  simEntries.push({ id: simNextId++, type: type || 'CTESCI', amount: parseFloat(amount) || 0.5 });
+  simRender();
+}
+function simRemove(id) { simEntries = simEntries.filter(e => e.id !== id); simRender(); }
+function simUpdate(id, field, val) {
+  const e = simEntries.find(e => e.id === id);
+  if (!e) return;
+  e[field] = field === 'amount' ? (parseFloat(val) || 0) : val;
+  simRender();
+}
+
+function simRunPS() {
+  const chains = getSimChains();
+  const st = {};
+  SIM_FLAT.forEach(b => { st[b.id] = { filled:0, required:b.required, sources:[] }; });
+  simEntries.forEach(entry => {
+    const chain = chains[entry.type] || [];
+    let rem = entry.amount;
+    for (const bid of chain) {
+      if (rem < 0.001 || !st[bid]) continue;
+      const fill = Math.min(rem, Math.max(0, st[bid].required - st[bid].filled));
+      if (fill >= 0.001) { st[bid].filled += fill; st[bid].sources.push({ type:entry.type, amt:fill }); rem -= fill; }
+    }
+  });
+  return st;
+}
+
+function simRunArena() {
+  const chains = getSimChains();
+  const st = {};
+  SIM_FLAT.forEach(b => { st[b.id] = { filled:0, required:b.required, sources:[] }; });
+  const rems = simEntries.map(e => e.amount);
+  for (const bucket of SIM_FLAT) {
+    const bs = st[bucket.id];
+    simEntries.forEach((entry, i) => {
+      if (rems[i] < 0.001) return;
+      const chain = chains[entry.type] || [];
+      if (chain.includes(bucket.id) && !(SIM_ARENA_EXCL[bucket.id]||[]).includes(entry.type)) {
+        const fill = Math.min(rems[i], Math.max(0, bs.required - bs.filled));
+        if (fill >= 0.001) { bs.filled += fill; bs.sources.push({ type:entry.type, amt:fill }); rems[i] -= fill; }
+      }
+    });
+  }
+  return st;
+}
+
+function simFmt(n) { const r = parseFloat(n.toFixed(3)); return r % 1 === 0 ? String(r) : String(parseFloat(r.toFixed(2))); }
+
+function renderSimPlan(id, state, compare, showSort) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.innerHTML = SIM_GROUPS.map(group => {
+    const totalFilled = Math.min(group.total, group.buckets.reduce((s,b) => s + Math.min(state[b.id].filled, state[b.id].required), 0));
+    const pct = Math.min(100, (totalFilled / group.total) * 100);
+    const met = totalFilled >= group.total - 0.001;
+    const barColor = met ? '#16a34a' : (totalFilled > 0.001 ? '#86efac' : '#e5e7eb');
+    const hasSubs = group.buckets.length > 1;
+
+    // Sub-bucket rows (for groups with multiple buckets)
+    const subHtml = hasSubs ? `<div class="gp-sim-sub-rows">${group.buckets.map(b => {
+      const s = state[b.id];
+      const filled = Math.min(s.filled, s.required);
+      const subPct = Math.min(100, (filled / b.required) * 100);
+      const subMet = filled >= b.required - 0.001;
+      const subColor = subMet ? '#16a34a' : (filled > 0.001 ? '#86efac' : '#e5e7eb');
+      const differs = compare && Math.abs(filled - Math.min(compare[b.id].filled, compare[b.id].required)) > 0.001;
+      const sortBadge = showSort ? `<span class="gp-sim-sort-badge${b.sortKnown?' known':''}">${b.sortKnown?'★':''}${b.arenaSort}</span>` : '';
+      const diffBadge = differs ? `<span class="gp-sim-diff-badge">≠ PS</span>` : '';
+      const srcHtml = s.sources.length ? `<div class="gp-sim-src-tags">${s.sources.map(src=>`<span class="gp-sim-src-tag">${src.type} ${simFmt(src.amt)} cr</span>`).join('')}</div>` : '';
+      return `<div class="gp-sim-sub-row${differs?' gp-sim-diff-row':''}">
+        <div class="gp-sim-sub-meta">
+          <span class="gp-sim-sub-name">${b.name} ${sortBadge} ${diffBadge}</span>
+          <span class="gp-sim-sub-status">${simFmt(filled)} of ${b.required} cr${subMet?' ✓':''}</span>
+        </div>
+        <div class="gp-sim-sub-bar-track"><div class="gp-sim-sub-bar-fill" style="width:${subPct}%;background:${subColor};"></div></div>
+        ${srcHtml}</div>`;
+    }).join('')}</div>` : '';
+
+    // For single-bucket groups, check diff at group level
+    const singleB = group.buckets[0];
+    const singleFilled = Math.min(state[singleB.id].filled, singleB.required);
+    const singleDiffers = !hasSubs && compare && Math.abs(singleFilled - Math.min(compare[singleB.id].filled, compare[singleB.id].required)) > 0.001;
+    const sortBadgeSingle = (showSort && !hasSubs) ? `<span class="gp-sim-sort-badge${singleB.sortKnown?' known':''}">${singleB.sortKnown?'★':''}${singleB.arenaSort}</span>` : '';
+    const diffBadgeSingle = singleDiffers ? `<span class="gp-sim-diff-badge">≠ PS</span>` : '';
+    const singleSrcHtml = (!hasSubs && state[singleB.id].sources.length) ? `<div class="gp-sim-src-tags">${state[singleB.id].sources.map(src=>`<span class="gp-sim-src-tag">${src.type} ${simFmt(src.amt)} cr</span>`).join('')}</div>` : '';
+
+    return `<div class="gp-sim-group">
+      <div class="${singleDiffers?'gp-sim-diff-row':''}">
+        <div class="gp-sim-group-meta">
+          <span class="gp-sim-group-name">${group.name} ${sortBadgeSingle} ${diffBadgeSingle}</span>
+          <span class="gp-sim-group-status">${simFmt(totalFilled)} of ${group.total} Credits${met?` <span class="gp-sim-met-badge">✓ Met</span>`:''}</span>
+        </div>
+        <div class="gp-sim-bar-track"><div class="gp-sim-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
+        ${singleSrcHtml}
+      </div>
+      ${subHtml}
+    </div>`;
+  }).join('');
+}
+
+function simRender() {
+  const entriesEl = document.getElementById('gp-sim-entries');
+  if (!entriesEl) return;
+  const chains = getSimChains();
+  const allTypes = Object.keys(chains).sort();
+  const typeLabels = {};
+  (GP_PLAN_2021.creditTypes||[]).forEach(ct => { typeLabels[ct.type] = ct.group; });
+
+  if (simEntries.length === 0) {
+    entriesEl.innerHTML = '<div class="gp-sim-empty-msg">No courses added yet. Click "+ Add Course" to begin.</div>';
+  } else {
+    entriesEl.innerHTML = simEntries.map(e => `
+      <div class="gp-sim-entry-row">
+        <select class="gp-sim-type-sel" onchange="simUpdate(${e.id},'type',this.value)">
+          ${allTypes.map(t=>`<option value="${t}"${t===e.type?' selected':''}>${t}${typeLabels[t]?' — '+typeLabels[t]:''}</option>`).join('')}
+        </select>
+        <input class="gp-sim-amt-inp" type="number" min="0.25" max="4" step="0.25" value="${e.amount}"
+          oninput="simUpdate(${e.id},'amount',this.value)">
+        <span class="gp-sim-cr-lbl">credits</span>
+        <button class="gp-sim-del-btn" onclick="simRemove(${e.id})" title="Remove">✕</button>
+      </div>`).join('');
+  }
+
+  const psState = simRunPS();
+  const arenaState = simRunArena();
+  renderSimPlan('gp-sim-ps-reqs', psState, null, false);
+  renderSimPlan('gp-sim-arena-reqs', arenaState, psState, true);
+}
+
+// Boot with one example entry after DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+  if (document.getElementById('gp-sim')) simAdd('CTESCI', 0.5);
 });
 </script>
 </body>
