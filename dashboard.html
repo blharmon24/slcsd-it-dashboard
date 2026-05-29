@@ -410,7 +410,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.13</div>
+      <div class="sidebar-version">v2026.05.29.14</div>
     </div>
     <div class="main">
 
@@ -1094,15 +1094,15 @@
                   </tr>
                   <tr>
                     <td><span class="gp-type-badge">CTESCI</span></td>
-                    <td>Science → Science AA → <strong>Career Tech Ed</strong></td>
-                    <td>Science → Science AA (Career Tech Ed not listed)</td>
-                    <td><span class="gp-conflict-pill missing">Career Tech Ed bucket missing</span><div class="gp-conflict-note">Students who satisfy Career Tech Ed via CTESCI in PowerSchool will show Career Tech Ed incomplete in Arena.</div></td>
+                    <td>Science → <strong>Science AA</strong> → Career Tech Ed</td>
+                    <td>Science → Career Tech Ed (sort 11) → Science AA</td>
+                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">CTESCI is accepted in Career Tech Ed (sort 11) in Arena — but Career Tech Ed is sorted before Science AA. PS fills Science AA first; Arena fills Career Tech Ed first.</div></td>
                   </tr>
                   <tr>
                     <td><span class="gp-type-badge">DSCTESAA</span></td>
                     <td>Computer Tech → <strong>Career Tech Ed</strong> → Science AA</td>
-                    <td>Computer Tech → Science AA (Career Tech Ed not listed)</td>
-                    <td><span class="gp-conflict-pill missing">Career Tech Ed bucket missing</span><div class="gp-conflict-note">Career Tech Ed is a valid destination in PowerSchool but not configured in Arena.</div></td>
+                    <td>Career Tech Ed (sort 11) → Computer Tech (sort 14) → Science AA</td>
+                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">DSCTESAA is accepted in both Career Tech Ed (sort 11) and Computer Tech (sort 14). Arena fills Career Tech Ed first; PS fills Computer Tech first.</div></td>
                   </tr>
                 </tbody>
               </table>
@@ -1112,10 +1112,10 @@
               <div class="gp-impossible-eyebrow">Structural Impossibility</div>
               <div class="gp-impossible-title">No Sort Order Can Fix This</div>
               <div class="gp-impossible-subtitle">
-                Some of the conflicts above could be resolved by reordering requirements — but the problem below is mathematically irreconcilable.
-                Two credit types both appear in the <strong>Career Tech Ed</strong> and <strong>Science AA</strong> buckets,
-                and PowerSchool routes them in <em>opposite priority orders</em> through those two buckets.
-                A single sort order can only place one bucket before the other — it cannot satisfy both at once.
+                The wrong-order conflicts above cannot be fixed by simply reordering requirements — the problem below is mathematically irreconcilable.
+                Both <strong>CTESCI</strong> and <strong>CTESAA</strong> are accepted in the same two buckets (Career Tech Ed and Science AA),
+                but PowerSchool routes them in <em>opposite priority orders</em> through those two buckets.
+                No single sort order can place Career Tech Ed and Science AA in an order that satisfies both credit types at once.
               </div>
 
               <div class="gp-impossible-proof">
@@ -1179,8 +1179,8 @@
               <div class="gp-student-scenario">
                 <div class="gp-section-label" style="font-size:11px;margin:1.25rem 0 0.6rem;">Why Sort Order Alone Cannot Reconcile These Two Credit Types</div>
 
-                <div style="background:#fef9c3;border:1px solid #fde047;border-radius:6px;padding:0.6rem 0.875rem;margin-bottom:0.875rem;font-size:12px;color:#713f12;line-height:1.5;">
-                  <strong>Note:</strong> Right now Arena is missing CTESCI from Career Tech Ed's accepted list entirely (the bug in the table above). This scenario shows what would happen <em>if Arena were corrected to include CTESCI in Career Tech Ed's accepted list</em>. Even with that correction, no single sort order can make Arena agree with PowerSchool for both credit types at the same time.
+                <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:0.6rem 0.875rem;margin-bottom:0.875rem;font-size:12px;color:#0c4a6e;line-height:1.5;">
+                  This is the <strong>actual current conflict</strong> — not a hypothetical. Both CTESCI and CTESAA are accepted in Career Tech Ed and Science AA in Arena. Career Tech Ed is sorted first (sort 11). That is correct for CTESAA (which PS also fills Career Tech Ed first) but wrong for CTESCI (which PS fills Science AA first, before Career Tech Ed).
                 </div>
 
                 <div class="gp-vs-grid">
@@ -1191,7 +1191,7 @@
                     <div class="gp-vs-col-a">
                       <div class="gp-vs-student-name">Student A &mdash; <span class="gp-type-badge" style="font-size:10px;">CTESCI</span> course &mdash; 1.0 cr awarded</div>
                       <div class="gp-vs-order">Full PS chain: Science &rarr; Science AA &rarr; Career Tech Ed &rarr; Elective</div>
-                      <div class="gp-vs-order" style="margin-top:3px;color:#64748b;font-style:italic;">Student A already has 2.0 cr of Science (that sub-bucket is full). The 1.0 cr flows past Science to the next open bucket in the chain.</div>
+                      <div class="gp-vs-order" style="margin-top:3px;color:#64748b;font-style:italic;">Student A has already earned 2.0 cr of Science from prior courses (e.g., Biology + Chemistry). The 1.0 cr CTESCI flows past that full sub-bucket to the next open one in the chain.</div>
                     </div>
                     <div class="gp-vs-col-b">
                       <div class="gp-vs-student-name">Student B &mdash; <span class="gp-type-badge" style="font-size:10px;">CTESAA</span> course &mdash; 1.0 cr awarded</div>
@@ -4713,7 +4713,8 @@ SIM_GROUPS.forEach(g => g.buckets.forEach(b => { SIM_NAME_TO_ID[b.name] = b.id; 
 const SIM_FLAT = SIM_GROUPS.flatMap(g => g.buckets).sort((a,b) => a.arenaSort - b.arenaSort);
 
 // Arena exclusions: credit types Arena does NOT accept in a bucket despite being in the PS chain
-const SIM_ARENA_EXCL = { cte: ['CTESCI','DSCTESAA'] };
+// Per confirmed Arena config, CTESCI and DSCTESAA ARE accepted in Career Tech Ed (sort 11)
+const SIM_ARENA_EXCL = {};
 
 // Build PS chain map lazily from GP_PLAN_2021 (defined earlier in file)
 let _simChains = null;
