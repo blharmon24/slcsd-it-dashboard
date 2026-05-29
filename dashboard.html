@@ -429,7 +429,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.21</div>
+      <div class="sidebar-version">v2026.05.29.22</div>
     </div>
     <div class="main">
 
@@ -1103,7 +1103,13 @@
                     <td><span class="gp-type-badge">CTESCI</span></td>
                     <td>Science &rarr; <strong>Science AA (2nd)</strong> &rarr; Career Tech Ed (3rd)</td>
                     <td>Science &rarr; <strong>Career Tech Ed (sort 13, 2nd)</strong> &rarr; Science AA (sort 16, 3rd)</td>
-                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">When Science is full, ClassChoice reaches Career Tech Ed (sort 13) before Science AA (sort 16) and fills it first. PowerSchool fills Science AA first. See structural impossibility below for why this cannot be fixed by reordering.</div></td>
+                    <td><span class="gp-conflict-pill mismatch">Unsolvable</span><div class="gp-conflict-note">CTESCI needs Science AA before Career Tech Ed. But CTESAA (below) needs the opposite order. No single sort order can satisfy both.</div></td>
+                  </tr>
+                  <tr>
+                    <td><span class="gp-type-badge">CTESAA</span></td>
+                    <td><strong>Career Tech Ed (1st)</strong> &rarr; Science AA (2nd)</td>
+                    <td><strong>Career Tech Ed (sort 13, 1st)</strong> &rarr; Science AA (sort 16, 2nd)</td>
+                    <td><span class="gp-conflict-pill mismatch">Unsolvable</span><div class="gp-conflict-note">CTESAA needs Career Tech Ed before Science AA. But CTESCI (above) needs the opposite order. No single sort order can satisfy both.</div></td>
                   </tr>
                 </tbody>
               </table>
@@ -4897,3 +4903,4 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 </body>
 </html>
+
