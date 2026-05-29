@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -429,7 +429,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.23</div>
+      <div class="sidebar-version">v2026.05.29.24</div>
     </div>
     <div class="main">
 
@@ -1004,9 +1004,9 @@
                 <div class="gp-algo-title">Credit-Type Priority Model</div>
                 <div class="gp-algo-desc">Each credit type has its own defined priority chain. When a student earns a credit, it fills the first bucket in <strong>that credit type's chain</strong> that still has room. Overflow moves automatically to the next bucket in the chain.</div>
                 <div class="gp-algo-rule">
-                  <strong>Example â€” CTESCI credit type:</strong><br>
+                  <strong>Example - CTESCI credit type:</strong><br>
                   Science &rarr; Science AA &rarr; Career Tech Ed &rarr; Elective<br>
-                  <span style="color:#555;">If Science is full, the credit tries Science AA next, then Career Tech Ed â€” always in that order.</span>
+                  <span style=”color:#555;”>If Science is full, the credit tries Science AA next, then Career Tech Ed - always in that order.</span>
                 </div>
               </div>
               <div class="gp-algo-vs">vs</div>
@@ -1015,9 +1015,9 @@
                 <div class="gp-algo-title">Bucket Sort-Order Model</div>
                 <div class="gp-algo-desc">Requirements are processed in sort order (1 &rarr; 99). For each requirement, any credit the student holds that matches its accepted credit types is consumed there â€” in the order the requirements appear, not the order the credit type defines.</div>
                 <div class="gp-algo-rule">
-                  <strong>Example â€” CTESCI credit type:</strong><br>
+                  <strong>Example - CTESCI credit type:</strong><br>
                   CTESCI appears in Science (sort&nbsp;6), Career Tech Ed (sort&nbsp;13), Science AA (sort&nbsp;16)<br>
-                  <span style="color:#555;">If Science is full, ClassChoice hits Career Tech Ed (sort 13) before Science AA (sort 16) â€” the opposite of PowerSchool's chain.</span>
+                  <span style=”color:#555;”>If Science is full, ClassChoice hits Career Tech Ed (sort 13) before Science AA (sort 16) - the opposite of PowerSchool's chain.</span>
                 </div>
               </div>
             </div>
@@ -1043,7 +1043,7 @@
                   <div class="gp-result-body ps">
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">1</div>
-                      <div>CTESCI chain: Science &rarr; Science AA &rarr; Career Tech Ed &rarr; Elective. Science is full â€” <strong>1.0 cr moves to Science AA.</strong> Science AA satisfied âœ“.</div>
+                      <div>CTESCI chain: Science &rarr; Science AA &rarr; Career Tech Ed &rarr; Elective. Science is full - <strong>1.0 cr moves to Science AA.</strong> Science AA satisfied ✓.</div>
                     </div>
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">2</div>
@@ -1056,7 +1056,7 @@
                   <div class="gp-result-body vendor">
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">1</div>
-                      <div>Sort 6 â€” Science: CTESCI accepted, but Science is full. Skip.</div>
+                      <div>Sort 6 - Science: CTESCI accepted, but Science is full. Skip.</div>
                     </div>
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">2</div>
