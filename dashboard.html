@@ -410,7 +410,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.14</div>
+      <div class="sidebar-version">v2026.05.29.15</div>
     </div>
     <div class="main">
 
@@ -1143,37 +1143,45 @@
                 </div>
               </div>
 
-              <div class="gp-section-label" style="font-size:11px;margin-bottom:0.6rem;">Both possible sort orders — one always fails</div>
+              <div class="gp-section-label" style="font-size:11px;margin-bottom:0.5rem;">The only question: what sort number does Science AA get?</div>
+              <div style="font-size:11px;color:#555;margin-bottom:0.75rem;line-height:1.5;">
+                Arena processes requirements in sort-number order, lowest first. Career Tech Ed is confirmed at <strong>sort 11</strong>. The entire conflict comes down to whether Science AA's sort number is <em>lower</em> or <em>higher</em> than 11 — those are the only two options, and neither works for both credit types.
+              </div>
               <div class="gp-sort-diagram">
                 <div class="gp-sort-option">
-                  <span class="gp-sort-option-label">Option A</span>
+                  <span class="gp-sort-option-label">Option A<br><span style="font-size:10px;font-weight:400;color:#888;">Science AA sort &gt; 11<br>(e.g., sort 20)</span></span>
                   <div class="gp-sort-buckets">
-                    <span class="gp-sort-bucket sci">Science</span>
+                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 7</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket cte">Career Tech Ed</span>
+                    <span class="gp-sort-bucket cte">Career Tech Ed<br><span style="font-weight:400;font-size:10px;">sort 11 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket sciaa">Science AA</span>
+                    <span class="gp-sort-bucket sciaa">Science AA<br><span style="font-weight:400;font-size:10px;">sort 20</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket elec">Elective</span>
+                    <span class="gp-sort-bucket elec">Elective<br><span style="font-weight:400;font-size:10px;">sort 99</span></span>
                   </div>
-                  <span class="gp-sort-result ok">CTESAA ✓</span>
-                  <span class="gp-sort-result fail">CTESCI ✗</span>
+                  <div style="display:flex;flex-direction:column;gap:3px;margin-left:6px;">
+                    <span class="gp-sort-result ok">CTESAA ✓</span>
+                    <span class="gp-sort-result fail">CTESCI ✗</span>
+                  </div>
                 </div>
                 <div class="gp-sort-option">
-                  <span class="gp-sort-option-label">Option B</span>
+                  <span class="gp-sort-option-label">Option B<br><span style="font-size:10px;font-weight:400;color:#888;">Science AA sort &lt; 11<br>(e.g., sort 8)</span></span>
                   <div class="gp-sort-buckets">
-                    <span class="gp-sort-bucket sci">Science</span>
+                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 7</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket sciaa">Science AA</span>
+                    <span class="gp-sort-bucket sciaa">Science AA<br><span style="font-weight:400;font-size:10px;">sort 8</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket cte">Career Tech Ed</span>
+                    <span class="gp-sort-bucket cte">Career Tech Ed<br><span style="font-weight:400;font-size:10px;">sort 11 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket elec">Elective</span>
+                    <span class="gp-sort-bucket elec">Elective<br><span style="font-weight:400;font-size:10px;">sort 99</span></span>
                   </div>
-                  <span class="gp-sort-result fail">CTESAA ✗</span>
-                  <span class="gp-sort-result ok">CTESCI ✓</span>
+                  <div style="display:flex;flex-direction:column;gap:3px;margin-left:6px;">
+                    <span class="gp-sort-result fail">CTESAA ✗</span>
+                    <span class="gp-sort-result ok">CTESCI ✓</span>
+                  </div>
                 </div>
               </div>
+              <div style="font-size:10px;color:#9ca3af;margin-top:4px;">★ confirmed sort value &nbsp;|&nbsp; other sort numbers shown are representative examples</div>
 
               <!-- Concrete student scenario for the impossibility -->
               <div class="gp-student-scenario">
