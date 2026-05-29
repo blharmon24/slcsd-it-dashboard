@@ -224,6 +224,40 @@
   .gp-conflict-pill.mismatch { background:#fef3c7; color:#92400e; border-color:#fde68a; }
   .gp-conflict-pill.missing { background:#fee2e2; color:#7f1d1d; border-color:#fca5a5; }
   .gp-conflict-note { font-size:11px; color:#666; margin-top:2px; }
+
+  /* Structural impossibility proof */
+  .gp-impossible-box { background:#fff5f5; border:1px solid #fca5a5; border-radius:8px; padding:1.25rem; margin-top:1.5rem; }
+  .gp-impossible-header { display:flex; align-items:center; gap:8px; margin-bottom:0.25rem; }
+  .gp-impossible-eyebrow { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#dc2626; }
+  .gp-impossible-title { font-size:14px; font-weight:700; color:#111; margin-bottom:0.5rem; }
+  .gp-impossible-subtitle { font-size:12px; color:#555; margin-bottom:1.25rem; line-height:1.5; }
+  .gp-impossible-proof { display:grid; grid-template-columns:1fr auto 1fr; gap:12px; align-items:center; margin-bottom:1.25rem; }
+  .gp-impossible-card { background:white; border:1px solid #fca5a5; border-radius:7px; padding:0.875rem 1rem; }
+  .gp-impossible-ct { font-family:monospace; font-size:12px; font-weight:700; background:#fee2e2; color:#7f1d1d; padding:2px 8px; border-radius:4px; border:1px solid #fca5a5; display:inline-block; margin-bottom:6px; }
+  .gp-impossible-chain { font-size:12px; color:#333; margin-bottom:6px; line-height:1.5; }
+  .gp-impossible-needs { font-size:11px; font-weight:600; padding:3px 10px; border-radius:10px; margin-top:2px; display:inline-block; }
+  .gp-impossible-needs.needs-cte-first { background:#dbeafe; color:#1e40af; }
+  .gp-impossible-needs.needs-sciaa-first { background:#dcfce7; color:#166534; }
+  .gp-impossible-vs { display:flex; flex-direction:column; align-items:center; gap:4px; }
+  .gp-impossible-vs-icon { font-size:20px; color:#dc2626; line-height:1; }
+  .gp-impossible-vs-label { font-size:10px; font-weight:700; color:#dc2626; text-transform:uppercase; letter-spacing:0.06em; }
+  .gp-sort-diagram { display:flex; flex-direction:column; gap:6px; }
+  .gp-sort-option { display:flex; align-items:center; gap:8px; background:white; border:1px solid #e0e4ea; border-radius:6px; padding:7px 10px; font-size:12px; }
+  .gp-sort-option-label { font-weight:600; color:#555; min-width:70px; flex-shrink:0; }
+  .gp-sort-option .gp-sort-buckets { display:flex; align-items:center; gap:4px; flex:1; }
+  .gp-sort-bucket { font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; border:1px solid; white-space:nowrap; }
+  .gp-sort-bucket.sci { background:#f0fdf4; color:#166534; border-color:#86efac; }
+  .gp-sort-bucket.sciaa { background:#dcfce7; color:#166534; border-color:#4ade80; }
+  .gp-sort-bucket.cte { background:#dbeafe; color:#1e40af; border-color:#93c5fd; }
+  .gp-sort-bucket.elec { background:#f3f4f6; color:#374151; border-color:#9ca3af; }
+  .gp-sort-result { font-size:11px; margin-left:auto; flex-shrink:0; padding:2px 8px; border-radius:10px; font-weight:600; }
+  .gp-sort-result.ok { background:#d1fae5; color:#065f46; }
+  .gp-sort-result.fail { background:#fee2e2; color:#7f1d1d; }
+  .gp-sort-arr { color:#bbb; font-size:11px; flex-shrink:0; }
+  .gp-root-cause { background:#1e1e2e; border-radius:7px; padding:1rem 1.125rem; margin-top:1rem; }
+  .gp-root-cause-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:#a78bfa; margin-bottom:6px; }
+  .gp-root-cause-text { font-size:12px; color:#e2e8f0; line-height:1.6; }
+  .gp-root-cause-text strong { color:#f8fafc; }
 </style>
 </head>
 <body>
@@ -292,7 +326,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.1</div>
+      <div class="sidebar-version">v2026.05.29.2</div>
     </div>
     <div class="main">
 
@@ -989,6 +1023,87 @@
                 </tbody>
               </table>
             </div>
+            <!-- Structural impossibility proof -->
+            <div class="gp-impossible-box">
+              <div class="gp-impossible-eyebrow">Structural Impossibility</div>
+              <div class="gp-impossible-title">No Sort Order Can Fix This</div>
+              <div class="gp-impossible-subtitle">
+                Some of the conflicts above could be resolved by reordering requirements — but the problem below is mathematically irreconcilable.
+                Two credit types both appear in the <strong>CTE</strong> and <strong>Science AA</strong> buckets,
+                and PowerSchool routes them in <em>opposite priority orders</em> through those two buckets.
+                A single sort order can only place one bucket before the other — it cannot satisfy both at once.
+              </div>
+
+              <div class="gp-impossible-proof">
+                <div class="gp-impossible-card">
+                  <div class="gp-impossible-ct">CTESAA</div>
+                  <div class="gp-impossible-chain">
+                    PowerSchool chain:<br>
+                    <strong>CTE</strong> &rarr; Science AA &rarr; Elective
+                  </div>
+                  <span class="gp-impossible-needs needs-cte-first">Requires: CTE before Science AA</span>
+                </div>
+
+                <div class="gp-impossible-vs">
+                  <div class="gp-impossible-vs-icon">&#8646;</div>
+                  <div class="gp-impossible-vs-label">Conflict</div>
+                </div>
+
+                <div class="gp-impossible-card">
+                  <div class="gp-impossible-ct">CTESCI</div>
+                  <div class="gp-impossible-chain">
+                    PowerSchool chain:<br>
+                    Science &rarr; <strong>Science AA &rarr; CTE</strong> &rarr; Elective
+                  </div>
+                  <span class="gp-impossible-needs needs-sciaa-first">Requires: Science AA before CTE</span>
+                </div>
+              </div>
+
+              <div class="gp-section-label" style="font-size:11px;margin-bottom:0.6rem;">Both possible sort orders — one always fails</div>
+              <div class="gp-sort-diagram">
+                <div class="gp-sort-option">
+                  <span class="gp-sort-option-label">Option A</span>
+                  <div class="gp-sort-buckets">
+                    <span class="gp-sort-bucket sci">Science</span>
+                    <span class="gp-sort-arr">&rarr;</span>
+                    <span class="gp-sort-bucket cte">CTE</span>
+                    <span class="gp-sort-arr">&rarr;</span>
+                    <span class="gp-sort-bucket sciaa">Science AA</span>
+                    <span class="gp-sort-arr">&rarr;</span>
+                    <span class="gp-sort-bucket elec">Elective</span>
+                  </div>
+                  <span class="gp-sort-result ok">CTESAA ✓</span>
+                  <span class="gp-sort-result fail">CTESCI ✗</span>
+                </div>
+                <div class="gp-sort-option">
+                  <span class="gp-sort-option-label">Option B</span>
+                  <div class="gp-sort-buckets">
+                    <span class="gp-sort-bucket sci">Science</span>
+                    <span class="gp-sort-arr">&rarr;</span>
+                    <span class="gp-sort-bucket sciaa">Science AA</span>
+                    <span class="gp-sort-arr">&rarr;</span>
+                    <span class="gp-sort-bucket cte">CTE</span>
+                    <span class="gp-sort-arr">&rarr;</span>
+                    <span class="gp-sort-bucket elec">Elective</span>
+                  </div>
+                  <span class="gp-sort-result fail">CTESAA ✗</span>
+                  <span class="gp-sort-result ok">CTESCI ✓</span>
+                </div>
+              </div>
+
+              <div class="gp-root-cause">
+                <div class="gp-root-cause-label">Root Cause</div>
+                <div class="gp-root-cause-text">
+                  PowerSchool lets <strong>each credit type define its own independent priority chain.</strong>
+                  Two credit types can point at the same pair of buckets and prefer them in opposite order — and PowerSchool handles that correctly because it evaluates each credit type's chain independently.
+                  Arena Scheduling enforces a <strong>single global sort order shared by all credit types.</strong>
+                  The moment any two credit types require opposite relative ordering for the same two buckets,
+                  no sort order configuration can satisfy both — the constraint is impossible to resolve within the model.
+                </div>
+              </div>
+            </div>
+            <!-- end structural impossibility proof -->
+
           </div>
           <!-- end Arena Scheduling Comparison -->
 
