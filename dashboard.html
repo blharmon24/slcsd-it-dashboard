@@ -463,7 +463,7 @@
 
 <div id="app-shell">
   <div class="topbar">
-    <div class=”brand”>SLCSD - IT Dashboard</div>
+    <div class="brand">SLCSD - IT Dashboard</div>
     <div class="user-info">
       <span id="user-label"></span>
       <button class="btn-logout" onclick="handleLogout()">Sign out</button>
@@ -479,7 +479,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.35</div>
+      <div class="sidebar-version">v2026.05.29.36</div>
     </div>
     <div class="main">
 
@@ -520,7 +520,7 @@
               <span id="term-dates-toggle-icon">&#9654;</span> Term end dates
             </button>
             <div id="term-dates-panel" style="display:none;background:white;border:1px solid #e0e4ea;border-radius:8px;padding:1rem;margin-top:0.5rem;">
-              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Set end dates separately for traditional schools (T1â€“T4) and Horizonte (T1â€“T6). The page will auto-select the current term and flag overdue schools (2+ weeks past due).</p>
+              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Set end dates separately for traditional schools (T1-T4) and Horizonte (T1-T6). The page will auto-select the current term and flag overdue schools (2+ weeks past due).</p>
               <div id="term-dates-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:0.75rem;"></div>
               <button class="save-btn" onclick="saveTermDates()">Save</button>
               <span class="save-confirm" id="term-dates-confirm">Saved!</span>
@@ -978,7 +978,7 @@
 
       <div class="page" id="page-cardtouta">
         <div class="page-title">CardToUTA</div>
-        <div class=”page-sub”>Convert daily card access export to UTA activation format. All processing happens in your browser - no student data is uploaded.</div>
+        <div class="page-sub">Convert daily card access export to UTA activation format. All processing happens in your browser - no student data is uploaded.</div>
 
         <div class="tasks-card" style="margin-bottom:1.5rem;">
           <div class="tasks-card-title">Upload Source File</div>
@@ -1018,7 +1018,7 @@
         <div class="page-title">Graduation Plans</div>
         <div class="page-sub">Credit bucket structure and overflow rules for each graduation plan. Credits fill the first available bucket in priority order; overflow moves to the next.</div>
         <div class="tab-bar">
-          <button class=”tab-btn active” id=”gp-tab-btn-2021” onclick=”switchGPTab('2021')”>2021-2025</button>
+          <button class="tab-btn active" id="gp-tab-btn-2021" onclick="switchGPTab('2021')">2021-2025</button>
           <button class="tab-btn" id="gp-tab-btn-2026" onclick="switchGPTab('2026')">Beginning 2026</button>
           <button class="tab-btn" id="gp-tab-btn-2027" onclick="switchGPTab('2027')">Beginning 2027</button>
         </div>
@@ -1056,18 +1056,18 @@
                 <div class="gp-algo-rule">
                   <strong>Example - CTESCI credit type:</strong><br>
                   Science &rarr; Science AA &rarr; Career Tech Ed &rarr; Elective<br>
-                  <span style=”color:#555;”>If Science is full, the credit tries Science AA next, then Career Tech Ed - always in that order.</span>
+                  <span style="color:#555;">If Science is full, the credit tries Science AA next, then Career Tech Ed - always in that order.</span>
                 </div>
               </div>
               <div class="gp-algo-vs">vs</div>
               <div class="gp-algo-card vendor-card">
                 <div class="gp-algo-label">ClassChoice</div>
                 <div class="gp-algo-title">Bucket Sort-Order Model</div>
-                <div class=”gp-algo-desc”>Requirements are processed in sort order (1 &rarr; 99). For each requirement, any credit the student holds that matches its accepted credit types is consumed there - in the order the requirements appear, not the order the credit type defines.</div>
+                <div class="gp-algo-desc">Requirements are processed in sort order (1 &rarr; 99). For each requirement, any credit the student holds that matches its accepted credit types is consumed there - in the order the requirements appear, not the order the credit type defines.</div>
                 <div class="gp-algo-rule">
                   <strong>Example - CTESCI credit type:</strong><br>
                   CTESCI appears in Science (sort&nbsp;6), Career Tech Ed (sort&nbsp;13), Science AA (sort&nbsp;16)<br>
-                  <span style=”color:#555;”>If Science is full, ClassChoice hits Career Tech Ed (sort 13) before Science AA (sort 16) - the opposite of PowerSchool's chain.</span>
+                  <span style="color:#555;">If Science is full, ClassChoice hits Career Tech Ed (sort 13) before Science AA (sort 16) - the opposite of PowerSchool's chain.</span>
                 </div>
               </div>
             </div>
@@ -1078,7 +1078,7 @@
             </div>
             <div class="gp-scenario-box">
               <div class="gp-scenario-intro">
-                A student has already earned 2.0 cr of Science (Biology + Chemistry - Science bucket full). They take a 1.0 cr <code style=”font-size:11px;background:#f1f5f9;padding:1px 5px;border-radius:3px;border:1px solid #e2e8f0;”>CTESCI</code> course and still need Science AA (1.0 cr) and Career Tech Ed (1.0 cr).
+                A student has already earned 2.0 cr of Science (Biology + Chemistry - Science bucket full). They take a 1.0 cr <code style="font-size:11px;background:#f1f5f9;padding:1px 5px;border-radius:3px;border:1px solid #e2e8f0;">CTESCI</code> course and still need Science AA (1.0 cr) and Career Tech Ed (1.0 cr).
               </div>
               <div class="gp-scenario-courses">
                 <div class="gp-course-card">
@@ -1123,13 +1123,13 @@
               <div class="gp-outcome-row">
                 <div class="gp-outcome-col ps">
                   <div class="gp-outcome-label">PowerSchool result</div>
-                  <div class=”gp-outcome-item”><span>Science AA (1.0 cr)</span><span class=”gp-badge-ok”>Satisfied ✓</span></div>
-                  <div class=”gp-outcome-item”><span>Career Tech Ed (1.0 cr)</span><span class=”gp-badge-fail”>Still needed ✗</span></div>
+                  <div class="gp-outcome-item"><span>Science AA (1.0 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
+                  <div class="gp-outcome-item"><span>Career Tech Ed (1.0 cr)</span><span class="gp-badge-fail">Still needed ✗</span></div>
                 </div>
                 <div class="gp-outcome-col vendor">
                   <div class="gp-outcome-label">ClassChoice result</div>
-                  <div class=”gp-outcome-item”><span>Science AA (1.0 cr)</span><span class=”gp-badge-fail”>Still needed ✗</span></div>
-                  <div class=”gp-outcome-item”><span>Career Tech Ed (1.0 cr)</span><span class=”gp-badge-ok”>Satisfied ✓</span></div>
+                  <div class="gp-outcome-item"><span>Science AA (1.0 cr)</span><span class="gp-badge-fail">Still needed ✗</span></div>
+                  <div class="gp-outcome-item"><span>Career Tech Ed (1.0 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
                 </div>
               </div>
             </div>
@@ -1381,7 +1381,7 @@
                         <div class="gp-req-track needs-fill"><div class="gp-req-fill" style="width:0"></div></div>
                       </div>
                       <div class="gp-vs-detail" style="margin-top:4px;">ClassChoice reaches Career Tech Ed before Science AA. CTESCI is accepted there &rarr; 1.0 cr fills Career Tech Ed. Science AA left empty. PS put it in Science AA.</div>
-                      <span class=”gp-vs-badge mismatch” style=”margin-top:5px;display:inline-block;”>Wrong - Career Tech Ed claimed the credit first</span>
+                      <span class="gp-vs-badge mismatch" style="margin-top:5px;display:inline-block;">Wrong - Career Tech Ed claimed the credit first</span>
                     </div>
                     <div class="gp-vs-col-b match">
                       <div class="gp-req-row">
@@ -1587,8 +1587,8 @@ let currentUser = null;
 let records = {};
 let completions = {};
 let allCompletions = {}; // keyed by record_id -&gt; { task_key -&gt; completion }
-let termDatesTraditional = {}; // T1â€“T4 end dates for all schools except Horizonte
-let termDatesHorizonte   = {}; // T1â€“T6 end dates for Horizonte
+let termDatesTraditional = {}; // T1-T4 end dates for all schools except Horizonte
+let termDatesHorizonte   = {}; // T1-T6 end dates for Horizonte
 let currentSchool = null;
 let currentSchoolObj = null;
 let currentRecordId = null;
@@ -1702,9 +1702,9 @@ function renderTermDatesForm() {
       <input type="date" id="td-horiz-${t}" value="${termDatesHorizonte[t] || ''}">
     </div>`).join('');
   grid.innerHTML = `
-    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#555;padding-bottom:4px;border-bottom:1px solid #eee;">Traditional Schools (T1â€“T4)</div>
+    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#555;padding-bottom:4px;border-bottom:1px solid #eee;">Traditional Schools (T1-T4)</div>
     ${tradFields}
-    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#555;padding-bottom:4px;border-bottom:1px solid #eee;margin-top:0.75rem;">Horizonte (T1â€“T6)</div>
+    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#555;padding-bottom:4px;border-bottom:1px solid #eee;margin-top:0.75rem;">Horizonte (T1-T6)</div>
     ${horizFields}`;
 }
 
@@ -1761,7 +1761,7 @@ function toggleTermDatesPanel() {
   icon.innerHTML = isOpen ? '&#9654;' : '&#9660;';
 }
 
-// Returns true if a school is Not Started and â‰¥14 days past the selected term's end date
+// Returns true if a school is Not Started and >=14 days past the selected term's end date
 function isOverdue(schoolName) {
   const dates = schoolName === 'Horizonte' ? termDatesHorizonte : termDatesTraditional;
   const endDateStr = dates[getTerm()];
