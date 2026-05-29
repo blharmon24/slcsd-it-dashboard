@@ -259,23 +259,29 @@
   .gp-root-cause-text { font-size:12px; color:#e2e8f0; line-height:1.6; }
   .gp-root-cause-text strong { color:#f8fafc; }
   .gp-student-scenario { margin-top:1.25rem; }
-  .gp-student-note { font-size:12px; color:#555; line-height:1.5; margin-bottom:0.875rem; background:#fff; border:1px solid #fca5a5; border-radius:6px; padding:0.6rem 0.875rem; }
-  .gp-student-note code { font-size:11px; background:#fee2e2; color:#7f1d1d; padding:1px 5px; border-radius:3px; }
-  .gp-student-table { width:100%; border-collapse:collapse; background:white; border-radius:7px; overflow:hidden; border:1px solid #fca5a5; font-size:12px; }
-  .gp-student-table th { background:#fff5f5; padding:8px 12px; text-align:left; font-size:11px; font-weight:700; color:#7f1d1d; border-bottom:2px solid #fca5a5; }
-  .gp-student-table th.student-col { color:#374151; }
-  .gp-student-table th:nth-child(2) { border-right:2px solid #d1d5db; background:#f0f9ff; color:#0c4a6e; }
-  .gp-student-table th:nth-child(3) { background:#faf5ff; color:#4c1d95; }
-  .gp-student-table td { padding:8px 12px; border-bottom:1px solid #fee2e2; vertical-align:top; line-height:1.45; }
-  .gp-student-table tr:last-child td { border-bottom:none; }
-  .gp-student-table td.row-label { font-weight:600; color:#374151; white-space:nowrap; font-size:11px; background:#fafafa; border-right:2px solid #d1d5db; vertical-align:middle; }
-  .gp-student-table td:nth-child(2) { border-right:2px solid #d1d5db; }
-  .gp-student-table td.cell-match { background:#f0fdf4; }
-  .gp-student-table td.cell-mismatch { background:#fff1f2; border-left:3px solid #f87171; }
-  .gp-cell-result { font-weight:600; color:#333; }
-  .gp-cell-verdict { display:inline-block; font-size:10px; font-weight:700; padding:1px 7px; border-radius:8px; margin-left:4px; vertical-align:middle; }
-  .gp-cell-verdict.match { background:#dcfce7; color:#166534; }
-  .gp-cell-verdict.mismatch { background:#fee2e2; color:#991b1b; }
+  .gp-vs-grid { border:1px solid #d1d5db; border-radius:8px; overflow:hidden; font-size:12px; }
+  .gp-vs-row { display:flex; border-top:1px solid #d1d5db; }
+  .gp-vs-row:first-child { border-top:none; }
+  .gp-vs-label { width:130px; flex-shrink:0; padding:10px 12px; background:#f8fafc; border-right:2px solid #94a3b8; font-size:11px; font-weight:700; color:#374151; display:flex; flex-direction:column; justify-content:center; line-height:1.4; }
+  .gp-vs-label.header { background:#f1f5f9; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; color:#64748b; border-bottom:2px solid #94a3b8; }
+  .gp-vs-col-a { flex:1; padding:10px 14px; border-right:2px solid #94a3b8; }
+  .gp-vs-col-b { flex:1; padding:10px 14px; }
+  .gp-vs-row.header .gp-vs-col-a { background:#eff6ff; }
+  .gp-vs-row.header .gp-vs-col-b { background:#faf5ff; }
+  .gp-vs-student-name { font-size:12px; font-weight:700; color:#1e3a5f; margin-bottom:3px; }
+  .gp-vs-row.header .gp-vs-col-b .gp-vs-student-name { color:#4c1d95; }
+  .gp-vs-order { font-size:11px; color:#555; }
+  .gp-vs-order strong { color:#111; }
+  .gp-vs-col-a.match, .gp-vs-col-b.match { background:#f0fdf4; }
+  .gp-vs-col-a.mismatch, .gp-vs-col-b.mismatch { background:#fff1f2; }
+  .gp-vs-result { font-weight:700; font-size:13px; margin-bottom:2px; }
+  .gp-vs-result.ok { color:#15803d; }
+  .gp-vs-result.bad { color:#b91c1c; }
+  .gp-vs-detail { font-size:11px; color:#666; }
+  .gp-vs-badge { display:inline-block; margin-top:5px; font-size:10px; font-weight:700; padding:2px 9px; border-radius:10px; }
+  .gp-vs-badge.match { background:#dcfce7; color:#166534; }
+  .gp-vs-badge.mismatch { background:#fee2e2; color:#991b1b; }
+  .gp-vs-conclusion { font-size:11px; color:#6b7280; margin-top:8px; text-align:center; }
 </style>
 </head>
 <body>
@@ -344,7 +350,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.5</div>
+      <div class="sidebar-version">v2026.05.29.6</div>
     </div>
     <div class="main">
 
@@ -1112,63 +1118,66 @@
               <!-- Concrete student scenario for the impossibility -->
               <div class="gp-student-scenario">
                 <div class="gp-section-label" style="font-size:11px;margin:1.25rem 0 0.6rem;">Why No Single Sort Order Works</div>
-                <div class="gp-student-note">
-                  <code>CTESCI</code> and <code>CTESAA</code> both satisfy two of the same buckets — Science AA and CTE — but PowerSchool fills them in <strong>opposite order</strong>:
-                  <ul style="margin:0.4rem 0 0.4rem 1.25rem; padding:0; font-size:12px; line-height:1.7;">
-                    <li><code>CTESCI</code>: Science AA fills first, then CTE</li>
-                    <li><code>CTESAA</code>: CTE fills first, then Science AA</li>
-                  </ul>
-                  Arena must pick <strong>one</strong> sort order for both. The two students below have the exact same unfulfilled requirements — the only difference is which course they took:
+                <div class="gp-vs-grid">
+
+                  <!-- Header row -->
+                  <div class="gp-vs-row header">
+                    <div class="gp-vs-label header"></div>
+                    <div class="gp-vs-col-a">
+                      <div class="gp-vs-student-name">Student A &mdash; <span class="gp-type-badge" style="font-size:10px;">CTESCI</span> course</div>
+                      <div class="gp-vs-order">PS fills: <strong>Science AA first</strong>, then CTE</div>
+                    </div>
+                    <div class="gp-vs-col-b">
+                      <div class="gp-vs-student-name">Student B &mdash; <span class="gp-type-badge" style="font-size:10px;">CTESAA</span> course</div>
+                      <div class="gp-vs-order">PS fills: <strong>CTE first</strong>, then Science AA</div>
+                    </div>
+                  </div>
+
+                  <!-- PowerSchool row -->
+                  <div class="gp-vs-row">
+                    <div class="gp-vs-label">PowerSchool</div>
+                    <div class="gp-vs-col-a match">
+                      <div class="gp-vs-result ok">Science AA fills ✓</div>
+                      <div class="gp-vs-detail">CTE still open</div>
+                    </div>
+                    <div class="gp-vs-col-b match">
+                      <div class="gp-vs-result ok">CTE fills ✓</div>
+                      <div class="gp-vs-detail">Science AA still open</div>
+                    </div>
+                  </div>
+
+                  <!-- Arena: CTE sorted first -->
+                  <div class="gp-vs-row">
+                    <div class="gp-vs-label">Arena<br>CTE sorted first</div>
+                    <div class="gp-vs-col-a mismatch">
+                      <div class="gp-vs-result bad">CTE fills ✗</div>
+                      <div class="gp-vs-detail">Science AA left open — PS says Sci AA should be filled</div>
+                      <span class="gp-vs-badge mismatch">Wrong</span>
+                    </div>
+                    <div class="gp-vs-col-b match">
+                      <div class="gp-vs-result ok">CTE fills ✓</div>
+                      <div class="gp-vs-detail">Matches PS</div>
+                      <span class="gp-vs-badge match">Correct</span>
+                    </div>
+                  </div>
+
+                  <!-- Arena: Sci AA sorted first -->
+                  <div class="gp-vs-row">
+                    <div class="gp-vs-label">Arena<br>Sci AA sorted first</div>
+                    <div class="gp-vs-col-a match">
+                      <div class="gp-vs-result ok">Science AA fills ✓</div>
+                      <div class="gp-vs-detail">Matches PS</div>
+                      <span class="gp-vs-badge match">Correct</span>
+                    </div>
+                    <div class="gp-vs-col-b mismatch">
+                      <div class="gp-vs-result bad">Science AA fills ✗</div>
+                      <div class="gp-vs-detail">CTE left open — PS says CTE should be filled</div>
+                      <span class="gp-vs-badge mismatch">Wrong</span>
+                    </div>
+                  </div>
+
                 </div>
-                <table class="gp-student-table">
-                  <thead>
-                    <tr>
-                      <th style="width:140px;"></th>
-                      <th class="student-col">Student A &mdash; took a <span class="gp-type-badge" style="font-size:10px;">CTESCI</span> course (0.5 cr)</th>
-                      <th class="student-col">Student B &mdash; took a <span class="gp-type-badge" style="font-size:10px;">CTESAA</span> course (0.5 cr)</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td class="row-label">PowerSchool</td>
-                      <td class="cell-match">
-                        <div class="gp-cell-result">CTESCI chain: Science (full) &rarr; <strong>Science AA fills ✓</strong></div>
-                        <div style="color:#666;font-size:11px;margin-top:2px;">CTE still needs work</div>
-                      </td>
-                      <td class="cell-match">
-                        <div class="gp-cell-result">CTESAA chain: <strong>CTE fills ✓</strong></div>
-                        <div style="color:#666;font-size:11px;margin-top:2px;">Science AA still needs work</div>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="row-label">Arena &mdash; Sort A<br><span style="font-weight:400;color:#888;">(CTE before Sci AA)</span></td>
-                      <td class="cell-mismatch">
-                        <div class="gp-cell-result">CTESCI hits CTE first (lower sort) &rarr; <strong>CTE fills</strong></div>
-                        <div style="color:#666;font-size:11px;margin-top:2px;">Science AA still open — but PS says it should be filled</div>
-                        <span class="gp-cell-verdict mismatch">Disagrees with PS ✗</span>
-                      </td>
-                      <td class="cell-match">
-                        <div class="gp-cell-result">CTESAA hits CTE first &rarr; <strong>CTE fills ✓</strong></div>
-                        <div style="color:#666;font-size:11px;margin-top:2px;">Science AA still needs work — matches PS</div>
-                        <span class="gp-cell-verdict match">Matches PS ✓</span>
-                      </td>
-                    </tr>
-                    <tr>
-                      <td class="row-label">Arena &mdash; Sort B<br><span style="font-weight:400;color:#888;">(Sci AA before CTE)</span></td>
-                      <td class="cell-match">
-                        <div class="gp-cell-result">CTESCI hits Science AA first &rarr; <strong>Science AA fills ✓</strong></div>
-                        <div style="color:#666;font-size:11px;margin-top:2px;">CTE still needs work — matches PS</div>
-                        <span class="gp-cell-verdict match">Matches PS ✓</span>
-                      </td>
-                      <td class="cell-mismatch">
-                        <div class="gp-cell-result">CTESAA hits Science AA first &rarr; <strong>Science AA fills</strong></div>
-                        <div style="color:#666;font-size:11px;margin-top:2px;">CTE still open — but PS says it should be filled</div>
-                        <span class="gp-cell-verdict mismatch">Disagrees with PS ✗</span>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-                <div style="font-size:11px;color:#888;margin-top:6px;">Sort A fixes Student B but breaks Student A. Sort B fixes Student A but breaks Student B. No sort order works for both.</div>
+                <div class="gp-vs-conclusion">Sort "CTE first" fixes Student B but breaks Student A. Sort "Sci AA first" fixes Student A but breaks Student B. No sort order works for both.</div>
               </div>
               <!-- end student scenario -->
 
