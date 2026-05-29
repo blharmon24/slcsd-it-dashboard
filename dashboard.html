@@ -410,7 +410,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.16</div>
+      <div class="sidebar-version">v2026.05.29.17</div>
     </div>
     <div class="main">
 
@@ -1151,13 +1151,13 @@
                 <div class="gp-sort-option" style="border-color:#f97316;background:#fff7ed;">
                   <span class="gp-sort-option-label">Current<br><span style="font-size:10px;font-weight:400;color:#9a3412;">Career Tech Ed (11)<br>before Science AA (16)</span></span>
                   <div class="gp-sort-buckets">
-                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 7 ★</span></span>
+                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 6 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
                     <span class="gp-sort-bucket cte">Career Tech Ed<br><span style="font-weight:400;font-size:10px;">sort 11 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
                     <span class="gp-sort-bucket sciaa">Science AA<br><span style="font-weight:400;font-size:10px;">sort 16 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket elec">Elective<br><span style="font-weight:400;font-size:10px;">sort 99</span></span>
+                    <span class="gp-sort-bucket elec">Elective<br><span style="font-weight:400;font-size:10px;">sort 99 ★</span></span>
                   </div>
                   <div style="display:flex;flex-direction:column;gap:3px;margin-left:6px;">
                     <span class="gp-sort-result ok">CTESAA ✓</span>
@@ -1167,7 +1167,7 @@
                 <div class="gp-sort-option">
                   <span class="gp-sort-option-label">If swapped<br><span style="font-size:10px;font-weight:400;color:#888;">Science AA moved<br>before Career Tech Ed</span></span>
                   <div class="gp-sort-buckets">
-                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 7 ★</span></span>
+                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 6 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
                     <span class="gp-sort-bucket sciaa">Science AA<br><span style="font-weight:400;font-size:10px;">sort &lt;11</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
@@ -1181,7 +1181,7 @@
                   </div>
                 </div>
               </div>
-              <div style="font-size:10px;color:#9ca3af;margin-top:4px;">★ confirmed sort values from Arena configuration</div>
+              <div style="font-size:10px;color:#9ca3af;margin-top:4px;">★ all sort values confirmed from the Arena 2021-2025 plan configuration</div>
 
               <!-- Concrete student scenario for the impossibility -->
               <div class="gp-student-scenario">
@@ -4669,49 +4669,50 @@ sb.auth.getSession().then(({ data }) => {
 //  Grad Plan Simulator
 // ─────────────────────────────────────────────
 
+// All sort orders confirmed from Arena 2021-2025 configuration
 const SIM_GROUPS = [
   { name:'Language Arts', total:4.0, buckets:[
-    { id:'la9',       name:'Language Arts 9',               required:1.0, arenaSort:1,  sortKnown:false },
-    { id:'la10',      name:'Language Arts 10',              required:1.0, arenaSort:2,  sortKnown:false },
-    { id:'la11',      name:'Language Arts 11',              required:1.0, arenaSort:3,  sortKnown:false },
-    { id:'la12',      name:'Language Arts 12',              required:1.0, arenaSort:4,  sortKnown:false },
+    { id:'la9',       name:'Language Arts 9',               required:1.0, arenaSort:1  },
+    { id:'la10',      name:'Language Arts 10',              required:1.0, arenaSort:2  },
+    { id:'la11',      name:'Language Arts 11',              required:1.0, arenaSort:3  },
+    { id:'la12',      name:'Language Arts 12',              required:1.0, arenaSort:4  },
   ]},
   { name:'Mathematics', total:3.0, buckets:[
-    { id:'math',      name:'Mathematics',                   required:2.0, arenaSort:5,  sortKnown:false },
-    { id:'math_aa',   name:'Mathematics AA',                required:1.0, arenaSort:6,  sortKnown:false },
+    { id:'math',      name:'Mathematics',                   required:2.0, arenaSort:5  },
+    { id:'math_aa',   name:'Mathematics AA',                required:1.0, arenaSort:15 },
   ]},
   { name:'Science', total:3.0, buckets:[
-    { id:'science',   name:'Science',                       required:2.0, arenaSort:7,  sortKnown:false },
-    { id:'sci_aa',    name:'Science AA',                    required:1.0, arenaSort:16, sortKnown:true  },
+    { id:'science',   name:'Science',                       required:2.0, arenaSort:6  },
+    { id:'sci_aa',    name:'Science AA',                    required:1.0, arenaSort:16 },
   ]},
   { name:'Social Studies', total:3.0, buckets:[
-    { id:'world_geo', name:'World Geography',               required:0.5, arenaSort:9,  sortKnown:false },
-    { id:'world_his', name:'World History',                 required:0.5, arenaSort:10, sortKnown:false },
-    { id:'us_his',    name:'United States History',         required:1.0, arenaSort:12, sortKnown:false },
-    { id:'us_gov',    name:"U S Gov't Citizen",             required:0.5, arenaSort:13, sortKnown:false },
-    { id:'soc_elect', name:'Soc Studies Elect',             required:0.5, arenaSort:17, sortKnown:false },
-  ]},
-  { name:'Fine Arts', total:1.5, buckets:[
-    { id:'fine_arts', name:'Fine Arts',                     required:1.5, arenaSort:15, sortKnown:false },
+    { id:'world_geo', name:'World Geography',               required:0.5, arenaSort:7  },
+    { id:'world_his', name:'World History',                 required:0.5, arenaSort:8  },
+    { id:'us_his',    name:'United States History',         required:1.0, arenaSort:9  },
+    { id:'us_gov',    name:"U S Gov't Citizen",             required:0.5, arenaSort:10 },
+    { id:'soc_elect', name:'Soc Studies Elect',             required:0.5, arenaSort:17 },
   ]},
   { name:'Career Tech Ed', total:1.0, buckets:[
-    { id:'cte',       name:'Career Tech Ed',                required:1.0, arenaSort:11, sortKnown:true  },
+    { id:'cte',       name:'Career Tech Ed',                required:1.0, arenaSort:11 },
   ]},
-  { name:'Computer Tech/Digital Studies', total:0.5, buckets:[
-    { id:'comp_tech', name:'Computer Tech/Digital Studies', required:0.5, arenaSort:14, sortKnown:true  },
+  { name:'Fine Arts', total:1.5, buckets:[
+    { id:'fine_arts', name:'Fine Arts',                     required:1.5, arenaSort:12 },
   ]},
   { name:'Financial Literacy', total:0.5, buckets:[
-    { id:'fin_lit',   name:'Financial Literacy',            required:0.5, arenaSort:16, sortKnown:false },
+    { id:'fin_lit',   name:'Financial Literacy',            required:0.5, arenaSort:13 },
+  ]},
+  { name:'Computer Tech/Digital Studies', total:0.5, buckets:[
+    { id:'comp_tech', name:'Computer Tech/Digital Studies', required:0.5, arenaSort:14 },
   ]},
   { name:'Health', total:0.5, buckets:[
-    { id:'health',    name:'Health',                        required:0.5, arenaSort:18, sortKnown:false },
+    { id:'health',    name:'Health',                        required:0.5, arenaSort:18 },
   ]},
   { name:'Physical Education', total:1.5, buckets:[
-    { id:'psf',       name:'Part Skills & Fitness',         required:1.0, arenaSort:19, sortKnown:false },
-    { id:'lifetime',  name:'Lifetime Activities',           required:0.5, arenaSort:20, sortKnown:false },
+    { id:'psf',       name:'Part Skills & Fitness',         required:1.0, arenaSort:19 },
+    { id:'lifetime',  name:'Lifetime Activities',           required:0.5, arenaSort:20 },
   ]},
   { name:'Elective', total:5.5, buckets:[
-    { id:'elective',  name:'Elective',                      required:5.5, arenaSort:99, sortKnown:false },
+    { id:'elective',  name:'Elective',                      required:5.5, arenaSort:99 },
   ]},
 ];
 
@@ -4720,9 +4721,30 @@ const SIM_NAME_TO_ID = {};
 SIM_GROUPS.forEach(g => g.buckets.forEach(b => { SIM_NAME_TO_ID[b.name] = b.id; }));
 const SIM_FLAT = SIM_GROUPS.flatMap(g => g.buckets).sort((a,b) => a.arenaSort - b.arenaSort);
 
-// Arena exclusions: credit types Arena does NOT accept in a bucket despite being in the PS chain
-// Per confirmed Arena config, CTESCI and DSCTESAA ARE accepted in Career Tech Ed (sort 11)
-const SIM_ARENA_EXCL = {};
+// Confirmed Arena accepted credit types per bucket (from 2021-2025 Arena configuration)
+const SIM_ARENA_ACCEPTED = {
+  'la9':       ['L09','EEL'],
+  'la10':      ['L10','EEL'],
+  'la11':      ['L11','L11L12','EEL'],
+  'la12':      ['L12','L11L12','L12CTE','L12SSE','EEL'],
+  'math':      ['MAT','MAT1 OR MAT2','EEMATH'],
+  'science':   ['SCI','CTESCI','EESCI'],
+  'world_geo': ['GEO'],
+  'world_his': ['WCI'],
+  'us_his':    ['USH'],
+  'us_gov':    ['USH'],
+  'cte':       ['CTE','CTEFA','CTEFL','CTEMAA','CTESSE','DSMAA','L12CTE','CTESAA','DS','DSCTESAA','CTESCI'],
+  'fine_arts': ['FA','CTEFA','FALA'],
+  'fin_lit':   ['FL','CTEFL'],
+  'comp_tech': ['DSMAA','DS','DSCTESAA'],
+  'math_aa':   ['MAA','MAT','CTEMAA','DSMAA','EEMATH'],
+  'sci_aa':    ['SAA','SCI','CTESAA','CTESCI','DSCTESAA','EESCI'],
+  'soc_elect': ['WCI','GEO','USH','USG','CTESSE','L12SSE','SSE'],
+  'health':    ['HE'],
+  'psf':       ['PSF','FIT'],
+  'lifetime':  ['LA','FALA'],
+  'elective':  null, // all credit types
+};
 
 // Build PS chain map lazily from GP_PLAN_2021 (defined earlier in file)
 let _simChains = null;
@@ -4767,16 +4789,15 @@ function simRunPS() {
 }
 
 function simRunArena() {
-  const chains = getSimChains();
   const st = {};
   SIM_FLAT.forEach(b => { st[b.id] = { filled:0, required:b.required, sources:[] }; });
   const rems = simEntries.map(e => e.amount);
   for (const bucket of SIM_FLAT) {
     const bs = st[bucket.id];
+    const accepted = SIM_ARENA_ACCEPTED[bucket.id]; // null = all types accepted (Elective)
     simEntries.forEach((entry, i) => {
       if (rems[i] < 0.001) return;
-      const chain = chains[entry.type] || [];
-      if (chain.includes(bucket.id) && !(SIM_ARENA_EXCL[bucket.id]||[]).includes(entry.type)) {
+      if (accepted === null || (accepted && accepted.includes(entry.type))) {
         const fill = Math.min(rems[i], Math.max(0, bs.required - bs.filled));
         if (fill >= 0.001) { bs.filled += fill; bs.sources.push({ type:entry.type, amt:fill }); rems[i] -= fill; }
       }
