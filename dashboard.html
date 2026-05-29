@@ -223,6 +223,7 @@
   .gp-conflict-pill { font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; border:1px solid; white-space:nowrap; }
   .gp-conflict-pill.mismatch { background:#fef3c7; color:#92400e; border-color:#fde68a; }
   .gp-conflict-pill.missing { background:#fee2e2; color:#7f1d1d; border-color:#fca5a5; }
+  .gp-conflict-pill.resolved { background:#dcfce7; color:#14532d; border-color:#86efac; }
   .gp-conflict-note { font-size:11px; color:#666; margin-top:2px; }
 
   /* Proposed sort order changes */
@@ -428,7 +429,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.19</div>
+      <div class="sidebar-version">v2026.05.29.20</div>
     </div>
     <div class="main">
 
@@ -1015,15 +1016,15 @@
                 <div class="gp-algo-desc">Requirements are processed in sort order (1 &rarr; 99). For each requirement, any credit the student holds that matches its accepted credit types is consumed there — in the order the requirements appear, not the order the credit type defines.</div>
                 <div class="gp-algo-rule">
                   <strong>Example — DS credit type:</strong><br>
-                  DS appears in Career Tech Ed (sort&nbsp;11) and Computer Tech (sort&nbsp;14)<br>
-                  <span style="color:#555;">DS always fills Career Tech Ed first because sort 11 comes before sort 14.</span>
+                  DS appears in Computer Tech (sort&nbsp;12) and Career Tech Ed (sort&nbsp;13)<br>
+                  <span style="color:#555;">DS now fills Computer Tech first because sort 12 comes before sort 13.</span>
                 </div>
               </div>
             </div>
 
             <!-- Scenario walkthrough -->
             <div class="gp-section-label" style="font-size:12px;margin-bottom:0.75rem;">
-              Concrete Example: Same Student, Different Results
+              Concrete Example: How Each System Processes Credits
             </div>
             <div class="gp-scenario-box">
               <div class="gp-scenario-intro">
@@ -1059,11 +1060,11 @@
                   <div class="gp-result-body vendor">
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">1</div>
-                      <div>Sort 11 — Career Tech Ed requirement: DS type is in Career Tech Ed's accepted list. <strong>DS credit fills Career Tech Ed</strong> (1.0 cr, satisfied). DS is now fully consumed.</div>
+                      <div>Sort 12 — Computer Tech requirement: DS type is in Computer Tech's accepted list. <strong>DS credit fills Computer Tech</strong> (0.5 cr, satisfied). 0.5 cr overflows to Career Tech Ed.</div>
                     </div>
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">2</div>
-                      <div>Sort 14 — Computer Tech: DS was already used. CTE credit type is not in Computer Tech's accepted list. <strong>Computer Tech stays empty.</strong></div>
+                      <div>Sort 13 — Career Tech Ed: 0.5 cr DS overflow + 0.5 cr CTE course. <strong>Career Tech Ed satisfied.</strong></div>
                     </div>
                   </div>
                 </div>
@@ -1078,7 +1079,7 @@
                 <div class="gp-outcome-col vendor">
                   <div class="gp-outcome-label">ClassChoice result</div>
                   <div class="gp-outcome-item"><span>Career Tech Ed (1.0 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
-                  <div class="gp-outcome-item"><span>Computer Tech (0.5 cr)</span><span class="gp-badge-fail">0 / 0.5 ✗</span></div>
+                  <div class="gp-outcome-item"><span>Computer Tech (0.5 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
                 </div>
               </div>
             </div>
@@ -1101,45 +1102,44 @@
                   <tr>
                     <td><span class="gp-type-badge">DS</span></td>
                     <td>Computer Tech/Digital Studies</td>
-                    <td>Career Tech Ed (sort 11 &lt; sort 14)</td>
-                    <td><span class="gp-conflict-pill mismatch">Wrong order</span></td>
+                    <td>Computer Tech (sort 12) → Career Tech Ed (sort 13)</td>
+                    <td><span class="gp-conflict-pill resolved">Resolved ✓</span><div class="gp-conflict-note">Sort reorder moved Computer Tech (12) before Career Tech Ed (13). ClassChoice now fills Computer Tech first — matches PS.</div></td>
                   </tr>
                   <tr>
                     <td><span class="gp-type-badge">DSMAA</span></td>
                     <td>Computer Tech/Digital Studies</td>
-                    <td>Career Tech Ed (sort 11 &lt; sort 14)</td>
-                    <td><span class="gp-conflict-pill mismatch">Wrong order</span></td>
+                    <td>Computer Tech (sort 12) → Career Tech Ed (sort 13)</td>
+                    <td><span class="gp-conflict-pill resolved">Resolved ✓</span><div class="gp-conflict-note">Same fix as DS — Computer Tech (12) now before Career Tech Ed (13).</div></td>
                   </tr>
                   <tr>
                     <td><span class="gp-type-badge">CTESCI</span></td>
                     <td>Science → <strong>Science AA</strong> → Career Tech Ed</td>
-                    <td>Science → Career Tech Ed (sort 11) → Science AA</td>
-                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">CTESCI is accepted in both Career Tech Ed (sort 11) and Science AA (sort 16). ClassChoice fills Career Tech Ed first; PS fills Science AA first.</div></td>
+                    <td>Science → Career Tech Ed (sort 13) → Science AA (sort 16)</td>
+                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">CTESCI is accepted in both Career Tech Ed (sort 13) and Science AA (sort 16). ClassChoice still fills Career Tech Ed before Science AA; PS fills Science AA first. See structural impossibility below.</div></td>
                   </tr>
                   <tr>
                     <td><span class="gp-type-badge">DSCTESAA</span></td>
                     <td>Computer Tech → <strong>Career Tech Ed</strong> → Science AA</td>
-                    <td>Career Tech Ed (sort 11) → Computer Tech (sort 14) → Science AA</td>
-                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">DSCTESAA is accepted in both Career Tech Ed (sort 11) and Computer Tech (sort 14). ClassChoice fills Career Tech Ed first; PS fills Computer Tech first.</div></td>
+                    <td>Computer Tech (sort 12) → Career Tech Ed (sort 13) → Science AA (sort 16)</td>
+                    <td><span class="gp-conflict-pill resolved">Resolved ✓</span><div class="gp-conflict-note">Computer Tech (12) now sorts before Career Tech Ed (13), matching PS chain order.</div></td>
                   </tr>
                 </tbody>
               </table>
             </div>
             <!-- Proposed sort order changes -->
             <div class="gp-proposal-section">
-              <div class="gp-section-label" style="font-size:12px;margin-bottom:0.6rem;">Proposed Sort Order Changes — What Can Be Fixed</div>
+              <div class="gp-section-label" style="font-size:12px;margin-bottom:0.6rem;">Sort Order Changes Implemented — Before &amp; After</div>
               <div class="gp-proposal-intro">
-                Four of the five conflicts above can be resolved by swapping the positions of two requirements relative to Career Tech Ed.
-                The table below shows the full sort order with the exact proposed changes highlighted.
+                The four rows highlighted below were reordered. All other sort numbers are unchanged.
               </div>
               <table class="gp-sort-compare-table">
                 <thead>
                   <tr>
                     <th>Requirement</th>
-                    <th class="sort-col">Current Sort</th>
+                    <th class="sort-col">Previous Sort</th>
                     <th class="sort-col"></th>
-                    <th class="sort-col">Proposed Sort</th>
-                    <th>Conflict resolved</th>
+                    <th class="sort-col">New Sort</th>
+                    <th>Effect</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1242,10 +1242,10 @@
                 </tbody>
               </table>
               <div class="gp-proposal-callout fix">
-                <strong>What this fixes:</strong> Financial Literacy (sort 11) and Computer Tech/Digital Studies (sort 12) now both appear before Career Tech Ed (sort 13). ClassChoice will fill them first — matching PowerSchool's chain order for CTEFL, DS, DSMAA, and DSCTESAA.
+                <strong>What this fixed:</strong> Financial Literacy (sort 11) and Computer Tech/Digital Studies (sort 12) now both appear before Career Tech Ed (sort 13). ClassChoice fills them first — matching PowerSchool's chain order for CTEFL, DS, DSMAA, and DSCTESAA. All four conflicts are resolved.
               </div>
               <div class="gp-proposal-callout limit">
-                <strong>What this cannot fix:</strong> The CTESCI / CTESAA conflict remains regardless of sort order. Both are accepted in Career Tech Ed and Science AA, and PowerSchool routes them in opposite orders through those two buckets. See the structural impossibility below.
+                <strong>What remains unresolvable:</strong> The CTESCI / CTESAA conflict persists regardless of any sort order. Both are accepted in Career Tech Ed (sort 13) and Science AA (sort 16), and PowerSchool routes them in opposite orders through those two buckets. See the structural impossibility below.
               </div>
             </div>
             <!-- end proposed sort order changes -->
@@ -1288,7 +1288,7 @@
 
               <div class="gp-section-label" style="font-size:11px;margin-bottom:0.5rem;">The conflict is the relative sort position of Career Tech Ed (sort 11) vs. Science AA (sort 16)</div>
               <div style="font-size:11px;color:#555;margin-bottom:0.75rem;line-height:1.5;">
-                ClassChoice processes requirements in sort-number order, lowest first. Both sort values below are confirmed. Because Career Tech Ed (sort 11) is lower than Science AA (sort 16), ClassChoice processes Career Tech Ed first — which is correct for CTESAA but wrong for CTESCI. Swapping them would fix CTESCI but break CTESAA.
+                ClassChoice processes requirements in sort-number order, lowest first. Both sort values below are confirmed. Because Career Tech Ed (sort 13) is lower than Science AA (sort 16), ClassChoice processes Career Tech Ed first — which is correct for CTESAA but wrong for CTESCI. Swapping them would fix CTESCI but break CTESAA.
               </div>
               <div class="gp-sort-diagram">
                 <div class="gp-sort-option" style="border-color:#f97316;background:#fff7ed;">
@@ -1296,7 +1296,7 @@
                   <div class="gp-sort-buckets">
                     <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 6 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket cte">Career Tech Ed<br><span style="font-weight:400;font-size:10px;">sort 11 ★</span></span>
+                    <span class="gp-sort-bucket cte">Career Tech Ed<br><span style="font-weight:400;font-size:10px;">sort 13 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
                     <span class="gp-sort-bucket sciaa">Science AA<br><span style="font-weight:400;font-size:10px;">sort 16 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
@@ -1331,7 +1331,7 @@
                 <div class="gp-section-label" style="font-size:11px;margin:1.25rem 0 0.6rem;">Why Sort Order Alone Cannot Reconcile These Two Credit Types</div>
 
                 <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:0.6rem 0.875rem;margin-bottom:0.875rem;font-size:12px;color:#0c4a6e;line-height:1.5;">
-                  This is the <strong>actual current conflict</strong>. Both CTESCI and CTESAA are accepted in Career Tech Ed (sort 11) and Science AA (sort 16) in ClassChoice. Because Career Tech Ed sorts first, ClassChoice fills it first for both — which matches PS for CTESAA but contradicts PS for CTESCI (which fills Science AA before Career Tech Ed).
+                  This is the <strong>actual current conflict</strong>. Both CTESCI and CTESAA are accepted in Career Tech Ed (sort 13) and Science AA (sort 16) in ClassChoice. Because Career Tech Ed sorts first, ClassChoice fills it first for both — which matches PS for CTESAA but contradicts PS for CTESCI (which fills Science AA before Career Tech Ed).
                 </div>
 
                 <div class="gp-vs-grid">
@@ -4835,17 +4835,17 @@ const SIM_GROUPS = [
     { id:'us_gov',    name:"U S Gov't Citizen",             required:0.5, arenaSort:10 },
     { id:'soc_elect', name:'Soc Studies Elect',             required:0.5, arenaSort:17 },
   ]},
-  { name:'Career Tech Ed', total:1.0, buckets:[
-    { id:'cte',       name:'Career Tech Ed',                required:1.0, arenaSort:11 },
-  ]},
-  { name:'Fine Arts', total:1.5, buckets:[
-    { id:'fine_arts', name:'Fine Arts',                     required:1.5, arenaSort:12 },
-  ]},
   { name:'Financial Literacy', total:0.5, buckets:[
-    { id:'fin_lit',   name:'Financial Literacy',            required:0.5, arenaSort:13 },
+    { id:'fin_lit',   name:'Financial Literacy',            required:0.5, arenaSort:11 },
   ]},
   { name:'Computer Tech/Digital Studies', total:0.5, buckets:[
-    { id:'comp_tech', name:'Computer Tech/Digital Studies', required:0.5, arenaSort:14 },
+    { id:'comp_tech', name:'Computer Tech/Digital Studies', required:0.5, arenaSort:12 },
+  ]},
+  { name:'Career Tech Ed', total:1.0, buckets:[
+    { id:'cte',       name:'Career Tech Ed',                required:1.0, arenaSort:13 },
+  ]},
+  { name:'Fine Arts', total:1.5, buckets:[
+    { id:'fine_arts', name:'Fine Arts',                     required:1.5, arenaSort:14 },
   ]},
   { name:'Health', total:0.5, buckets:[
     { id:'health',    name:'Health',                        required:0.5, arenaSort:18 },
