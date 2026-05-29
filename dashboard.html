@@ -350,7 +350,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.7</div>
+      <div class="sidebar-version">v2026.05.29.8</div>
     </div>
     <div class="main">
 
@@ -1124,12 +1124,25 @@
                   <div class="gp-vs-row header">
                     <div class="gp-vs-label header"></div>
                     <div class="gp-vs-col-a">
-                      <div class="gp-vs-student-name">Student A &mdash; <span class="gp-type-badge" style="font-size:10px;">CTESCI</span> course</div>
-                      <div class="gp-vs-order">PS fills: <strong>Science AA first</strong>, then Career Tech Ed</div>
+                      <div class="gp-vs-student-name">Student A &mdash; <span class="gp-type-badge" style="font-size:10px;">CTESCI</span> course &mdash; 0.5 cr awarded</div>
+                      <div class="gp-vs-order">PS chain: Science (full) &rarr; <strong>Science AA</strong> &rarr; Career Tech Ed &rarr; Elective</div>
                     </div>
                     <div class="gp-vs-col-b">
-                      <div class="gp-vs-student-name">Student B &mdash; <span class="gp-type-badge" style="font-size:10px;">CTESAA</span> course</div>
-                      <div class="gp-vs-order">PS fills: <strong>Career Tech Ed first</strong>, then Science AA</div>
+                      <div class="gp-vs-student-name">Student B &mdash; <span class="gp-type-badge" style="font-size:10px;">CTESAA</span> course &mdash; 0.5 cr awarded</div>
+                      <div class="gp-vs-order">PS chain: <strong>Career Tech Ed</strong> &rarr; Science AA &rarr; Elective</div>
+                    </div>
+                  </div>
+
+                  <!-- Open requirements row -->
+                  <div class="gp-vs-row">
+                    <div class="gp-vs-label" style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Open requirements<br>before this course</div>
+                    <div class="gp-vs-col-a" style="background:#f8fafc;">
+                      <div class="gp-vs-detail">Career Tech Ed: needs 0.5 cr</div>
+                      <div class="gp-vs-detail">Science AA: needs 0.5 cr</div>
+                    </div>
+                    <div class="gp-vs-col-b" style="background:#f8fafc;">
+                      <div class="gp-vs-detail">Career Tech Ed: needs 0.5 cr</div>
+                      <div class="gp-vs-detail">Science AA: needs 0.5 cr</div>
                     </div>
                   </div>
 
@@ -1137,41 +1150,41 @@
                   <div class="gp-vs-row">
                     <div class="gp-vs-label">PowerSchool</div>
                     <div class="gp-vs-col-a match">
-                      <div class="gp-vs-result ok">Science AA fills ✓</div>
-                      <div class="gp-vs-detail">Career Tech Ed still open</div>
+                      <div class="gp-vs-result ok">0.5 cr &rarr; Science AA ✓</div>
+                      <div class="gp-vs-detail">Science is already full; 0.5 cr moves to next bucket in chain. Career Tech Ed still needs 0.5 cr.</div>
                     </div>
                     <div class="gp-vs-col-b match">
-                      <div class="gp-vs-result ok">Career Tech Ed fills ✓</div>
-                      <div class="gp-vs-detail">Science AA still open</div>
+                      <div class="gp-vs-result ok">0.5 cr &rarr; Career Tech Ed ✓</div>
+                      <div class="gp-vs-detail">Career Tech Ed is first in chain and still open. Science AA still needs 0.5 cr.</div>
                     </div>
                   </div>
 
-                  <!-- Arena: CTE sorted first -->
+                  <!-- Arena: Career Tech Ed sorted first -->
                   <div class="gp-vs-row">
-                    <div class="gp-vs-label">Arena<br>Career Tech Ed first</div>
+                    <div class="gp-vs-label">Arena<br>Career Tech Ed sorted first</div>
                     <div class="gp-vs-col-a mismatch">
-                      <div class="gp-vs-result bad">Career Tech Ed fills ✗</div>
-                      <div class="gp-vs-detail">Science AA left open — PS says Sci AA should be filled</div>
+                      <div class="gp-vs-result bad">0.5 cr &rarr; Career Tech Ed ✗</div>
+                      <div class="gp-vs-detail">CTESCI is accepted in Career Tech Ed; Arena fills it with 0.5 cr. Science AA still needs 0.5 cr — PS put it in Science AA instead.</div>
                       <span class="gp-vs-badge mismatch">Wrong</span>
                     </div>
                     <div class="gp-vs-col-b match">
-                      <div class="gp-vs-result ok">Career Tech Ed fills ✓</div>
-                      <div class="gp-vs-detail">Matches PS</div>
+                      <div class="gp-vs-result ok">0.5 cr &rarr; Career Tech Ed ✓</div>
+                      <div class="gp-vs-detail">Both systems agree: 0.5 cr fills Career Tech Ed.</div>
                       <span class="gp-vs-badge match">Correct</span>
                     </div>
                   </div>
 
-                  <!-- Arena: Sci AA sorted first -->
+                  <!-- Arena: Science AA sorted first -->
                   <div class="gp-vs-row">
-                    <div class="gp-vs-label">Arena<br>Sci AA sorted first</div>
+                    <div class="gp-vs-label">Arena<br>Science AA sorted first</div>
                     <div class="gp-vs-col-a match">
-                      <div class="gp-vs-result ok">Science AA fills ✓</div>
-                      <div class="gp-vs-detail">Matches PS</div>
+                      <div class="gp-vs-result ok">0.5 cr &rarr; Science AA ✓</div>
+                      <div class="gp-vs-detail">Both systems agree: 0.5 cr fills Science AA.</div>
                       <span class="gp-vs-badge match">Correct</span>
                     </div>
                     <div class="gp-vs-col-b mismatch">
-                      <div class="gp-vs-result bad">Science AA fills ✗</div>
-                      <div class="gp-vs-detail">Career Tech Ed left open — PS says Career Tech Ed should be filled</div>
+                      <div class="gp-vs-result bad">0.5 cr &rarr; Science AA ✗</div>
+                      <div class="gp-vs-detail">CTESAA is accepted in Science AA; Arena fills it with 0.5 cr. Career Tech Ed still needs 0.5 cr — PS put it in Career Tech Ed instead.</div>
                       <span class="gp-vs-badge mismatch">Wrong</span>
                     </div>
                   </div>
