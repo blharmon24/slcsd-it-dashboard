@@ -410,7 +410,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.17</div>
+      <div class="sidebar-version">v2026.05.29.18</div>
     </div>
     <div class="main">
 
@@ -971,10 +971,10 @@
             </table>
           </div>
 
-          <!-- Arena Scheduling Comparison -->
+          <!-- ClassChoice Comparison -->
           <div class="gp-compare-section">
             <div class="gp-section-label" style="margin-bottom:1rem;">
-              Arena Scheduling Comparison
+              ClassChoice Comparison
               <span class="gp-total-badge" style="background:#fef3c7;color:#92400e;">Vendor vs. PowerSchool</span>
             </div>
 
@@ -992,7 +992,7 @@
               </div>
               <div class="gp-algo-vs">vs</div>
               <div class="gp-algo-card vendor-card">
-                <div class="gp-algo-label">Arena Scheduling</div>
+                <div class="gp-algo-label">ClassChoice</div>
                 <div class="gp-algo-title">Bucket Sort-Order Model</div>
                 <div class="gp-algo-desc">Requirements are processed in sort order (1 &rarr; 99). For each requirement, any credit the student holds that matches its accepted credit types is consumed there — in the order the requirements appear, not the order the credit type defines.</div>
                 <div class="gp-algo-rule">
@@ -1037,7 +1037,7 @@
                   </div>
                 </div>
                 <div class="gp-result-col">
-                  <div class="gp-result-header vendor">Arena Scheduling — sort-order processing</div>
+                  <div class="gp-result-header vendor">ClassChoice — sort-order processing</div>
                   <div class="gp-result-body vendor">
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">1</div>
@@ -1058,7 +1058,7 @@
                   <div class="gp-outcome-item"><span>Computer Tech (0.5 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
                 </div>
                 <div class="gp-outcome-col vendor">
-                  <div class="gp-outcome-label">Arena Scheduling result</div>
+                  <div class="gp-outcome-label">ClassChoice result</div>
                   <div class="gp-outcome-item"><span>Career Tech Ed (1.0 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
                   <div class="gp-outcome-item"><span>Computer Tech (0.5 cr)</span><span class="gp-badge-fail">0 / 0.5 ✗</span></div>
                 </div>
@@ -1075,7 +1075,7 @@
                   <tr>
                     <th>Credit Type</th>
                     <th>PowerSchool fills first</th>
-                    <th>Arena Scheduling fills first</th>
+                    <th>ClassChoice fills first</th>
                     <th>Issue</th>
                   </tr>
                 </thead>
@@ -1096,13 +1096,13 @@
                     <td><span class="gp-type-badge">CTESCI</span></td>
                     <td>Science → <strong>Science AA</strong> → Career Tech Ed</td>
                     <td>Science → Career Tech Ed (sort 11) → Science AA</td>
-                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">CTESCI is accepted in both Career Tech Ed (sort 11) and Science AA (sort 16). Arena fills Career Tech Ed first; PS fills Science AA first.</div></td>
+                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">CTESCI is accepted in both Career Tech Ed (sort 11) and Science AA (sort 16). ClassChoice fills Career Tech Ed first; PS fills Science AA first.</div></td>
                   </tr>
                   <tr>
                     <td><span class="gp-type-badge">DSCTESAA</span></td>
                     <td>Computer Tech → <strong>Career Tech Ed</strong> → Science AA</td>
                     <td>Career Tech Ed (sort 11) → Computer Tech (sort 14) → Science AA</td>
-                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">DSCTESAA is accepted in both Career Tech Ed (sort 11) and Computer Tech (sort 14). Arena fills Career Tech Ed first; PS fills Computer Tech first.</div></td>
+                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">DSCTESAA is accepted in both Career Tech Ed (sort 11) and Computer Tech (sort 14). ClassChoice fills Career Tech Ed first; PS fills Computer Tech first.</div></td>
                   </tr>
                 </tbody>
               </table>
@@ -1145,7 +1145,7 @@
 
               <div class="gp-section-label" style="font-size:11px;margin-bottom:0.5rem;">The conflict is the relative sort position of Career Tech Ed (sort 11) vs. Science AA (sort 16)</div>
               <div style="font-size:11px;color:#555;margin-bottom:0.75rem;line-height:1.5;">
-                Arena processes requirements in sort-number order, lowest first. Both sort values below are confirmed. Because Career Tech Ed (sort 11) is lower than Science AA (sort 16), Arena processes Career Tech Ed first — which is correct for CTESAA but wrong for CTESCI. Swapping them would fix CTESCI but break CTESAA.
+                ClassChoice processes requirements in sort-number order, lowest first. Both sort values below are confirmed. Because Career Tech Ed (sort 11) is lower than Science AA (sort 16), ClassChoice processes Career Tech Ed first — which is correct for CTESAA but wrong for CTESCI. Swapping them would fix CTESCI but break CTESAA.
               </div>
               <div class="gp-sort-diagram">
                 <div class="gp-sort-option" style="border-color:#f97316;background:#fff7ed;">
@@ -1181,14 +1181,14 @@
                   </div>
                 </div>
               </div>
-              <div style="font-size:10px;color:#9ca3af;margin-top:4px;">★ all sort values confirmed from the Arena 2021-2025 plan configuration</div>
+              <div style="font-size:10px;color:#9ca3af;margin-top:4px;">★ all sort values confirmed from the ClassChoice 2021-2025 plan configuration</div>
 
               <!-- Concrete student scenario for the impossibility -->
               <div class="gp-student-scenario">
                 <div class="gp-section-label" style="font-size:11px;margin:1.25rem 0 0.6rem;">Why Sort Order Alone Cannot Reconcile These Two Credit Types</div>
 
                 <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:0.6rem 0.875rem;margin-bottom:0.875rem;font-size:12px;color:#0c4a6e;line-height:1.5;">
-                  This is the <strong>actual current conflict</strong>. Both CTESCI and CTESAA are accepted in Career Tech Ed (sort 11) and Science AA (sort 16) in Arena. Because Career Tech Ed sorts first, Arena fills it first for both — which matches PS for CTESAA but contradicts PS for CTESCI (which fills Science AA before Career Tech Ed).
+                  This is the <strong>actual current conflict</strong>. Both CTESCI and CTESAA are accepted in Career Tech Ed (sort 11) and Science AA (sort 16) in ClassChoice. Because Career Tech Ed sorts first, ClassChoice fills it first for both — which matches PS for CTESAA but contradicts PS for CTESCI (which fills Science AA before Career Tech Ed).
                 </div>
 
                 <div class="gp-vs-grid">
@@ -1272,9 +1272,9 @@
                     </div>
                   </div>
 
-                  <!-- Arena: Career Tech Ed sorted first -->
+                  <!-- ClassChoice: Career Tech Ed sorted first -->
                   <div class="gp-vs-row">
-                    <div class="gp-vs-label">Arena<br>Career Tech Ed<br>sorted first</div>
+                    <div class="gp-vs-label">ClassChoice<br>Career Tech Ed<br>sorted first</div>
                     <div class="gp-vs-col-a mismatch">
                       <div class="gp-req-row">
                         <div class="gp-req-meta"><span class="gp-req-name" style="color:#9ca3af;text-decoration:line-through;">Science</span><span class="gp-req-count" style="color:#9ca3af;">2.0 of 2.0 — full, skip</span></div>
@@ -1288,7 +1288,7 @@
                         <div class="gp-req-meta"><span class="gp-req-name">Science AA</span><span class="gp-req-count">0 of 1.0 Credits</span></div>
                         <div class="gp-req-track needs-fill"><div class="gp-req-fill" style="width:0"></div></div>
                       </div>
-                      <div class="gp-vs-detail" style="margin-top:4px;">Arena reaches Career Tech Ed before Science AA. CTESCI is accepted there &rarr; 1.0 cr fills Career Tech Ed. Science AA left empty. PS put it in Science AA.</div>
+                      <div class="gp-vs-detail" style="margin-top:4px;">ClassChoice reaches Career Tech Ed before Science AA. CTESCI is accepted there &rarr; 1.0 cr fills Career Tech Ed. Science AA left empty. PS put it in Science AA.</div>
                       <span class="gp-vs-badge mismatch" style="margin-top:5px;display:inline-block;">Wrong — Career Tech Ed claimed the credit first</span>
                     </div>
                     <div class="gp-vs-col-b match">
@@ -1304,9 +1304,9 @@
                     </div>
                   </div>
 
-                  <!-- Arena: Science AA sorted first -->
+                  <!-- ClassChoice: Science AA sorted first -->
                   <div class="gp-vs-row">
-                    <div class="gp-vs-label">Arena<br>Science AA<br>sorted first</div>
+                    <div class="gp-vs-label">ClassChoice<br>Science AA<br>sorted first</div>
                     <div class="gp-vs-col-a match">
                       <div class="gp-req-row">
                         <div class="gp-req-meta"><span class="gp-req-name" style="color:#9ca3af;text-decoration:line-through;">Science</span><span class="gp-req-count" style="color:#9ca3af;">2.0 of 2.0 — full, skip</span></div>
@@ -1331,7 +1331,7 @@
                         <div class="gp-req-meta"><span class="gp-req-name">Career Tech Ed</span><span class="gp-req-count">0 of 1.0 Credits</span></div>
                         <div class="gp-req-track needs-fill"><div class="gp-req-fill" style="width:0"></div></div>
                       </div>
-                      <div class="gp-vs-detail" style="margin-top:4px;">Arena reaches Science AA before Career Tech Ed. CTESAA is accepted there &rarr; 1.0 cr fills Science AA. Career Tech Ed left empty. PS put it in Career Tech Ed.</div>
+                      <div class="gp-vs-detail" style="margin-top:4px;">ClassChoice reaches Science AA before Career Tech Ed. CTESAA is accepted there &rarr; 1.0 cr fills Science AA. Career Tech Ed left empty. PS put it in Career Tech Ed.</div>
                       <span class="gp-vs-badge mismatch" style="margin-top:5px;display:inline-block;">Wrong — Science AA claimed the credit first</span>
                     </div>
                   </div>
@@ -1339,8 +1339,8 @@
                 </div>
                 <div class="gp-vs-bar-legend">
                   <span><span class="gp-vs-legend-swatch" style="background:#16a34a;"></span>Filled correctly (matches PS)</span>
-                  <span><span class="gp-vs-legend-swatch" style="background:#dc2626;"></span>Filled incorrectly (Arena disagrees with PS)</span>
-                  <span><span class="gp-vs-legend-swatch" style="background:#fff7ed;border:1px dashed #fb923c;"></span>Should be filled per PS — left empty by Arena</span>
+                  <span><span class="gp-vs-legend-swatch" style="background:#dc2626;"></span>Filled incorrectly (ClassChoice disagrees with PS)</span>
+                  <span><span class="gp-vs-legend-swatch" style="background:#fff7ed;border:1px dashed #fb923c;"></span>Should be filled per PS — left empty by ClassChoice</span>
                 </div>
                 <div class="gp-vs-conclusion">Sort "Career Tech Ed first" fixes Student B but breaks Student A. Sort "Science AA first" fixes Student A but breaks Student B. No sort order works for both.</div>
               </div>
@@ -1351,7 +1351,7 @@
                 <div class="gp-root-cause-text">
                   PowerSchool lets <strong>each credit type define its own independent priority chain.</strong>
                   Two credit types can point at the same pair of buckets and prefer them in opposite order — and PowerSchool handles that correctly because it evaluates each credit type's chain independently.
-                  Arena Scheduling enforces a <strong>single global sort order shared by all credit types.</strong>
+                  ClassChoice enforces a <strong>single global sort order shared by all credit types.</strong>
                   The moment any two credit types require opposite relative ordering for the same two buckets,
                   no sort order configuration can satisfy both — the constraint is impossible to resolve within the model.
                 </div>
@@ -1360,14 +1360,14 @@
             <!-- end structural impossibility proof -->
 
           </div>
-          <!-- end Arena Scheduling Comparison -->
+          <!-- end ClassChoice Comparison -->
 
           <!-- Grad Plan Simulator -->
           <div class="gp-sim-wrap" id="gp-sim">
             <div class="gp-sim-head">
               <div class="gp-sim-eyebrow-lbl">Interactive Simulator</div>
               <div class="gp-sim-heading">Grad Plan Credit Simulator</div>
-              <div class="gp-sim-subtext">Add courses below and see how PowerSchool and Arena Scheduling each apply those credits to the full graduation plan. Buckets that differ between the two systems are highlighted in the Arena column.</div>
+              <div class="gp-sim-subtext">Add courses below and see how PowerSchool and ClassChoice each apply those credits to the full graduation plan. Buckets that differ between the two systems are highlighted in the ClassChoice column.</div>
             </div>
             <div class="gp-sim-controls">
               <div class="gp-sim-controls-lbl">Courses to apply</div>
@@ -1384,13 +1384,13 @@
               </div>
               <div class="gp-sim-plan-col">
                 <div class="gp-sim-plan-col-hdr arena">
-                  <div class="gp-sim-plan-col-name">Arena Scheduling</div>
+                  <div class="gp-sim-plan-col-name">ClassChoice</div>
                   <div class="gp-sim-plan-col-desc">Sort-order model — requirements claim credits by sort # &nbsp;(★ = confirmed value)</div>
                 </div>
                 <div class="gp-sim-plan-reqs" id="gp-sim-arena-reqs"></div>
               </div>
             </div>
-            <div class="gp-sim-footnote">Arena sort #s marked ★ are confirmed for this district: Career Tech Ed (sort 11), Computer Tech/Digital Studies (sort 14). All other sort values are approximate.</div>
+            <div class="gp-sim-footnote">ClassChoice sort #s marked ★ are confirmed from the 2021-2025 plan configuration.</div>
           </div>
           <!-- end Grad Plan Simulator -->
 
@@ -4669,7 +4669,7 @@ sb.auth.getSession().then(({ data }) => {
 //  Grad Plan Simulator
 // ─────────────────────────────────────────────
 
-// All sort orders confirmed from Arena 2021-2025 configuration
+// All sort orders confirmed from ClassChoice 2021-2025 configuration
 const SIM_GROUPS = [
   { name:'Language Arts', total:4.0, buckets:[
     { id:'la9',       name:'Language Arts 9',               required:1.0, arenaSort:1  },
@@ -4721,7 +4721,7 @@ const SIM_NAME_TO_ID = {};
 SIM_GROUPS.forEach(g => g.buckets.forEach(b => { SIM_NAME_TO_ID[b.name] = b.id; }));
 const SIM_FLAT = SIM_GROUPS.flatMap(g => g.buckets).sort((a,b) => a.arenaSort - b.arenaSort);
 
-// Confirmed Arena accepted credit types per bucket (from 2021-2025 Arena configuration)
+// Confirmed ClassChoice accepted credit types per bucket (from 2021-2025 ClassChoice configuration)
 const SIM_ARENA_ACCEPTED = {
   'la9':       ['L09','EEL'],
   'la10':      ['L10','EEL'],
