@@ -479,7 +479,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.33</div>
+      <div class="sidebar-version">v2026.05.29.34</div>
     </div>
     <div class="main">
 
@@ -4919,7 +4919,7 @@ function renderSimPlan(id, state, compare, showSort) {
       const subColor = subMet ? '#16a34a' : (filled > 0.001 ? '#86efac' : '#e5e7eb');
       const differs = compare && Math.abs(filled - Math.min(compare[b.id].filled, compare[b.id].required)) > 0.001;
       const sortBadge = showSort ? `<span class="gp-sim-sort-badge${b.sortKnown?' known':''}">${b.sortKnown?'&#9733;':''}${b.arenaSort}</span>` : '';
-      const diffBadge = differs ? `<span class="gp-sim-diff-badge">â‰  PS</span>` : '';
+      const diffBadge = differs ? `<span class="gp-sim-diff-badge">&ne; PS</span>` : '';
       const srcHtml = s.sources.length ? `<div class="gp-sim-src-tags">${s.sources.map(src=>`<span class="gp-sim-src-tag">${src.type} ${simFmt(src.amt)} cr</span>`).join('')}</div>` : '';
       return `<div class="gp-sim-sub-row${differs?' gp-sim-diff-row':''}">
         <div class="gp-sim-sub-meta">
@@ -4935,7 +4935,7 @@ function renderSimPlan(id, state, compare, showSort) {
     const singleFilled = Math.min(state[singleB.id].filled, singleB.required);
     const singleDiffers = !hasSubs && compare && Math.abs(singleFilled - Math.min(compare[singleB.id].filled, compare[singleB.id].required)) > 0.001;
     const sortBadgeSingle = (showSort && !hasSubs) ? `<span class="gp-sim-sort-badge${singleB.sortKnown?' known':''}">${singleB.sortKnown?'&#9733;':''}${singleB.arenaSort}</span>` : '';
-    const diffBadgeSingle = singleDiffers ? `<span class="gp-sim-diff-badge">â‰  PS</span>` : '';
+    const diffBadgeSingle = singleDiffers ? `<span class="gp-sim-diff-badge">&ne; PS</span>` : '';
     const singleSrcHtml = (!hasSubs && state[singleB.id].sources.length) ? `<div class="gp-sim-src-tags">${state[singleB.id].sources.map(src=>`<span class="gp-sim-src-tag">${src.type} ${simFmt(src.amt)} cr</span>`).join('')}</div>` : '';
 
     return `<div class="gp-sim-group">
