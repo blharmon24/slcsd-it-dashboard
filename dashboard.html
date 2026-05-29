@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -413,7 +413,7 @@
 
 <div id="app-shell">
   <div class="topbar">
-    <div class="brand">SLCSD — IT Dashboard</div>
+    <div class="brand">SLCSD â€” IT Dashboard</div>
     <div class="user-info">
       <span id="user-label"></span>
       <button class="btn-logout" onclick="handleLogout()">Sign out</button>
@@ -429,7 +429,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.20</div>
+      <div class="sidebar-version">v2026.05.29.21</div>
     </div>
     <div class="main">
 
@@ -464,13 +464,13 @@
               <option value="2028">28-29</option>
             </select>
           </div>
-          <!-- Term end dates configuration — collapsed by default -->
+          <!-- Term end dates configuration â€” collapsed by default -->
           <div style="margin-bottom:1rem;">
             <button onclick="toggleTermDatesPanel()" style="background:none;border:none;font-size:12px;color:#888;cursor:pointer;padding:0;display:flex;align-items:center;gap:5px;">
               <span id="term-dates-toggle-icon">&#9654;</span> Term end dates
             </button>
             <div id="term-dates-panel" style="display:none;background:white;border:1px solid #e0e4ea;border-radius:8px;padding:1rem;margin-top:0.5rem;">
-              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Set end dates separately for traditional schools (T1–T4) and Horizonte (T1–T6). The page will auto-select the current term and flag overdue schools (2+ weeks past due).</p>
+              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Set end dates separately for traditional schools (T1â€“T4) and Horizonte (T1â€“T6). The page will auto-select the current term and flag overdue schools (2+ weeks past due).</p>
               <div id="term-dates-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin-bottom:0.75rem;"></div>
               <button class="save-btn" onclick="saveTermDates()">Save</button>
               <span class="save-confirm" id="term-dates-confirm">Saved!</span>
@@ -625,7 +625,7 @@
                 Using PowerScheduler to collect student course requests
               </label>
             </div>
-            <!-- CTC push confirmation — shown only for East, Highland, West HS -->
+            <!-- CTC push confirmation â€” shown only for East, Highland, West HS -->
             <div id="sb-ctc-section" style="display:none; margin-top:0.75rem;">
               <div class="ctc-banner">
                 <div class="ctc-icon">&#9888;</div>
@@ -645,7 +645,7 @@
               CTC class push must be confirmed before moving to Loading.
             </div>
           </div>
-          <!-- Schedule commit checklist — shown when status is Complete -->
+          <!-- Schedule commit checklist â€” shown when status is Complete -->
           <div id="sb-checklist-section" style="display:none; margin-top:1rem;">
             <div class="tasks-card">
               <div class="tasks-card-title">
@@ -661,7 +661,7 @@
         <!-- CTC Export tab -->
         <div class="tab-content" id="tab-ctc">
 
-        <!-- Term confirmation banner — shown when config is loaded -->
+        <!-- Term confirmation banner â€” shown when config is loaded -->
         <div id="ctc-year-banner" style="display:none; margin-bottom:1.25rem;"></div>
 
         <!-- Annual configuration -->
@@ -720,7 +720,7 @@
           </div>
         </div>
 
-        <!-- Generate exports — shown after a file is uploaded or loaded from DB -->
+        <!-- Generate exports â€” shown after a file is uploaded or loaded from DB -->
         <div class="tasks-card" id="ctc-generate-section" style="display:none;">
           <div class="tasks-card-title">Generate Export Files</div>
           <div style="padding:1rem;">
@@ -928,12 +928,12 @@
 
       <div class="page" id="page-cardtouta">
         <div class="page-title">CardToUTA</div>
-        <div class="page-sub">Convert daily card access export to UTA activation format. All processing happens in your browser — no student data is uploaded.</div>
+        <div class="page-sub">Convert daily card access export to UTA activation format. All processing happens in your browser â€” no student data is uploaded.</div>
 
         <div class="tasks-card" style="margin-bottom:1.5rem;">
           <div class="tasks-card-title">Upload Source File</div>
           <div style="padding:1rem;">
-            <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Upload the daily CSV export. Required columns: Campus, Student Id, Uid. Columns used: Reversed UID → Activate → (blank) → 20300630 → UID → Student ID → School Number.</p>
+            <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Upload the daily CSV export. Required columns: Campus, Student Id, Uid. Columns used: Reversed UID â†’ Activate â†’ (blank) â†’ 20300630 â†’ UID â†’ Student ID â†’ School Number.</p>
             <div id="ctu-drop-zone"
                  style="border:2px dashed #cbd5e1;border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;"
                  onclick="document.getElementById('ctu-file-input').click()"
@@ -968,7 +968,7 @@
         <div class="page-title">Graduation Plans</div>
         <div class="page-sub">Credit bucket structure and overflow rules for each graduation plan. Credits fill the first available bucket in priority order; overflow moves to the next.</div>
         <div class="tab-bar">
-          <button class="tab-btn active" id="gp-tab-btn-2021" onclick="switchGPTab('2021')">2021–2025</button>
+          <button class="tab-btn active" id="gp-tab-btn-2021" onclick="switchGPTab('2021')">2021â€“2025</button>
           <button class="tab-btn" id="gp-tab-btn-2026" onclick="switchGPTab('2026')">Beginning 2026</button>
           <button class="tab-btn" id="gp-tab-btn-2027" onclick="switchGPTab('2027')">Beginning 2027</button>
         </div>
@@ -1004,67 +1004,67 @@
                 <div class="gp-algo-title">Credit-Type Priority Model</div>
                 <div class="gp-algo-desc">Each credit type has its own defined priority chain. When a student earns a credit, it fills the first bucket in <strong>that credit type's chain</strong> that still has room. Overflow moves automatically to the next bucket in the chain.</div>
                 <div class="gp-algo-rule">
-                  <strong>Example — DS credit type:</strong><br>
-                  DS &rarr; Computer Tech &rarr; Career Tech Ed &rarr; Elective<br>
-                  <span style="color:#555;">The credit always tries Computer Tech first, regardless of what order requirements are listed.</span>
+                  <strong>Example â€” CTESCI credit type:</strong><br>
+                  Science &rarr; Science AA &rarr; Career Tech Ed &rarr; Elective<br>
+                  <span style="color:#555;">If Science is full, the credit tries Science AA next, then Career Tech Ed â€” always in that order.</span>
                 </div>
               </div>
               <div class="gp-algo-vs">vs</div>
               <div class="gp-algo-card vendor-card">
                 <div class="gp-algo-label">ClassChoice</div>
                 <div class="gp-algo-title">Bucket Sort-Order Model</div>
-                <div class="gp-algo-desc">Requirements are processed in sort order (1 &rarr; 99). For each requirement, any credit the student holds that matches its accepted credit types is consumed there — in the order the requirements appear, not the order the credit type defines.</div>
+                <div class="gp-algo-desc">Requirements are processed in sort order (1 &rarr; 99). For each requirement, any credit the student holds that matches its accepted credit types is consumed there â€” in the order the requirements appear, not the order the credit type defines.</div>
                 <div class="gp-algo-rule">
-                  <strong>Example — DS credit type:</strong><br>
-                  DS appears in Computer Tech (sort&nbsp;12) and Career Tech Ed (sort&nbsp;13)<br>
-                  <span style="color:#555;">DS now fills Computer Tech first because sort 12 comes before sort 13.</span>
+                  <strong>Example â€” CTESCI credit type:</strong><br>
+                  CTESCI appears in Science (sort&nbsp;6), Career Tech Ed (sort&nbsp;13), Science AA (sort&nbsp;16)<br>
+                  <span style="color:#555;">If Science is full, ClassChoice hits Career Tech Ed (sort 13) before Science AA (sort 16) â€” the opposite of PowerSchool's chain.</span>
                 </div>
               </div>
             </div>
 
             <!-- Scenario walkthrough -->
             <div class="gp-section-label" style="font-size:12px;margin-bottom:0.75rem;">
-              Concrete Example: How Each System Processes Credits
+              Concrete Example: Where the Remaining Conflict Occurs
             </div>
             <div class="gp-scenario-box">
               <div class="gp-scenario-intro">
-                A student completes two courses — one Digital Studies course (credit type <code style="font-size:11px;background:#f1f5f9;padding:1px 5px;border-radius:3px;border:1px solid #e2e8f0;">DS</code>) worth 1.0 credit, and one CTE course (credit type <code style="font-size:11px;background:#f1f5f9;padding:1px 5px;border-radius:3px;border:1px solid #e2e8f0;">CTE</code>) worth 1.0 credit. Two requirements still need credits: Career Tech Ed (1.0 cr needed) and Computer Tech (0.5 cr needed).
+                A student has already earned 2.0 cr of Science (Biology + Chemistry â€” Science bucket full). They take a 1.0 cr <code style="font-size:11px;background:#f1f5f9;padding:1px 5px;border-radius:3px;border:1px solid #e2e8f0;">CTESCI</code> course and still need Science AA (1.0 cr) and Career Tech Ed (1.0 cr).
               </div>
               <div class="gp-scenario-courses">
                 <div class="gp-course-card">
-                  <div class="gp-course-name">Digital Studies Course</div>
-                  <div class="gp-course-meta">Credit type: <span>DS</span> &nbsp;|&nbsp; 1.0 credit</div>
-                </div>
-                <div class="gp-course-card">
-                  <div class="gp-course-name">CTE Foundations Course</div>
-                  <div class="gp-course-meta">Credit type: <span>CTE</span> &nbsp;|&nbsp; 1.0 credit</div>
+                  <div class="gp-course-name">CTE/Science Cross-Discipline Course</div>
+                  <div class="gp-course-meta">Credit type: <span>CTESCI</span> &nbsp;|&nbsp; 1.0 credit</div>
                 </div>
               </div>
 
               <div class="gp-result-row">
                 <div class="gp-result-col">
-                  <div class="gp-result-header ps">PowerSchool — credit-type chains</div>
+                  <div class="gp-result-header ps">PowerSchool â€” credit-type chains</div>
                   <div class="gp-result-body ps">
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">1</div>
-                      <div>DS credit chain: <strong>Computer Tech first.</strong> 0.5 cr fills Computer Tech (satisfied). 0.5 cr overflows to Career Tech Ed.</div>
+                      <div>CTESCI chain: Science &rarr; Science AA &rarr; Career Tech Ed &rarr; Elective. Science is full â€” <strong>1.0 cr moves to Science AA.</strong> Science AA satisfied âœ“.</div>
                     </div>
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">2</div>
-                      <div>CTE credit chain: <strong>Career Tech Ed first.</strong> Career Tech Ed needs 1.0 cr — gets 0.5 from DS overflow + 0.5 from the CTE course (satisfied). Remaining 0.5 of CTE course flows to Elective.</div>
+                      <div>Credit fully consumed. Career Tech Ed still needs 1.0 cr â€” no overflow from this course.</div>
                     </div>
                   </div>
                 </div>
                 <div class="gp-result-col">
-                  <div class="gp-result-header vendor">ClassChoice — sort-order processing</div>
+                  <div class="gp-result-header vendor">ClassChoice â€” sort-order processing</div>
                   <div class="gp-result-body vendor">
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">1</div>
-                      <div>Sort 12 — Computer Tech requirement: DS type is in Computer Tech's accepted list. <strong>DS credit fills Computer Tech</strong> (0.5 cr, satisfied). 0.5 cr overflows to Career Tech Ed.</div>
+                      <div>Sort 6 â€” Science: CTESCI accepted, but Science is full. Skip.</div>
                     </div>
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">2</div>
-                      <div>Sort 13 — Career Tech Ed: 0.5 cr DS overflow + 0.5 cr CTE course. <strong>Career Tech Ed satisfied.</strong></div>
+                      <div>Sort 13 â€” Career Tech Ed: CTESCI accepted and Career Tech Ed has room. <strong>1.0 cr fills Career Tech Ed.</strong> Credit fully consumed.</div>
+                    </div>
+                    <div class="gp-result-step">
+                      <div class="gp-result-step-num">3</div>
+                      <div>Sort 16 â€” Science AA: nothing left to apply. Science AA stays empty.</div>
                     </div>
                   </div>
                 </div>
@@ -1073,189 +1073,47 @@
               <div class="gp-outcome-row">
                 <div class="gp-outcome-col ps">
                   <div class="gp-outcome-label">PowerSchool result</div>
-                  <div class="gp-outcome-item"><span>Career Tech Ed (1.0 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
-                  <div class="gp-outcome-item"><span>Computer Tech (0.5 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
+                  <div class="gp-outcome-item"><span>Science AA (1.0 cr)</span><span class="gp-badge-ok">Satisfied âœ“</span></div>
+                  <div class="gp-outcome-item"><span>Career Tech Ed (1.0 cr)</span><span class="gp-badge-fail">Still needed âœ—</span></div>
                 </div>
                 <div class="gp-outcome-col vendor">
                   <div class="gp-outcome-label">ClassChoice result</div>
-                  <div class="gp-outcome-item"><span>Career Tech Ed (1.0 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
-                  <div class="gp-outcome-item"><span>Computer Tech (0.5 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
+                  <div class="gp-outcome-item"><span>Science AA (1.0 cr)</span><span class="gp-badge-fail">Still needed âœ—</span></div>
+                  <div class="gp-outcome-item"><span>Career Tech Ed (1.0 cr)</span><span class="gp-badge-ok">Satisfied âœ“</span></div>
                 </div>
               </div>
             </div>
 
             <!-- Conflict credit types table -->
             <div class="gp-section-label" style="font-size:12px;margin-bottom:0.75rem;">
-              All Affected Credit Types — Where the Two Systems Diverge
+              Remaining Sort Order Conflict
             </div>
             <div class="gp-conflict-table-wrap">
               <table class="gp-conflict-table">
                 <thead>
                   <tr>
                     <th>Credit Type</th>
-                    <th>PowerSchool fills first</th>
-                    <th>ClassChoice fills first</th>
+                    <th>PowerSchool fills in this order</th>
+                    <th>ClassChoice fills in this order</th>
                     <th>Issue</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td><span class="gp-type-badge">DS</span></td>
-                    <td>Computer Tech/Digital Studies</td>
-                    <td>Computer Tech (sort 12) → Career Tech Ed (sort 13)</td>
-                    <td><span class="gp-conflict-pill resolved">Resolved ✓</span><div class="gp-conflict-note">Sort reorder moved Computer Tech (12) before Career Tech Ed (13). ClassChoice now fills Computer Tech first — matches PS.</div></td>
-                  </tr>
-                  <tr>
-                    <td><span class="gp-type-badge">DSMAA</span></td>
-                    <td>Computer Tech/Digital Studies</td>
-                    <td>Computer Tech (sort 12) → Career Tech Ed (sort 13)</td>
-                    <td><span class="gp-conflict-pill resolved">Resolved ✓</span><div class="gp-conflict-note">Same fix as DS — Computer Tech (12) now before Career Tech Ed (13).</div></td>
-                  </tr>
-                  <tr>
                     <td><span class="gp-type-badge">CTESCI</span></td>
-                    <td>Science → <strong>Science AA</strong> → Career Tech Ed</td>
-                    <td>Science → Career Tech Ed (sort 13) → Science AA (sort 16)</td>
-                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">CTESCI is accepted in both Career Tech Ed (sort 13) and Science AA (sort 16). ClassChoice still fills Career Tech Ed before Science AA; PS fills Science AA first. See structural impossibility below.</div></td>
-                  </tr>
-                  <tr>
-                    <td><span class="gp-type-badge">DSCTESAA</span></td>
-                    <td>Computer Tech → <strong>Career Tech Ed</strong> → Science AA</td>
-                    <td>Computer Tech (sort 12) → Career Tech Ed (sort 13) → Science AA (sort 16)</td>
-                    <td><span class="gp-conflict-pill resolved">Resolved ✓</span><div class="gp-conflict-note">Computer Tech (12) now sorts before Career Tech Ed (13), matching PS chain order.</div></td>
+                    <td>Science &rarr; <strong>Science AA (2nd)</strong> &rarr; Career Tech Ed (3rd)</td>
+                    <td>Science &rarr; <strong>Career Tech Ed (sort 13, 2nd)</strong> &rarr; Science AA (sort 16, 3rd)</td>
+                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">When Science is full, ClassChoice reaches Career Tech Ed (sort 13) before Science AA (sort 16) and fills it first. PowerSchool fills Science AA first. See structural impossibility below for why this cannot be fixed by reordering.</div></td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <!-- Proposed sort order changes -->
-            <div class="gp-proposal-section">
-              <div class="gp-section-label" style="font-size:12px;margin-bottom:0.6rem;">Sort Order Changes Implemented — Before &amp; After</div>
-              <div class="gp-proposal-intro">
-                The four rows highlighted below were reordered. All other sort numbers are unchanged.
-              </div>
-              <table class="gp-sort-compare-table">
-                <thead>
-                  <tr>
-                    <th>Requirement</th>
-                    <th class="sort-col">Previous Sort</th>
-                    <th class="sort-col"></th>
-                    <th class="sort-col">New Sort</th>
-                    <th>Effect</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>Language Arts 9</td>
-                    <td class="sort-col sort-current">1</td><td></td><td class="sort-col sort-proposed-same">1</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>Language Arts 10</td>
-                    <td class="sort-col sort-current">2</td><td></td><td class="sort-col sort-proposed-same">2</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>Language Arts 11</td>
-                    <td class="sort-col sort-current">3</td><td></td><td class="sort-col sort-proposed-same">3</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>Language Arts 12</td>
-                    <td class="sort-col sort-current">4</td><td></td><td class="sort-col sort-proposed-same">4</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>Mathematics</td>
-                    <td class="sort-col sort-current">5</td><td></td><td class="sort-col sort-proposed-same">5</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>Science</td>
-                    <td class="sort-col sort-current">6</td><td></td><td class="sort-col sort-proposed-same">6</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>World Geography</td>
-                    <td class="sort-col sort-current">7</td><td></td><td class="sort-col sort-proposed-same">7</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>World History</td>
-                    <td class="sort-col sort-current">8</td><td></td><td class="sort-col sort-proposed-same">8</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>United States History</td>
-                    <td class="sort-col sort-current">9</td><td></td><td class="sort-col sort-proposed-same">9</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>U S Gov't Citizen</td>
-                    <td class="sort-col sort-current">10</td><td></td><td class="sort-col sort-proposed-same">10</td><td></td>
-                  </tr>
-                  <tr class="changed">
-                    <td><strong>Financial Literacy</strong></td>
-                    <td class="sort-col sort-current">13</td>
-                    <td class="sort-arrow">→</td>
-                    <td class="sort-col sort-proposed-new">11</td>
-                    <td class="gp-proposal-fixes">Fixes CTEFL wrong order</td>
-                  </tr>
-                  <tr class="changed">
-                    <td><strong>Computer Tech/Digital Studies</strong></td>
-                    <td class="sort-col sort-current">14</td>
-                    <td class="sort-arrow">→</td>
-                    <td class="sort-col sort-proposed-new">12</td>
-                    <td class="gp-proposal-fixes">Fixes DS, DSMAA, DSCTESAA wrong order</td>
-                  </tr>
-                  <tr class="changed">
-                    <td><strong>Career Tech Ed</strong></td>
-                    <td class="sort-col sort-current">11</td>
-                    <td class="sort-arrow">→</td>
-                    <td class="sort-col sort-proposed-new">13</td>
-                    <td class="gp-proposal-fixes">Moved to make room above</td>
-                  </tr>
-                  <tr class="changed">
-                    <td><strong>Fine Arts</strong></td>
-                    <td class="sort-col sort-current">12</td>
-                    <td class="sort-arrow">→</td>
-                    <td class="sort-col sort-proposed-new">14</td>
-                    <td class="gp-proposal-fixes">Moved to make room above</td>
-                  </tr>
-                  <tr>
-                    <td>Mathematics AA</td>
-                    <td class="sort-col sort-current">15</td><td></td><td class="sort-col sort-proposed-same">15</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>Science AA</td>
-                    <td class="sort-col sort-current">16</td><td></td><td class="sort-col sort-proposed-same">16</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>Soc Studies Elect</td>
-                    <td class="sort-col sort-current">17</td><td></td><td class="sort-col sort-proposed-same">17</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>Health</td>
-                    <td class="sort-col sort-current">18</td><td></td><td class="sort-col sort-proposed-same">18</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>Part Skills &amp; Fitness</td>
-                    <td class="sort-col sort-current">19</td><td></td><td class="sort-col sort-proposed-same">19</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>Lifetime Activities</td>
-                    <td class="sort-col sort-current">20</td><td></td><td class="sort-col sort-proposed-same">20</td><td></td>
-                  </tr>
-                  <tr>
-                    <td>Elective</td>
-                    <td class="sort-col sort-current">99</td><td></td><td class="sort-col sort-proposed-same">99</td><td></td>
-                  </tr>
-                </tbody>
-              </table>
-              <div class="gp-proposal-callout fix">
-                <strong>What this fixed:</strong> Financial Literacy (sort 11) and Computer Tech/Digital Studies (sort 12) now both appear before Career Tech Ed (sort 13). ClassChoice fills them first — matching PowerSchool's chain order for CTEFL, DS, DSMAA, and DSCTESAA. All four conflicts are resolved.
-              </div>
-              <div class="gp-proposal-callout limit">
-                <strong>What remains unresolvable:</strong> The CTESCI / CTESAA conflict persists regardless of any sort order. Both are accepted in Career Tech Ed (sort 13) and Science AA (sort 16), and PowerSchool routes them in opposite orders through those two buckets. See the structural impossibility below.
-              </div>
-            </div>
-            <!-- end proposed sort order changes -->
-
             <!-- Structural impossibility proof -->
             <div class="gp-impossible-box">
               <div class="gp-impossible-eyebrow">Structural Impossibility</div>
               <div class="gp-impossible-title">No Sort Order Can Fix This</div>
               <div class="gp-impossible-subtitle">
-                The wrong-order conflicts above cannot be fixed by simply reordering requirements — the problem below is mathematically irreconcilable.
+                The wrong-order conflicts above cannot be fixed by simply reordering requirements â€” the problem below is mathematically irreconcilable.
                 Both <strong>CTESCI</strong> and <strong>CTESAA</strong> are accepted in the same two buckets (Career Tech Ed and Science AA),
                 but PowerSchool routes them in <em>opposite priority orders</em> through those two buckets.
                 No single sort order can place Career Tech Ed and Science AA in an order that satisfies both credit types at once.
@@ -1288,50 +1146,50 @@
 
               <div class="gp-section-label" style="font-size:11px;margin-bottom:0.5rem;">The conflict is the relative sort position of Career Tech Ed (sort 11) vs. Science AA (sort 16)</div>
               <div style="font-size:11px;color:#555;margin-bottom:0.75rem;line-height:1.5;">
-                ClassChoice processes requirements in sort-number order, lowest first. Both sort values below are confirmed. Because Career Tech Ed (sort 13) is lower than Science AA (sort 16), ClassChoice processes Career Tech Ed first — which is correct for CTESAA but wrong for CTESCI. Swapping them would fix CTESCI but break CTESAA.
+                ClassChoice processes requirements in sort-number order, lowest first. Both sort values below are confirmed. Because Career Tech Ed (sort 13) is lower than Science AA (sort 16), ClassChoice processes Career Tech Ed first â€” which is correct for CTESAA but wrong for CTESCI. Swapping them would fix CTESCI but break CTESAA.
               </div>
               <div class="gp-sort-diagram">
                 <div class="gp-sort-option" style="border-color:#f97316;background:#fff7ed;">
                   <span class="gp-sort-option-label">Current<br><span style="font-size:10px;font-weight:400;color:#9a3412;">Career Tech Ed (11)<br>before Science AA (16)</span></span>
                   <div class="gp-sort-buckets">
-                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 6 ★</span></span>
+                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 6 â˜…</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket cte">Career Tech Ed<br><span style="font-weight:400;font-size:10px;">sort 13 ★</span></span>
+                    <span class="gp-sort-bucket cte">Career Tech Ed<br><span style="font-weight:400;font-size:10px;">sort 13 â˜…</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket sciaa">Science AA<br><span style="font-weight:400;font-size:10px;">sort 16 ★</span></span>
+                    <span class="gp-sort-bucket sciaa">Science AA<br><span style="font-weight:400;font-size:10px;">sort 16 â˜…</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket elec">Elective<br><span style="font-weight:400;font-size:10px;">sort 99 ★</span></span>
+                    <span class="gp-sort-bucket elec">Elective<br><span style="font-weight:400;font-size:10px;">sort 99 â˜…</span></span>
                   </div>
                   <div style="display:flex;flex-direction:column;gap:3px;margin-left:6px;">
-                    <span class="gp-sort-result ok">CTESAA ✓</span>
-                    <span class="gp-sort-result fail">CTESCI ✗</span>
+                    <span class="gp-sort-result ok">CTESAA âœ“</span>
+                    <span class="gp-sort-result fail">CTESCI âœ—</span>
                   </div>
                 </div>
                 <div class="gp-sort-option">
                   <span class="gp-sort-option-label">If swapped<br><span style="font-size:10px;font-weight:400;color:#888;">Science AA moved<br>before Career Tech Ed</span></span>
                   <div class="gp-sort-buckets">
-                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 6 ★</span></span>
+                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 6 â˜…</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
                     <span class="gp-sort-bucket sciaa">Science AA<br><span style="font-weight:400;font-size:10px;">sort &lt;11</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket cte">Career Tech Ed<br><span style="font-weight:400;font-size:10px;">sort 11 ★</span></span>
+                    <span class="gp-sort-bucket cte">Career Tech Ed<br><span style="font-weight:400;font-size:10px;">sort 11 â˜…</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
                     <span class="gp-sort-bucket elec">Elective<br><span style="font-weight:400;font-size:10px;">sort 99</span></span>
                   </div>
                   <div style="display:flex;flex-direction:column;gap:3px;margin-left:6px;">
-                    <span class="gp-sort-result fail">CTESAA ✗</span>
-                    <span class="gp-sort-result ok">CTESCI ✓</span>
+                    <span class="gp-sort-result fail">CTESAA âœ—</span>
+                    <span class="gp-sort-result ok">CTESCI âœ“</span>
                   </div>
                 </div>
               </div>
-              <div style="font-size:10px;color:#9ca3af;margin-top:4px;">★ all sort values confirmed from the ClassChoice 2021-2025 plan configuration</div>
+              <div style="font-size:10px;color:#9ca3af;margin-top:4px;">â˜… all sort values confirmed from the ClassChoice 2021-2025 plan configuration</div>
 
               <!-- Concrete student scenario for the impossibility -->
               <div class="gp-student-scenario">
                 <div class="gp-section-label" style="font-size:11px;margin:1.25rem 0 0.6rem;">Why Sort Order Alone Cannot Reconcile These Two Credit Types</div>
 
                 <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:0.6rem 0.875rem;margin-bottom:0.875rem;font-size:12px;color:#0c4a6e;line-height:1.5;">
-                  This is the <strong>actual current conflict</strong>. Both CTESCI and CTESAA are accepted in Career Tech Ed (sort 13) and Science AA (sort 16) in ClassChoice. Because Career Tech Ed sorts first, ClassChoice fills it first for both — which matches PS for CTESAA but contradicts PS for CTESCI (which fills Science AA before Career Tech Ed).
+                  This is the <strong>actual current conflict</strong>. Both CTESCI and CTESAA are accepted in Career Tech Ed (sort 13) and Science AA (sort 16) in ClassChoice. Because Career Tech Ed sorts first, ClassChoice fills it first for both â€” which matches PS for CTESAA but contradicts PS for CTESCI (which fills Science AA before Career Tech Ed).
                 </div>
 
                 <div class="gp-vs-grid">
@@ -1355,13 +1213,13 @@
                     <div class="gp-vs-label" style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Before this course</div>
                     <div class="gp-vs-col-a" style="background:#f8fafc;">
                       <div class="gp-req-row">
-                        <div class="gp-req-meta"><span class="gp-req-name">Science</span><span class="gp-req-count" style="color:#16a34a;font-weight:600;">2.0 of 2.0 Credits ✓ Full</span></div>
+                        <div class="gp-req-meta"><span class="gp-req-name">Science</span><span class="gp-req-count" style="color:#16a34a;font-weight:600;">2.0 of 2.0 Credits âœ“ Full</span></div>
                         <div class="gp-req-track"><div class="gp-req-fill correct"></div></div>
                         <div class="gp-sim-src-tags" style="margin-top:3px;">
                           <span class="gp-sim-src-tag">SCI 1.0 cr</span>
                           <span class="gp-sim-src-tag">SCI 1.0 cr</span>
                         </div>
-                        <div class="gp-vs-detail" style="margin-top:2px;">e.g., Biology + Chemistry — earned in prior years</div>
+                        <div class="gp-vs-detail" style="margin-top:2px;">e.g., Biology + Chemistry â€” earned in prior years</div>
                       </div>
                       <div class="gp-req-row">
                         <div class="gp-req-meta"><span class="gp-req-name">Science AA</span><span class="gp-req-count">0 of 1.0 Credits</span></div>
@@ -1389,7 +1247,7 @@
                     <div class="gp-vs-label">PowerSchool</div>
                     <div class="gp-vs-col-a match">
                       <div class="gp-req-row">
-                        <div class="gp-req-meta"><span class="gp-req-name" style="color:#9ca3af;text-decoration:line-through;">Science</span><span class="gp-req-count" style="color:#9ca3af;">2.0 of 2.0 — full, skip</span></div>
+                        <div class="gp-req-meta"><span class="gp-req-name" style="color:#9ca3af;text-decoration:line-through;">Science</span><span class="gp-req-count" style="color:#9ca3af;">2.0 of 2.0 â€” full, skip</span></div>
                         <div class="gp-req-track"><div class="gp-req-fill correct"></div></div>
                       </div>
                       <div class="gp-req-row">
@@ -1400,7 +1258,7 @@
                         <div class="gp-req-meta"><span class="gp-req-name">Career Tech Ed</span><span class="gp-req-count">0 of 1.0 Credits</span></div>
                         <div class="gp-req-track"><div class="gp-req-fill" style="width:0"></div></div>
                       </div>
-                      <div class="gp-vs-detail" style="margin-top:4px;">1.0 cr tries Science first &rarr; full, skip. Next in chain is Science AA &rarr; fills it completely ✓.</div>
+                      <div class="gp-vs-detail" style="margin-top:4px;">1.0 cr tries Science first &rarr; full, skip. Next in chain is Science AA &rarr; fills it completely âœ“.</div>
                     </div>
                     <div class="gp-vs-col-b match">
                       <div class="gp-req-row">
@@ -1411,7 +1269,7 @@
                         <div class="gp-req-meta"><span class="gp-req-name">Science AA</span><span class="gp-req-count">0 of 1.0 Credits</span></div>
                         <div class="gp-req-track"><div class="gp-req-fill" style="width:0"></div></div>
                       </div>
-                      <div class="gp-vs-detail" style="margin-top:4px;">Career Tech Ed is first in chain and open &rarr; 1.0 cr fills it ✓.</div>
+                      <div class="gp-vs-detail" style="margin-top:4px;">Career Tech Ed is first in chain and open &rarr; 1.0 cr fills it âœ“.</div>
                     </div>
                   </div>
 
@@ -1420,7 +1278,7 @@
                     <div class="gp-vs-label">ClassChoice<br>Career Tech Ed<br>sorted first</div>
                     <div class="gp-vs-col-a mismatch">
                       <div class="gp-req-row">
-                        <div class="gp-req-meta"><span class="gp-req-name" style="color:#9ca3af;text-decoration:line-through;">Science</span><span class="gp-req-count" style="color:#9ca3af;">2.0 of 2.0 — full, skip</span></div>
+                        <div class="gp-req-meta"><span class="gp-req-name" style="color:#9ca3af;text-decoration:line-through;">Science</span><span class="gp-req-count" style="color:#9ca3af;">2.0 of 2.0 â€” full, skip</span></div>
                         <div class="gp-req-track"><div class="gp-req-fill correct"></div></div>
                       </div>
                       <div class="gp-req-row">
@@ -1432,7 +1290,7 @@
                         <div class="gp-req-track needs-fill"><div class="gp-req-fill" style="width:0"></div></div>
                       </div>
                       <div class="gp-vs-detail" style="margin-top:4px;">ClassChoice reaches Career Tech Ed before Science AA. CTESCI is accepted there &rarr; 1.0 cr fills Career Tech Ed. Science AA left empty. PS put it in Science AA.</div>
-                      <span class="gp-vs-badge mismatch" style="margin-top:5px;display:inline-block;">Wrong — Career Tech Ed claimed the credit first</span>
+                      <span class="gp-vs-badge mismatch" style="margin-top:5px;display:inline-block;">Wrong â€” Career Tech Ed claimed the credit first</span>
                     </div>
                     <div class="gp-vs-col-b match">
                       <div class="gp-req-row">
@@ -1443,7 +1301,7 @@
                         <div class="gp-req-meta"><span class="gp-req-name">Science AA</span><span class="gp-req-count">0 of 1.0 Credits</span></div>
                         <div class="gp-req-track"><div class="gp-req-fill" style="width:0"></div></div>
                       </div>
-                      <span class="gp-vs-badge match" style="margin-top:5px;display:inline-block;">Correct — matches PS</span>
+                      <span class="gp-vs-badge match" style="margin-top:5px;display:inline-block;">Correct â€” matches PS</span>
                     </div>
                   </div>
 
@@ -1452,7 +1310,7 @@
                     <div class="gp-vs-label">ClassChoice<br>Science AA<br>sorted first</div>
                     <div class="gp-vs-col-a match">
                       <div class="gp-req-row">
-                        <div class="gp-req-meta"><span class="gp-req-name" style="color:#9ca3af;text-decoration:line-through;">Science</span><span class="gp-req-count" style="color:#9ca3af;">2.0 of 2.0 — full, skip</span></div>
+                        <div class="gp-req-meta"><span class="gp-req-name" style="color:#9ca3af;text-decoration:line-through;">Science</span><span class="gp-req-count" style="color:#9ca3af;">2.0 of 2.0 â€” full, skip</span></div>
                         <div class="gp-req-track"><div class="gp-req-fill correct"></div></div>
                       </div>
                       <div class="gp-req-row">
@@ -1463,7 +1321,7 @@
                         <div class="gp-req-meta"><span class="gp-req-name">Career Tech Ed</span><span class="gp-req-count">0 of 1.0 Credits</span></div>
                         <div class="gp-req-track"><div class="gp-req-fill" style="width:0"></div></div>
                       </div>
-                      <span class="gp-vs-badge match" style="margin-top:5px;display:inline-block;">Correct — matches PS</span>
+                      <span class="gp-vs-badge match" style="margin-top:5px;display:inline-block;">Correct â€” matches PS</span>
                     </div>
                     <div class="gp-vs-col-b mismatch">
                       <div class="gp-req-row">
@@ -1475,7 +1333,7 @@
                         <div class="gp-req-track needs-fill"><div class="gp-req-fill" style="width:0"></div></div>
                       </div>
                       <div class="gp-vs-detail" style="margin-top:4px;">ClassChoice reaches Science AA before Career Tech Ed. CTESAA is accepted there &rarr; 1.0 cr fills Science AA. Career Tech Ed left empty. PS put it in Career Tech Ed.</div>
-                      <span class="gp-vs-badge mismatch" style="margin-top:5px;display:inline-block;">Wrong — Science AA claimed the credit first</span>
+                      <span class="gp-vs-badge mismatch" style="margin-top:5px;display:inline-block;">Wrong â€” Science AA claimed the credit first</span>
                     </div>
                   </div>
 
@@ -1483,7 +1341,7 @@
                 <div class="gp-vs-bar-legend">
                   <span><span class="gp-vs-legend-swatch" style="background:#16a34a;"></span>Filled correctly (matches PS)</span>
                   <span><span class="gp-vs-legend-swatch" style="background:#dc2626;"></span>Filled incorrectly (ClassChoice disagrees with PS)</span>
-                  <span><span class="gp-vs-legend-swatch" style="background:#fff7ed;border:1px dashed #fb923c;"></span>Should be filled per PS — left empty by ClassChoice</span>
+                  <span><span class="gp-vs-legend-swatch" style="background:#fff7ed;border:1px dashed #fb923c;"></span>Should be filled per PS â€” left empty by ClassChoice</span>
                 </div>
                 <div class="gp-vs-conclusion">Sort "Career Tech Ed first" fixes Student B but breaks Student A. Sort "Science AA first" fixes Student A but breaks Student B. No sort order works for both.</div>
               </div>
@@ -1493,10 +1351,10 @@
                 <div class="gp-root-cause-label">Root Cause</div>
                 <div class="gp-root-cause-text">
                   PowerSchool lets <strong>each credit type define its own independent priority chain.</strong>
-                  Two credit types can point at the same pair of buckets and prefer them in opposite order — and PowerSchool handles that correctly because it evaluates each credit type's chain independently.
+                  Two credit types can point at the same pair of buckets and prefer them in opposite order â€” and PowerSchool handles that correctly because it evaluates each credit type's chain independently.
                   ClassChoice enforces a <strong>single global sort order shared by all credit types.</strong>
                   The moment any two credit types require opposite relative ordering for the same two buckets,
-                  no sort order configuration can satisfy both — the constraint is impossible to resolve within the model.
+                  no sort order configuration can satisfy both â€” the constraint is impossible to resolve within the model.
                 </div>
               </div>
             </div>
@@ -1521,19 +1379,19 @@
               <div class="gp-sim-plan-col">
                 <div class="gp-sim-plan-col-hdr ps">
                   <div class="gp-sim-plan-col-name">PowerSchool</div>
-                  <div class="gp-sim-plan-col-desc">Credit-type chain model — each type fills its own priority chain</div>
+                  <div class="gp-sim-plan-col-desc">Credit-type chain model â€” each type fills its own priority chain</div>
                 </div>
                 <div class="gp-sim-plan-reqs" id="gp-sim-ps-reqs"></div>
               </div>
               <div class="gp-sim-plan-col">
                 <div class="gp-sim-plan-col-hdr arena">
                   <div class="gp-sim-plan-col-name">ClassChoice</div>
-                  <div class="gp-sim-plan-col-desc">Sort-order model — requirements claim credits by sort # &nbsp;(★ = confirmed value)</div>
+                  <div class="gp-sim-plan-col-desc">Sort-order model â€” requirements claim credits by sort # &nbsp;(â˜… = confirmed value)</div>
                 </div>
                 <div class="gp-sim-plan-reqs" id="gp-sim-arena-reqs"></div>
               </div>
             </div>
-            <div class="gp-sim-footnote">ClassChoice sort #s marked ★ are confirmed from the 2021-2025 plan configuration.</div>
+            <div class="gp-sim-footnote">ClassChoice sort #s marked â˜… are confirmed from the 2021-2025 plan configuration.</div>
           </div>
           <!-- end Grad Plan Simulator -->
 
@@ -1551,9 +1409,9 @@
       <!-- My Tasks page -->
       <div class="page" id="page-my-tasks">
         <div class="page-title">My Tasks</div>
-        <div class="page-sub">Your personal work queue — sorted by urgency.</div>
+        <div class="page-sub">Your personal work queue â€” sorted by urgency.</div>
         <div id="my-tasks-content">
-          <div style="color:#888;padding:2rem 0;">Loading…</div>
+          <div style="color:#888;padding:2rem 0;">Loadingâ€¦</div>
         </div>
       </div>
 
@@ -1638,9 +1496,9 @@ const ELEM_TASKS = [
 let currentUser = null;
 let records = {};
 let completions = {};
-let allCompletions = {}; // keyed by record_id → { task_key → completion }
-let termDatesTraditional = {}; // T1–T4 end dates for all schools except Horizonte
-let termDatesHorizonte   = {}; // T1–T6 end dates for Horizonte
+let allCompletions = {}; // keyed by record_id â†’ { task_key â†’ completion }
+let termDatesTraditional = {}; // T1â€“T4 end dates for all schools except Horizonte
+let termDatesHorizonte   = {}; // T1â€“T6 end dates for Horizonte
 let currentSchool = null;
 let currentSchoolObj = null;
 let currentRecordId = null;
@@ -1654,7 +1512,7 @@ function isFinalTerm(schoolName, term) {
 }
 function getTasksForSchool(type, schoolName, term) {
   if (type === 'elementary') {
-    // Hide 'Update Current Grade Display' on the final term (T4) — not needed after grades are stored for good
+    // Hide 'Update Current Grade Display' on the final term (T4) â€” not needed after grades are stored for good
     if (isFinalTerm(schoolName, term)) return ELEM_TASKS.filter(t => t.key !== 'grade_display_elem');
     return ELEM_TASKS;
   }
@@ -1708,7 +1566,7 @@ function showApp() {
   showPage(page, navEl);
 }
 
-// ── Term Dates / Auto-select / Overdue ──────────────────────────────
+// â”€â”€ Term Dates / Auto-select / Overdue â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function switchGSTab(tab) {
   document.querySelectorAll('#page-grade-storing .tab-btn').forEach(b => b.classList.remove('active'));
@@ -1719,7 +1577,7 @@ function switchGSTab(tab) {
   if (tab === 'history') initHistoryPage();
 }
 
-// Entry point for the grade storing page — loads term dates, auto-selects term, then renders
+// Entry point for the grade storing page â€” loads term dates, auto-selects term, then renders
 async function initGradeStoringPage() {
   await loadTermDates();
   autoSelectTerm();
@@ -1754,9 +1612,9 @@ function renderTermDatesForm() {
       <input type="date" id="td-horiz-${t}" value="${termDatesHorizonte[t] || ''}">
     </div>`).join('');
   grid.innerHTML = `
-    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#555;padding-bottom:4px;border-bottom:1px solid #eee;">Traditional Schools (T1–T4)</div>
+    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#555;padding-bottom:4px;border-bottom:1px solid #eee;">Traditional Schools (T1â€“T4)</div>
     ${tradFields}
-    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#555;padding-bottom:4px;border-bottom:1px solid #eee;margin-top:0.75rem;">Horizonte (T1–T6)</div>
+    <div style="grid-column:1/-1;font-size:12px;font-weight:600;color:#555;padding-bottom:4px;border-bottom:1px solid #eee;margin-top:0.75rem;">Horizonte (T1â€“T6)</div>
     ${horizFields}`;
 }
 
@@ -1813,7 +1671,7 @@ function toggleTermDatesPanel() {
   icon.innerHTML = isOpen ? '&#9654;' : '&#9660;';
 }
 
-// Returns true if a school is Not Started and ≥14 days past the selected term's end date
+// Returns true if a school is Not Started and â‰¥14 days past the selected term's end date
 function isOverdue(schoolName) {
   const dates = schoolName === 'Horizonte' ? termDatesHorizonte : termDatesTraditional;
   const endDateStr = dates[getTerm()];
@@ -1910,14 +1768,14 @@ function renderSchools() {
       const overdue = isOverdue(school.name);
       const card = document.createElement('div');
       card.className = 'school-card' + (overdue ? ' overdue' : '');
-      const overdueHint = overdue ? `<div style="font-size:10px;color:#DC2626;font-weight:600;margin-top:2px;">Past due — 2+ weeks</div>` : '';
+      const overdueHint = overdue ? `<div style="font-size:10px;color:#DC2626;font-weight:600;margin-top:2px;">Past due â€” 2+ weeks</div>` : '';
       card.innerHTML = `<div><div class="sname">${school.name}</div>${taskHtml}${overdueHint}</div><div class="sstatus status-${status}">${statusLabel(status)}</div>`;
       card.onclick = () => openSchool(school, type);
       grid.appendChild(card);
     });
   });
 
-  // Update summary stats bar — four SVG doughnuts
+  // Update summary stats bar â€” four SVG doughnuts
   const summaryBar = document.getElementById('gs-summary-bar');
   if (totalSchools > 0) {
     summaryBar.style.display = 'flex';
@@ -1945,7 +1803,7 @@ async function openSchool(school, type) {
   document.getElementById('cl-school-name').textContent = school.name;
   document.getElementById('cl-term-badge').textContent = getTerm() + ' ' + getYear();
 
-  // Load existing record only — do NOT create one yet
+  // Load existing record only â€” do NOT create one yet
   const existing = records[school.name];
   currentRecordId = existing ? existing.id : null;
 
@@ -2034,8 +1892,8 @@ function renderTasks(school, type, record) {
   document.getElementById('cl-tasks').innerHTML = tasks.map(t => {
     const comp = completions[t.key];
     const done = comp && comp.completed;
-    const meta = done && comp.completed_at ? (comp.completed_by_name ? comp.completed_by_name + ' · ' : '') + new Date(comp.completed_at).toLocaleDateString() : '';
-    const linkHtml = t.link ? ` <a href="${t.link.url}" target="_blank" rel="noopener" style="font-size:11px;color:#4A7CFF;text-decoration:none;margin-left:6px;font-weight:500;">${t.link.label} ↗</a>` : '';
+    const meta = done && comp.completed_at ? (comp.completed_by_name ? comp.completed_by_name + ' Â· ' : '') + new Date(comp.completed_at).toLocaleDateString() : '';
+    const linkHtml = t.link ? ` <a href="${t.link.url}" target="_blank" rel="noopener" style="font-size:11px;color:#4A7CFF;text-decoration:none;margin-left:6px;font-weight:500;">${t.link.label} â†—</a>` : '';
     return `<div class="task-item ${locked ? 'task-locked' : ''}">
       <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleTask('${t.key}', this.checked)">
       <div><div class="task-label ${done ? 'done' : ''}">${t.label}${linkHtml}</div>${meta ? '<div class="task-meta">' + meta + '</div>' : ''}</div>
@@ -2126,9 +1984,9 @@ async function loadHistory() {
     return `<tr>
       <td><strong>${r.school_name}</strong></td>
       <td>${typeLabel}</td>
-      <td>${r.requested_by || '—'}</td>
-      <td>${r.requested_date ? new Date(r.requested_date).toLocaleDateString() : '—'}</td>
-      <td>${r.students_processed || '—'}</td>
+      <td>${r.requested_by || 'â€”'}</td>
+      <td>${r.requested_date ? new Date(r.requested_date).toLocaleDateString() : 'â€”'}</td>
+      <td>${r.students_processed || 'â€”'}</td>
       <td><span class="hist-badge status-${status}">${statusLabel(status)}</span></td>
       <td><button class="view-btn" onclick="viewHistoryDetail('${r.id}','${r.school_name}','${r.school_type}','${term}','${year}')">View</button></td>
     </tr>`;
@@ -2138,20 +1996,20 @@ async function loadHistory() {
 async function viewHistoryDetail(recordId, schoolName, schoolType, term, year) {
   document.getElementById('history-list').style.display = 'none';
   document.getElementById('history-detail').style.display = 'block';
-  document.getElementById('hd-title').textContent = schoolName + ' — ' + term + ' ' + year;
+  document.getElementById('hd-title').textContent = schoolName + ' â€” ' + term + ' ' + year;
   const { data: record } = await sb.from('grade_store_records').select('*').eq('id', recordId).single();
   const { data: comps } = await sb.from('checklist_completions').select('*').eq('record_id', recordId);
   const compMap = {};
   if (comps) comps.forEach(c => { compMap[c.task_key] = c; });
   const rows = [
-    { label: 'Requested by', value: record.requested_by || '—' },
-    { label: 'Date requested', value: record.requested_date ? new Date(record.requested_date).toLocaleDateString() : '—' },
+    { label: 'Requested by', value: record.requested_by || 'â€”' },
+    { label: 'Date requested', value: record.requested_date ? new Date(record.requested_date).toLocaleDateString() : 'â€”' },
   ];
   if (schoolType !== 'elementary') {
-    rows.push({ label: 'As-of date', value: record.as_of_date ? new Date(record.as_of_date).toLocaleDateString() : '—' });
-    rows.push({ label: 'Active students', value: record.active_student_count || '—' });
-    rows.push({ label: 'Students processed', value: record.students_processed || '—' });
-    rows.push({ label: 'Grades processed', value: record.grades_processed || '—' });
+    rows.push({ label: 'As-of date', value: record.as_of_date ? new Date(record.as_of_date).toLocaleDateString() : 'â€”' });
+    rows.push({ label: 'Active students', value: record.active_student_count || 'â€”' });
+    rows.push({ label: 'Students processed', value: record.students_processed || 'â€”' });
+    rows.push({ label: 'Grades processed', value: record.grades_processed || 'â€”' });
     if (record.ctc_confirmed !== null && record.ctc_confirmed !== undefined) {
       rows.push({ label: 'CTC confirmed', value: record.ctc_confirmed ? 'Yes' : 'No' });
     }
@@ -2167,8 +2025,8 @@ async function viewHistoryDetail(recordId, schoolName, schoolType, term, year) {
   document.getElementById('hd-tasks').innerHTML = tasks.map(t => {
     const comp = compMap[t.key];
     const done = comp && comp.completed;
-    const meta = done && comp.completed_at ? ' — ' + new Date(comp.completed_at).toLocaleDateString() : '';
-    const linkHtml = t.link ? ` <a href="${t.link.url}" target="_blank" rel="noopener" style="font-size:11px;color:#4A7CFF;text-decoration:none;margin-left:6px;font-weight:500;">${t.link.label} ↗</a>` : '';
+    const meta = done && comp.completed_at ? ' â€” ' + new Date(comp.completed_at).toLocaleDateString() : '';
+    const linkHtml = t.link ? ` <a href="${t.link.url}" target="_blank" rel="noopener" style="font-size:11px;color:#4A7CFF;text-decoration:none;margin-left:6px;font-weight:500;">${t.link.label} â†—</a>` : '';
     return `<div class="detail-task">
       <span class="check-icon ${done ? 'check-done' : 'check-pending'}">${done ? '&#10003;' : '&#8211;'}</span>
       <span style="font-size:13px;${done ? '' : 'color:#aaa'}">${t.label}${linkHtml}${meta}</span>
@@ -2181,7 +2039,7 @@ function showHistoryList() {
   document.getElementById('history-list').style.display = 'block';
 }
 
-// ── Schedule Build Tracker ──────────────────────────────────────────
+// â”€â”€ Schedule Build Tracker â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SB_STATUSES = [
   { key: 'not_started',         label: 'Not Started',                     cls: 'status-not-started' },
   { key: 'collecting_requests', label: 'Collecting Requests',             cls: 'status-collecting' },
@@ -2228,7 +2086,7 @@ async function loadScheduleBuildRecords() {
 // These schools require CTC class push confirmation before moving to Loading
 const SB_CTC_SCHOOLS = ['East HS', 'Highland HS', 'West HS'];
 
-// Generates the progress bar HTML — 5 heat-colored segments, one per status transition
+// Generates the progress bar HTML â€” 5 heat-colored segments, one per status transition
 const SB_HEAT_COLORS = ['#EF4444', '#F97316', '#EAB308', '#84CC16', '#10B981'];
 function renderSBProgressBar(statusKey) {
   const SEGMENTS = 5;
@@ -2267,7 +2125,7 @@ function renderScheduleSchools() {
     const grid = document.getElementById('sb-grid-' + type);
     grid.innerHTML = '';
     SCHOOLS[type].forEach(school => {
-      // Horizonte does not build a schedule — exclude from this tracker
+      // Horizonte does not build a schedule â€” exclude from this tracker
       if (school.name === 'Horizonte') return;
 
       const rec = sbRecords[school.name];
@@ -2376,7 +2234,7 @@ async function saveScheduleDetail() {
   const errEl = document.getElementById('sb-save-error');
   errEl.style.display = 'none';
 
-  // Read checkboxes directly from DOM — don't rely on cache
+  // Read checkboxes directly from DOM â€” don't rely on cache
   const usingPS = document.getElementById('sb-ps-check').checked;
   const isCTCSchool = SB_CTC_SCHOOLS.includes(sbCurrentSchool.name);
   const ctcPushConfirmed = isCTCSchool
@@ -2439,7 +2297,7 @@ function showScheduleList() {
   loadScheduleBuildRecords();
 }
 
-// ── Schedule Build Checklist (shown when status = Complete) ─────────
+// â”€â”€ Schedule Build Checklist (shown when status = Complete) â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SB_CHECKLIST = [
   { key: 'sb_verify_schedule',    label: 'Verify schedule runs without conflicts in PowerSchool' },
   { key: 'sb_enrollment_caps',    label: 'Confirm section enrollment caps are set correctly' },
@@ -2494,7 +2352,7 @@ async function toggleSBTask(taskKey, checked) {
   renderSBChecklist();
 }
 
-// ── Graduation Plans ─────────────────────────────────────────────────
+// â”€â”€ Graduation Plans â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const GP_COLORS = {
   'Language Arts 9':               { bg:'#dbeafe', text:'#1e3a8a', border:'#3b82f6' },
@@ -2676,7 +2534,7 @@ function showPage(name, el) {
   localStorage.setItem('it_dash_page', name);
 }
 
-// ── School Rollover ──────────────────────────────────────────────────
+// â”€â”€ School Rollover â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const ROLLOVER_SCHOOLS = {
   high:   ['East HS', 'Highland HS', 'West HS'],
@@ -2686,28 +2544,28 @@ const ROLLOVER_SCHOOLS = {
 
 const ROLLOVER_DISTRICT_TASKS = [
   { key: 'ro_d_state_reporting',      label: 'Sam has finished State Reporting' },
-  { key: 'ro_d_disable_sif',         label: 'Disable SIF Adapter (System Management → Server → Global API and SIF Settings)' },
+  { key: 'ro_d_disable_sif',         label: 'Disable SIF Adapter (System Management â†’ Server â†’ Global API and SIF Settings)' },
   { key: 'ro_d_store_grades',         label: 'Permanently Store All Grades for Current Year' },
-  { key: 'ro_d_enrollment_audit',     label: 'Run School Enrollment Audit — Correct Any Issues' },
-  { key: 'ro_d_section_audit',        label: 'Run Section Enrollment Audit — Correct Any Issues' },
+  { key: 'ro_d_enrollment_audit',     label: 'Run School Enrollment Audit â€” Correct Any Issues' },
+  { key: 'ro_d_section_audit',        label: 'Run Section Enrollment Audit â€” Correct Any Issues' },
   { key: 'ro_d_export_entry_codes',   label: 'Export OE/DP Entry Code Students (Pre-Rollover)' },
-  { key: 'ro_d_graduates',            label: 'Change Graduates: enroll_status 2 → 3' },
-  { key: 'ro_d_next_school',          label: 'Assign Next School Indicator — All Students' },
-  { key: 'ro_d_next_grade',           label: 'Assign Next Year Grade — All Students' },
+  { key: 'ro_d_graduates',            label: 'Change Graduates: enroll_status 2 â†’ 3' },
+  { key: 'ro_d_next_school',          label: 'Assign Next School Indicator â€” All Students' },
+  { key: 'ro_d_next_grade',           label: 'Assign Next Year Grade â€” All Students' },
   { key: 'ro_d_clear_fields',         label: 'Clear Custom Student Fields (Review yearly with Sam)' },
   { key: 'ro_d_eoy_process',          label: 'Run End of Year (EOY) Process' },
-  { key: 'ro_d_attendance_year',      label: 'Update Attendance Calculation Year (District Setup → Attendance Tracking)' },
+  { key: 'ro_d_attendance_year',      label: 'Update Attendance Calculation Year (District Setup â†’ Attendance Tracking)' },
 ];
 
 const ROLLOVER_SCHOOL_TASKS = [
   { key: 'ro_s_years_terms',          label: 'Create Upcoming School Year (Years and Terms)' },
   { key: 'ro_s_fte_grades',           label: 'Review FTE Default Grade Levels for All Grades' },
-  { key: 'ro_s_attendance_conv',      label: 'Verify Attendance Conversions — Full Day Defined' },
-  { key: 'ro_s_calendar_setup',       label: 'Set Up Calendar — Sem 1 & Sem 2 First Day + Bell Schedule' },
-  { key: 'ro_s_reset_class_count',    label: 'Reset Class Count (System → Special Operations)' },
+  { key: 'ro_s_attendance_conv',      label: 'Verify Attendance Conversions â€” Full Day Defined' },
+  { key: 'ro_s_calendar_setup',       label: 'Set Up Calendar â€” Sem 1 & Sem 2 First Day + Bell Schedule' },
+  { key: 'ro_s_reset_class_count',    label: 'Reset Class Count (System â†’ Special Operations)' },
   { key: 'ro_s_clear_lockers',        label: 'Clear Lockers and Advance to Next Sequence' },
   { key: 'ro_s_meal_transactions',    label: 'Confirm Meal Transactions Reported with Lunch Staff' },
-  { key: 'ro_s_precommit_validation', label: 'Pre-Commit Validation — Verify No Errors' },
+  { key: 'ro_s_precommit_validation', label: 'Pre-Commit Validation â€” Verify No Errors' },
   { key: 'ro_s_commit_schedule',      label: 'Commit Schedule from PowerScheduler' },
   { key: 'ro_s_ctc_enrollments',      label: 'Copy Generic CTC Section enrollments to Real CTC sections', schools: ['East HS', 'Highland HS', 'West HS'] },
   { key: 'ro_s_student_portal',       label: 'Disable Parent/Student Access to Standards' },
@@ -2722,8 +2580,8 @@ let roCurrentSchool = null;      // { name, type }
 let roCurrentRecordId = null;
 let roFieldTasks = [];           // ordered list of custom field task records
 let roFieldCompletions = {};     // { field_task_id: completion_record } for current year
-let roDistrictNotes = {};        // { task_key: note_record } — year-agnostic
-let roAllSchoolNotes = {};       // { school_name: { task_key: note_record } } — year-agnostic
+let roDistrictNotes = {};        // { task_key: note_record } â€” year-agnostic
+let roAllSchoolNotes = {};       // { school_name: { task_key: note_record } } â€” year-agnostic
 let roSchoolNotes = {};          // notes for currently open school
 let roDistrictTaskOrder = {};    // { task_key: sort_order }
 let roSchoolTaskOrder = {};      // { task_key: sort_order }
@@ -2791,7 +2649,7 @@ async function loadRolloverData() {
     if (r.task_type === 'school')   roSchoolTaskOrder[r.task_key]   = r.sort_order;
   });
 
-  // Persistent notes — not tied to a year
+  // Persistent notes â€” not tied to a year
   roDistrictNotes = {};
   const { data: dn } = await sb.from('rollover_district_notes').select('*');
   if (dn) dn.forEach(n => { roDistrictNotes[n.task_key] = n; });
@@ -2916,7 +2774,7 @@ function renderRolloverDistrictTasks() {
     const note = roDistrictNotes[task.key]?.notes || '';
     const noteId = `ro-note-d-${task.key}`;
     const meta = checked && comp?.completed_by_name
-      ? `<div class="task-meta">${comp.completed_by_name} · ${new Date(comp.completed_at).toLocaleDateString()}</div>`
+      ? `<div class="task-meta">${comp.completed_by_name} Â· ${new Date(comp.completed_at).toLocaleDateString()}</div>`
       : '';
     const badge = '';
     const moveBtns = `<div style="display:flex;flex-direction:column;flex-shrink:0;">
@@ -3099,7 +2957,7 @@ function renderRolloverSchoolChecklist() {
     const note = roSchoolNotes[task.key]?.notes || '';
     const noteId = `ro-note-s-${task.key}`;
     const meta = checked && comp?.completed_by_name
-      ? `<div class="task-meta">${comp.completed_by_name} · ${new Date(comp.completed_at).toLocaleDateString()}</div>`
+      ? `<div class="task-meta">${comp.completed_by_name} Â· ${new Date(comp.completed_at).toLocaleDateString()}</div>`
       : '';
     const moveBtns = `<div style="display:flex;flex-direction:column;flex-shrink:0;">
       <button class="task-move-btn" onclick="moveTask('school','${task.key}','up')" ${idx === 0 ? 'disabled' : ''}>&#9650;</button>
@@ -3373,7 +3231,7 @@ async function removeTask(taskKey, type, isCustom) {
   else renderRolloverSchoolChecklist();
 }
 
-// ── CTC Schedule Export ─────────────────────────────────────────────
+// â”€â”€ CTC Schedule Export â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let ctcRows = null; // rows currently loaded (from DB or fresh upload)
 
 function getCTCYear() { return document.getElementById('sb-year-select').value; }
@@ -3412,7 +3270,7 @@ function updateCTCBanner(termLabel, baseTermId) {
     banner.innerHTML = `<div class="ctc-banner" style="background:#EFF6FF;border-color:#BFDBFE;">
       <div class="ctc-icon" style="font-size:16px;">&#8505;</div>
       <div class="ctc-text" style="color:#1E40AF;">
-        <strong>Configured term: ${termLabel} &nbsp;|&nbsp; Base Term ID: ${baseTermId || '—'}</strong>
+        <strong>Configured term: ${termLabel} &nbsp;|&nbsp; Base Term ID: ${baseTermId || 'â€”'}</strong>
         At the start of each new school year, update the Term Label and Base Term ID below.
       </div>
     </div>`;
@@ -3447,7 +3305,7 @@ async function saveCTCConfig() {
 // Load stored schedule rows for the selected year from Supabase
 async function loadCTCScheduleFromDB() {
   const statusEl = document.getElementById('ctc-row-count');
-  statusEl.textContent = 'Loading schedule…';
+  statusEl.textContent = 'Loading scheduleâ€¦';
   statusEl.style.color = '#555';
   ctcRows = null;
   document.getElementById('ctc-preview-wrap').style.display = 'none';
@@ -3456,7 +3314,7 @@ async function loadCTCScheduleFromDB() {
   const { data } = await sb.from('ctc_master_schedule').select('*').eq('academic_year', getCTCYear()).order('course_number');
   if (!data || data.length === 0) {
     statusEl.textContent = '';
-    document.getElementById('ctc-file-name').textContent = 'Choose file…';
+    document.getElementById('ctc-file-name').textContent = 'Choose fileâ€¦';
     return;
   }
 
@@ -3531,7 +3389,7 @@ function handleCTCFileUpload(event) {
 
     ctcRows = parsed;
     const statusEl = document.getElementById('ctc-row-count');
-    statusEl.textContent = `${ctcRows.length} rows parsed. Saving to database…`;
+    statusEl.textContent = `${ctcRows.length} rows parsed. Saving to databaseâ€¦`;
     statusEl.style.color = '#555';
     renderCTCPreview(headers, ctcRows);
     await saveCTCScheduleToDB(parsed);
@@ -3618,13 +3476,13 @@ function renderCTCPreview(headers, rows) {
           : '<td></td>';
         return `<tr style="${bg}">${headers.map(h => `<td style="white-space:nowrap">${row[h] || ''}</td>`).join('')}${note}</tr>`;
       }).join('')}
-      ${rows.length > 5 ? `<tr><td colspan="${headers.length + 1}" style="text-align:center;color:#999;font-style:italic;padding:8px">…and ${rows.length - 5} more rows</td></tr>` : ''}
+      ${rows.length > 5 ? `<tr><td colspan="${headers.length + 1}" style="text-align:center;color:#999;font-style:italic;padding:8px">â€¦and ${rows.length - 5} more rows</td></tr>` : ''}
     </tbody>
   </table>
-  ${issueCount > 0 ? `<div style="margin-top:6px;font-size:12px;color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:4px;padding:5px 10px;">${issueCount} row${issueCount === 1 ? '' : 's'} across all data may need review — missing room, missing course number, or no seats at any school.</div>` : ''}`;
+  ${issueCount > 0 ? `<div style="margin-top:6px;font-size:12px;color:#92400E;background:#FFFBEB;border:1px solid #FDE68A;border-radius:4px;padding:5px 10px;">${issueCount} row${issueCount === 1 ? '' : 's'} across all data may need review â€” missing room, missing course number, or no seats at any school.</div>` : ''}`;
 }
 
-// ── CTC shared helpers ──────────────────────────────────────────────
+// â”€â”€ CTC shared helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Read all config fields from the live DOM inputs
 function readCTCConfig() {
@@ -3686,7 +3544,7 @@ function downloadFile(filename, content) {
   document.body.removeChild(a); URL.revokeObjectURL(url);
 }
 
-// ── Content builders — return tab-delimited string, no side effects ─
+// â”€â”€ Content builders â€” return tab-delimited string, no side effects â”€
 
 function buildPreScheduleContent(school, config) {
   const sc = ctcSchoolData(school, config);
@@ -3729,7 +3587,7 @@ function buildPostBuildContent(school, config) {
   return [headers, ...rows].map(r => r.join('\t')).join('\r\n');
 }
 
-// ── Individual download functions ───────────────────────────────────
+// â”€â”€ Individual download functions â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 function generatePreSchedule(school) {
   if (!ctcRows || !ctcRows.length) { alert('Please upload the CTC master schedule first.'); return; }
@@ -3743,7 +3601,7 @@ function generatePreSchedule(school) {
   const content = buildPreScheduleContent(school, config);
   const rowCount = content.split('\n').length - 1;
   downloadFile(`${school}_CTC_PreSchedule_${config.termLabel}.txt`, content);
-  statusEl.textContent = `${school} Pre-Schedule generated — ${rowCount} sections exported.`;
+  statusEl.textContent = `${school} Pre-Schedule generated â€” ${rowCount} sections exported.`;
   statusEl.style.color = '#065F46';
 }
 
@@ -3759,7 +3617,7 @@ function generateTeacherAssignment(school) {
   const content = buildTeacherAssignmentContent(school, config);
   const rowCount = content.split('\n').length - 1;
   downloadFile(`${school}_CTC_TeacherAssignment_${config.termLabel}.txt`, content);
-  statusEl.textContent = `${school} Teacher Assignment generated — ${rowCount} rows exported.`;
+  statusEl.textContent = `${school} Teacher Assignment generated â€” ${rowCount} rows exported.`;
   statusEl.style.color = '#065F46';
 }
 
@@ -3775,11 +3633,11 @@ function generatePostBuild(school) {
   const content = buildPostBuildContent(school, config);
   const rowCount = content.split('\n').length - 1;
   downloadFile(`${school}_CTC_PostBuild_${config.termLabel}.txt`, content);
-  statusEl.textContent = `${school} Post-Build generated — ${rowCount} sections exported.`;
+  statusEl.textContent = `${school} Post-Build generated â€” ${rowCount} sections exported.`;
   statusEl.style.color = '#065F46';
 }
 
-// ── Download All 9 as ZIP ───────────────────────────────────────────
+// â”€â”€ Download All 9 as ZIP â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 async function generateAllExports() {
   if (!ctcRows || !ctcRows.length) { alert('Please upload the CTC master schedule first.'); return; }
@@ -3792,7 +3650,7 @@ async function generateAllExports() {
     statusEl.style.color = '#c0392b'; return;
   }
 
-  statusEl.textContent = 'Building ZIP…';
+  statusEl.textContent = 'Building ZIPâ€¦';
   statusEl.style.color = '#555';
 
   const zip = new JSZip();
@@ -3816,7 +3674,7 @@ async function generateAllExports() {
   statusEl.style.color = '#065F46';
 }
 
-// ── My Tasks (personal work queue) ──────────────────────────────────
+// â”€â”€ My Tasks (personal work queue) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const MY_TASKS_PRIORITIES = [
   { key: 'urgent', label: 'Urgent', color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
@@ -3830,7 +3688,7 @@ let myTasksEditingId = null;
 
 async function initMyTasksPage() {
   if (!currentUser) return;
-  document.getElementById('my-tasks-content').innerHTML = '<div style="color:#888;padding:2rem 0;">Loading…</div>';
+  document.getElementById('my-tasks-content').innerHTML = '<div style="color:#888;padding:2rem 0;">Loadingâ€¦</div>';
   const { data } = await sb.from('work_queue_items')
     .select('*')
     .eq('user_id', currentUser.id)
@@ -3875,7 +3733,7 @@ function renderMyTasks() {
         <div style="background:${p.bg};border:1px solid ${p.border};border-radius:8px;overflow:hidden;">
           ${itemsHtml || `<div style="padding:12px 1rem;font-size:13px;color:#aaa;font-style:italic;">No ${p.label.toLowerCase()} tasks</div>`}
           <div style="padding:8px 1rem;border-top:1px solid ${p.border};display:flex;gap:8px;">
-            <input id="mq-add-${p.key}" placeholder="Add a ${p.label.toLowerCase()} task…"
+            <input id="mq-add-${p.key}" placeholder="Add a ${p.label.toLowerCase()} taskâ€¦"
               style="flex:1;font-size:13px;border:1px solid #d0d5dd;border-radius:6px;padding:5px 8px;"
               onkeydown="if(event.key==='Enter')addMyTask('${p.key}')">
             <button class="save-btn" onclick="addMyTask('${p.key}')" style="margin:0;padding:5px 14px;font-size:12px;">Add</button>
@@ -3941,7 +3799,7 @@ async function saveEditMyTask(id) {
   renderMyTasks();
 }
 
-// ── Class Choice Processes ────────────────────────────────────────────
+// â”€â”€ Class Choice Processes â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 let ccParsedRows = [];
 
@@ -4064,7 +3922,7 @@ function downloadCCFile() {
   URL.revokeObjectURL(url);
 }
 
-// ── Copy K-6 Schedule Check ──────────────────────────────────────────────
+// â”€â”€ Copy K-6 Schedule Check â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 let k6cLastRun = null; // stores parsed data for download
 
@@ -4117,7 +3975,7 @@ function runK6CCheck(text, fileName) {
   const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
   if (lines.length < 2) throw new Error('File appears empty or has no data rows.');
 
-  // Parse headers — first row, strip leading row-number column if it looks like "1\t..."
+  // Parse headers â€” first row, strip leading row-number column if it looks like "1\t..."
   const rawHeader = lines[0].split('\t');
   // If the first cell is a number (row counter), skip it
   const headerOffset = /^\d+$/.test(rawHeader[0].trim()) ? 1 : 0;
@@ -4159,10 +4017,10 @@ function runK6CCheck(text, fileName) {
 
   // Check dependencies
   const issues = [];
-  const issuesByLine = new Map(); // lineNum → Set of missing deps
+  const issuesByLine = new Map(); // lineNum â†’ Set of missing deps
   const dupIssues = [];
-  const dupIssuesByLine = new Map(); // lineNum → { courseNum: [dep strings] }
-  const depRefUsers = new Map(); // depRef → [row] across all rows (for shared-dep detection)
+  const dupIssuesByLine = new Map(); // lineNum â†’ { courseNum: [dep strings] }
+  const depRefUsers = new Map(); // depRef â†’ [row] across all rows (for shared-dep detection)
   let totalChecked = 0;
   let rowsWithDeps = 0;
 
@@ -4171,7 +4029,7 @@ function runK6CCheck(text, fileName) {
     rowsWithDeps++;
     const deps = row.depStr.split(',').map(d => d.trim()).filter(d => d);
     const missing = [];
-    const courseNumSeen = {}; // courseNum → [full dep strings with that course]
+    const courseNumSeen = {}; // courseNum â†’ [full dep strings with that course]
     deps.forEach(dep => {
       totalChecked++;
       if (!allSections.has(dep)) missing.push(dep);
@@ -4201,7 +4059,7 @@ function runK6CCheck(text, fileName) {
 
   // Find dep refs shared across more than one row
   const sharedDepIssues = [];
-  const sharedDepIssuesByLine = new Map(); // lineNum → Set<depRef>
+  const sharedDepIssuesByLine = new Map(); // lineNum â†’ Set<depRef>
   depRefUsers.forEach((rows, depRef) => {
     if (rows.length > 1) {
       sharedDepIssues.push({ depRef, rows });
@@ -4323,7 +4181,7 @@ function downloadK6CReport() {
   // Build column order: move DEPENDENT_SECS to immediately after LASTFIRST
   const colOrder = [];
   headers.forEach((_, ci) => {
-    if (ci === iDep) return; // skip here — inserted after iTeacher below
+    if (ci === iDep) return; // skip here â€” inserted after iTeacher below
     colOrder.push(ci);
     if (ci === iTeacher) colOrder.push(iDep);
   });
@@ -4388,14 +4246,14 @@ function downloadK6CReport() {
   if (issueCount  > 0) summaryParts.push(issueCount  + ' row(s) with missing dep sections');
   if (dupCount    > 0) summaryParts.push(dupCount    + ' row(s) with duplicate course #s in DEPENDENT_SECS');
   if (sharedCount > 0) summaryParts.push(sharedCount + ' row(s) with shared dependent sections');
-  const summaryBarHTML = '&#9888; ' + summaryParts.join(' &nbsp;|&nbsp; ') + ' — highlighted below. Missing refs: dark navy badge &nbsp;|&nbsp; Duplicate course #: amber badge &nbsp;|&nbsp; Shared dep: purple badge.';
+  const summaryBarHTML = '&#9888; ' + summaryParts.join(' &nbsp;|&nbsp; ') + ' â€” highlighted below. Missing refs: dark navy badge &nbsp;|&nbsp; Duplicate course #: amber badge &nbsp;|&nbsp; Shared dep: purple badge.';
   const baseName = fileName.replace(/\.[^.]+$/, '');
 
   const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>K-6 Schedule Check — ${esc(baseName)}</title>
+<title>K-6 Schedule Check â€” ${esc(baseName)}</title>
 <style>
   html, body { height: 100%; margin: 0; }
   body { font-family: Arial, sans-serif; font-size: 12px; padding: 1rem; box-sizing: border-box; display: flex; flex-direction: column; }
@@ -4406,7 +4264,7 @@ function downloadK6CReport() {
   table { border-collapse: collapse; min-width: 100%; }
   th { background: #1e3a5f; color: #fff; padding: 5px 8px; text-align: left; font-size: 11px; position: sticky; top: 0; z-index: 1; white-space: nowrap; }
   td { padding: 3px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; white-space: nowrap; }
-  /* Issue rows — red for missing deps, amber for dup course #s, purple for shared deps */
+  /* Issue rows â€” red for missing deps, amber for dup course #s, purple for shared deps */
   tr.has-issue td { background: #fca5a5; }
   tr.has-dup td { background: #fde68a; }
   tr.has-shared td { background: #ede9fe; }
@@ -4454,7 +4312,7 @@ ${tbodyRows}
   URL.revokeObjectURL(url);
 }
 
-// ── K-6 Clean Status ─────────────────────────────────────────────────────
+// â”€â”€ K-6 Clean Status â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const K6_SCHOOLS = [
   'Backman Elementary',
@@ -4488,7 +4346,7 @@ let k6CleanStatuses = {};
 async function loadK6CleanStatus() {
   const year = parseInt(getSBYear());
   document.getElementById('k6c-clean-title').textContent =
-    'K-6 School Clean Status — ' + (year - 1) + '-' + String(year).slice(2);
+    'K-6 School Clean Status â€” ' + (year - 1) + '-' + String(year).slice(2);
   const { data } = await sb.from('k6_clean_status').select('*').eq('academic_year', year);
   k6CleanStatuses = {};
   if (data) data.forEach(r => { k6CleanStatuses[r.school_name] = r; });
@@ -4541,7 +4399,7 @@ async function toggleK6CleanStatus(schoolName, checked) {
   renderK6CleanList();
 }
 
-// ── CardToUTA ──────────────────────────────────────────────────────────
+// â”€â”€ CardToUTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 const CTU_SCHOOL_MAP = {
   'Bryant Middle': 404,
@@ -4614,7 +4472,7 @@ function parseCTUCSVLine(line) {
 }
 
 function reverseCTUUID(uid) {
-  // Reverse in 2-char chunks: 670A18E2 → E2180A67
+  // Reverse in 2-char chunks: 670A18E2 â†’ E2180A67
   if (uid.length !== 8) return uid;
   return uid.slice(6, 8) + uid.slice(4, 6) + uid.slice(2, 4) + uid.slice(0, 2);
 }
@@ -4660,7 +4518,7 @@ function parseCTUFile(text) {
   }
 
   let msg = ctuParsedRows.length + ' data rows parsed.';
-  if (unknownSchools.size) msg += '  Warning — unknown campus name(s): ' + [...unknownSchools].join(', ') + '.';
+  if (unknownSchools.size) msg += '  Warning â€” unknown campus name(s): ' + [...unknownSchools].join(', ') + '.';
   const rowCountEl = document.getElementById('ctu-row-count');
   rowCountEl.textContent = msg;
   rowCountEl.style.color = unknownSchools.size ? '#b45309' : '#065F46';
@@ -4713,7 +4571,7 @@ function downloadCTUFile() {
   URL.revokeObjectURL(url);
 }
 
-// ── Password Reset Flow ────────────────────────────────────────────────
+// â”€â”€ Password Reset Flow â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // Check synchronously so getSession() below doesn't call showApp() during a recovery redirect
 let isPasswordRecovery = window.location.hash.includes('type=recovery');
@@ -4751,7 +4609,7 @@ async function handleSendReset() {
     msgEl.style.display = 'block';
     return;
   }
-  msgEl.textContent = 'Reset link sent — check your email.';
+  msgEl.textContent = 'Reset link sent â€” check your email.';
   msgEl.style.color = '#065F46';
   msgEl.style.display = 'block';
 }
@@ -4782,7 +4640,7 @@ async function handleResetPassword() {
     return;
   }
 
-  successEl.textContent = 'Password updated successfully! Redirecting to sign in…';
+  successEl.textContent = 'Password updated successfully! Redirecting to sign inâ€¦';
   successEl.style.display = 'block';
   document.getElementById('reset-password').value = '';
   document.getElementById('reset-confirm').value = '';
@@ -4808,9 +4666,9 @@ sb.auth.getSession().then(({ data }) => {
   if (data.session && !isPasswordRecovery) { currentUser = data.session.user; showApp(); }
 });
 
-// ─────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 //  Grad Plan Simulator
-// ─────────────────────────────────────────────
+// â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
 // All sort orders confirmed from ClassChoice 2021-2025 configuration
 const SIM_GROUPS = [
@@ -4859,7 +4717,7 @@ const SIM_GROUPS = [
   ]},
 ];
 
-// Build name→id map and flat sorted bucket list
+// Build nameâ†’id map and flat sorted bucket list
 const SIM_NAME_TO_ID = {};
 SIM_GROUPS.forEach(g => g.buckets.forEach(b => { SIM_NAME_TO_ID[b.name] = b.id; }));
 const SIM_FLAT = SIM_GROUPS.flatMap(g => g.buckets).sort((a,b) => a.arenaSort - b.arenaSort);
@@ -4969,13 +4827,13 @@ function renderSimPlan(id, state, compare, showSort) {
       const subMet = filled >= b.required - 0.001;
       const subColor = subMet ? '#16a34a' : (filled > 0.001 ? '#86efac' : '#e5e7eb');
       const differs = compare && Math.abs(filled - Math.min(compare[b.id].filled, compare[b.id].required)) > 0.001;
-      const sortBadge = showSort ? `<span class="gp-sim-sort-badge${b.sortKnown?' known':''}">${b.sortKnown?'★':''}${b.arenaSort}</span>` : '';
-      const diffBadge = differs ? `<span class="gp-sim-diff-badge">≠ PS</span>` : '';
+      const sortBadge = showSort ? `<span class="gp-sim-sort-badge${b.sortKnown?' known':''}">${b.sortKnown?'â˜…':''}${b.arenaSort}</span>` : '';
+      const diffBadge = differs ? `<span class="gp-sim-diff-badge">â‰  PS</span>` : '';
       const srcHtml = s.sources.length ? `<div class="gp-sim-src-tags">${s.sources.map(src=>`<span class="gp-sim-src-tag">${src.type} ${simFmt(src.amt)} cr</span>`).join('')}</div>` : '';
       return `<div class="gp-sim-sub-row${differs?' gp-sim-diff-row':''}">
         <div class="gp-sim-sub-meta">
           <span class="gp-sim-sub-name">${b.name} ${sortBadge} ${diffBadge}</span>
-          <span class="gp-sim-sub-status">${simFmt(filled)} of ${b.required} cr${subMet?' ✓':''}</span>
+          <span class="gp-sim-sub-status">${simFmt(filled)} of ${b.required} cr${subMet?' âœ“':''}</span>
         </div>
         <div class="gp-sim-sub-bar-track"><div class="gp-sim-sub-bar-fill" style="width:${subPct}%;background:${subColor};"></div></div>
         ${srcHtml}</div>`;
@@ -4985,15 +4843,15 @@ function renderSimPlan(id, state, compare, showSort) {
     const singleB = group.buckets[0];
     const singleFilled = Math.min(state[singleB.id].filled, singleB.required);
     const singleDiffers = !hasSubs && compare && Math.abs(singleFilled - Math.min(compare[singleB.id].filled, compare[singleB.id].required)) > 0.001;
-    const sortBadgeSingle = (showSort && !hasSubs) ? `<span class="gp-sim-sort-badge${singleB.sortKnown?' known':''}">${singleB.sortKnown?'★':''}${singleB.arenaSort}</span>` : '';
-    const diffBadgeSingle = singleDiffers ? `<span class="gp-sim-diff-badge">≠ PS</span>` : '';
+    const sortBadgeSingle = (showSort && !hasSubs) ? `<span class="gp-sim-sort-badge${singleB.sortKnown?' known':''}">${singleB.sortKnown?'â˜…':''}${singleB.arenaSort}</span>` : '';
+    const diffBadgeSingle = singleDiffers ? `<span class="gp-sim-diff-badge">â‰  PS</span>` : '';
     const singleSrcHtml = (!hasSubs && state[singleB.id].sources.length) ? `<div class="gp-sim-src-tags">${state[singleB.id].sources.map(src=>`<span class="gp-sim-src-tag">${src.type} ${simFmt(src.amt)} cr</span>`).join('')}</div>` : '';
 
     return `<div class="gp-sim-group">
       <div class="${singleDiffers?'gp-sim-diff-row':''}">
         <div class="gp-sim-group-meta">
           <span class="gp-sim-group-name">${group.name} ${sortBadgeSingle} ${diffBadgeSingle}</span>
-          <span class="gp-sim-group-status">${simFmt(totalFilled)} of ${group.total} Credits${met?` <span class="gp-sim-met-badge">✓ Met</span>`:''}</span>
+          <span class="gp-sim-group-status">${simFmt(totalFilled)} of ${group.total} Credits${met?` <span class="gp-sim-met-badge">âœ“ Met</span>`:''}</span>
         </div>
         <div class="gp-sim-bar-track"><div class="gp-sim-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
         ${singleSrcHtml}
@@ -5017,12 +4875,12 @@ function simRender() {
     entriesEl.innerHTML = simEntries.map(e => `
       <div class="gp-sim-entry-row">
         <select class="gp-sim-type-sel" onchange="simUpdate(${e.id},'type',this.value)">
-          ${allTypes.map(t=>`<option value="${t}"${t===e.type?' selected':''}>${t}${typeLabels[t]?' — '+typeLabels[t]:''}</option>`).join('')}
+          ${allTypes.map(t=>`<option value="${t}"${t===e.type?' selected':''}>${t}${typeLabels[t]?' â€” '+typeLabels[t]:''}</option>`).join('')}
         </select>
         <input class="gp-sim-amt-inp" type="number" min="0.25" max="4" step="0.25" value="${e.amount}"
           oninput="simUpdate(${e.id},'amount',this.value)">
         <span class="gp-sim-cr-lbl">credits</span>
-        <button class="gp-sim-del-btn" onclick="simRemove(${e.id})" title="Remove">✕</button>
+        <button class="gp-sim-del-btn" onclick="simRemove(${e.id})" title="Remove">âœ•</button>
       </div>`).join('');
   }
 
