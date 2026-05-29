@@ -410,7 +410,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.15</div>
+      <div class="sidebar-version">v2026.05.29.16</div>
     </div>
     <div class="main">
 
@@ -1096,7 +1096,7 @@
                     <td><span class="gp-type-badge">CTESCI</span></td>
                     <td>Science → <strong>Science AA</strong> → Career Tech Ed</td>
                     <td>Science → Career Tech Ed (sort 11) → Science AA</td>
-                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">CTESCI is accepted in Career Tech Ed (sort 11) in Arena — but Career Tech Ed is sorted before Science AA. PS fills Science AA first; Arena fills Career Tech Ed first.</div></td>
+                    <td><span class="gp-conflict-pill mismatch">Wrong order</span><div class="gp-conflict-note">CTESCI is accepted in both Career Tech Ed (sort 11) and Science AA (sort 16). Arena fills Career Tech Ed first; PS fills Science AA first.</div></td>
                   </tr>
                   <tr>
                     <td><span class="gp-type-badge">DSCTESAA</span></td>
@@ -1143,19 +1143,19 @@
                 </div>
               </div>
 
-              <div class="gp-section-label" style="font-size:11px;margin-bottom:0.5rem;">The only question: what sort number does Science AA get?</div>
+              <div class="gp-section-label" style="font-size:11px;margin-bottom:0.5rem;">The conflict is the relative sort position of Career Tech Ed (sort 11) vs. Science AA (sort 16)</div>
               <div style="font-size:11px;color:#555;margin-bottom:0.75rem;line-height:1.5;">
-                Arena processes requirements in sort-number order, lowest first. Career Tech Ed is confirmed at <strong>sort 11</strong>. The entire conflict comes down to whether Science AA's sort number is <em>lower</em> or <em>higher</em> than 11 — those are the only two options, and neither works for both credit types.
+                Arena processes requirements in sort-number order, lowest first. Both sort values below are confirmed. Because Career Tech Ed (sort 11) is lower than Science AA (sort 16), Arena processes Career Tech Ed first — which is correct for CTESAA but wrong for CTESCI. Swapping them would fix CTESCI but break CTESAA.
               </div>
               <div class="gp-sort-diagram">
-                <div class="gp-sort-option">
-                  <span class="gp-sort-option-label">Option A<br><span style="font-size:10px;font-weight:400;color:#888;">Science AA sort &gt; 11<br>(e.g., sort 20)</span></span>
+                <div class="gp-sort-option" style="border-color:#f97316;background:#fff7ed;">
+                  <span class="gp-sort-option-label">Current<br><span style="font-size:10px;font-weight:400;color:#9a3412;">Career Tech Ed (11)<br>before Science AA (16)</span></span>
                   <div class="gp-sort-buckets">
-                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 7</span></span>
+                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 7 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
                     <span class="gp-sort-bucket cte">Career Tech Ed<br><span style="font-weight:400;font-size:10px;">sort 11 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket sciaa">Science AA<br><span style="font-weight:400;font-size:10px;">sort 20</span></span>
+                    <span class="gp-sort-bucket sciaa">Science AA<br><span style="font-weight:400;font-size:10px;">sort 16 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
                     <span class="gp-sort-bucket elec">Elective<br><span style="font-weight:400;font-size:10px;">sort 99</span></span>
                   </div>
@@ -1165,11 +1165,11 @@
                   </div>
                 </div>
                 <div class="gp-sort-option">
-                  <span class="gp-sort-option-label">Option B<br><span style="font-size:10px;font-weight:400;color:#888;">Science AA sort &lt; 11<br>(e.g., sort 8)</span></span>
+                  <span class="gp-sort-option-label">If swapped<br><span style="font-size:10px;font-weight:400;color:#888;">Science AA moved<br>before Career Tech Ed</span></span>
                   <div class="gp-sort-buckets">
-                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 7</span></span>
+                    <span class="gp-sort-bucket sci">Science<br><span style="font-weight:400;font-size:10px;">sort 7 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket sciaa">Science AA<br><span style="font-weight:400;font-size:10px;">sort 8</span></span>
+                    <span class="gp-sort-bucket sciaa">Science AA<br><span style="font-weight:400;font-size:10px;">sort &lt;11</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
                     <span class="gp-sort-bucket cte">Career Tech Ed<br><span style="font-weight:400;font-size:10px;">sort 11 ★</span></span>
                     <span class="gp-sort-arr">&rarr;</span>
@@ -1181,14 +1181,14 @@
                   </div>
                 </div>
               </div>
-              <div style="font-size:10px;color:#9ca3af;margin-top:4px;">★ confirmed sort value &nbsp;|&nbsp; other sort numbers shown are representative examples</div>
+              <div style="font-size:10px;color:#9ca3af;margin-top:4px;">★ confirmed sort values from Arena configuration</div>
 
               <!-- Concrete student scenario for the impossibility -->
               <div class="gp-student-scenario">
                 <div class="gp-section-label" style="font-size:11px;margin:1.25rem 0 0.6rem;">Why Sort Order Alone Cannot Reconcile These Two Credit Types</div>
 
                 <div style="background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;padding:0.6rem 0.875rem;margin-bottom:0.875rem;font-size:12px;color:#0c4a6e;line-height:1.5;">
-                  This is the <strong>actual current conflict</strong> — not a hypothetical. Both CTESCI and CTESAA are accepted in Career Tech Ed and Science AA in Arena. Career Tech Ed is sorted first (sort 11). That is correct for CTESAA (which PS also fills Career Tech Ed first) but wrong for CTESCI (which PS fills Science AA first, before Career Tech Ed).
+                  This is the <strong>actual current conflict</strong>. Both CTESCI and CTESAA are accepted in Career Tech Ed (sort 11) and Science AA (sort 16) in Arena. Because Career Tech Ed sorts first, Arena fills it first for both — which matches PS for CTESAA but contradicts PS for CTESCI (which fills Science AA before Career Tech Ed).
                 </div>
 
                 <div class="gp-vs-grid">
@@ -4682,7 +4682,7 @@ const SIM_GROUPS = [
   ]},
   { name:'Science', total:3.0, buckets:[
     { id:'science',   name:'Science',                       required:2.0, arenaSort:7,  sortKnown:false },
-    { id:'sci_aa',    name:'Science AA',                    required:1.0, arenaSort:8,  sortKnown:false },
+    { id:'sci_aa',    name:'Science AA',                    required:1.0, arenaSort:16, sortKnown:true  },
   ]},
   { name:'Social Studies', total:3.0, buckets:[
     { id:'world_geo', name:'World Geography',               required:0.5, arenaSort:9,  sortKnown:false },
