@@ -341,7 +341,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.3</div>
+      <div class="sidebar-version">v2026.05.29.4</div>
     </div>
     <div class="main">
 
@@ -1110,9 +1110,14 @@
               <div class="gp-student-scenario">
                 <div class="gp-section-label" style="font-size:11px;margin:1.25rem 0 0.6rem;">Concrete Example: Same Students, Different Results</div>
                 <div class="gp-student-note">
-                  Suppose the vendor adds <code>CTESCI</code> to CTE's accepted list to fix the missing-bucket problem.
-                  Now <code>CTESCI</code> appears in both the Science AA and CTE buckets — exactly like <code>CTESAA</code> does.
-                  Two students each have one course and the same two requirements remaining (CTE: 0.5 cr, Science AA: 0.5 cr):
+                  If the vendor fixes the missing-bucket problem by adding <code>CTESCI</code> to CTE's accepted list,
+                  <code>CTESCI</code> would now appear in <em>both</em> the Science AA and CTE buckets — same as <code>CTESAA</code>.
+                  But a deeper conflict remains: these two course types fill requirements in <strong>opposite order</strong> in PowerSchool.
+                  <code>CTESCI</code>'s chain hits Science AA before CTE; <code>CTESAA</code>'s chain hits CTE before Science AA.
+                  Arena uses one global sort order for all course types, so whatever order it picks, it will match PowerSchool for one and contradict it for the other.
+                  <br><br>
+                  Here's the proof. Both students below have the <em>exact same unfulfilled requirements</em> (CTE: 0.5 cr, Science AA: 0.5 cr).
+                  The only difference is which course they took — and that's enough to make any single Arena sort order wrong for one of them:
                 </div>
                 <table class="gp-student-table">
                   <thead>
