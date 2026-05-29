@@ -170,6 +170,60 @@
   .gp-flow-chain { display:flex; align-items:center; gap:4px; flex-wrap:wrap; }
   .gp-pill { font-size:11px; font-weight:500; padding:2px 8px; border-radius:10px; border:1px solid; white-space:nowrap; }
   .gp-arrow { color:#bbb; font-size:12px; flex-shrink:0; }
+
+  /* Vendor comparison section */
+  .gp-compare-section { margin-top:2.5rem; }
+  .gp-algo-row { display:grid; grid-template-columns:1fr auto 1fr; gap:16px; align-items:stretch; margin-bottom:1.5rem; }
+  .gp-algo-card { background:white; border:1px solid #e0e4ea; border-radius:8px; padding:1.25rem 1.25rem 1rem; }
+  .gp-algo-card.ps-card { border-top:3px solid #4A7CFF; }
+  .gp-algo-card.vendor-card { border-top:3px solid #f59e0b; }
+  .gp-algo-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:2px; }
+  .gp-algo-card.ps-card .gp-algo-label { color:#4A7CFF; }
+  .gp-algo-card.vendor-card .gp-algo-label { color:#d97706; }
+  .gp-algo-title { font-size:15px; font-weight:700; color:#111; margin-bottom:0.5rem; }
+  .gp-algo-desc { font-size:13px; color:#444; line-height:1.55; }
+  .gp-algo-rule { background:#f8f9fb; border-radius:6px; padding:0.6rem 0.875rem; margin-top:0.75rem; font-size:12px; color:#333; line-height:1.5; border-left:3px solid #e0e4ea; }
+  .gp-algo-card.ps-card .gp-algo-rule { border-left-color:#4A7CFF; background:#eff4ff; }
+  .gp-algo-card.vendor-card .gp-algo-rule { border-left-color:#f59e0b; background:#fffbeb; }
+  .gp-algo-vs { display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:700; color:#aaa; padding:0 4px; }
+  .gp-scenario-box { background:white; border:1px solid #e0e4ea; border-radius:8px; padding:1.25rem; margin-bottom:1.5rem; }
+  .gp-scenario-intro { font-size:13px; color:#444; margin-bottom:1rem; line-height:1.5; }
+  .gp-scenario-courses { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:1.25rem; }
+  .gp-course-card { background:#f8f9fb; border:1px solid #e0e4ea; border-radius:7px; padding:0.6rem 0.875rem; font-size:12px; }
+  .gp-course-name { font-weight:600; color:#111; margin-bottom:2px; }
+  .gp-course-meta { color:#666; }
+  .gp-course-meta span { font-family:monospace; font-weight:600; color:#334155; background:#f1f5f9; padding:1px 5px; border-radius:3px; border:1px solid #e2e8f0; }
+  .gp-result-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .gp-result-col { }
+  .gp-result-header { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; padding:6px 12px; border-radius:5px 5px 0 0; border:1px solid; border-bottom:none; }
+  .gp-result-header.ps { background:#eff4ff; color:#3730a3; border-color:#c7d7fd; }
+  .gp-result-header.vendor { background:#fffbeb; color:#92400e; border-color:#fde68a; }
+  .gp-result-body { border:1px solid; border-radius:0 0 5px 5px; overflow:hidden; }
+  .gp-result-body.ps { border-color:#c7d7fd; }
+  .gp-result-body.vendor { border-color:#fde68a; }
+  .gp-result-step { display:flex; align-items:flex-start; gap:8px; padding:8px 12px; border-bottom:1px solid #f0f0f0; font-size:12px; line-height:1.45; }
+  .gp-result-step:last-child { border-bottom:none; }
+  .gp-result-step-num { font-size:10px; font-weight:700; background:#e5e7eb; color:#374151; border-radius:50%; width:17px; height:17px; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:1px; }
+  .gp-outcome-row { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:1rem; }
+  .gp-outcome-col { border-radius:6px; padding:0.75rem 1rem; }
+  .gp-outcome-col.ps { background:#eff4ff; border:1px solid #c7d7fd; }
+  .gp-outcome-col.vendor { background:#fffbeb; border:1px solid #fde68a; }
+  .gp-outcome-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.07em; margin-bottom:6px; }
+  .gp-outcome-col.ps .gp-outcome-label { color:#3730a3; }
+  .gp-outcome-col.vendor .gp-outcome-label { color:#92400e; }
+  .gp-outcome-item { display:flex; justify-content:space-between; align-items:center; font-size:12px; padding:2px 0; color:#333; }
+  .gp-badge-ok { font-size:11px; font-weight:700; color:#065f46; background:#d1fae5; padding:1px 8px; border-radius:10px; }
+  .gp-badge-fail { font-size:11px; font-weight:700; color:#7f1d1d; background:#fee2e2; padding:1px 8px; border-radius:10px; }
+  .gp-conflict-table-wrap { background:white; border:1px solid #e0e4ea; border-radius:8px; overflow:hidden; }
+  .gp-conflict-table { width:100%; border-collapse:collapse; font-size:12px; }
+  .gp-conflict-table th { background:#f8f9fb; padding:9px 1rem; text-align:left; font-size:11px; font-weight:600; color:#555; text-transform:uppercase; letter-spacing:0.05em; border-bottom:1px solid #e0e4ea; white-space:nowrap; }
+  .gp-conflict-table td { padding:8px 1rem; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
+  .gp-conflict-table tr:last-child td { border-bottom:none; }
+  .gp-conflict-table tr:hover td { background:#f8f9fb; }
+  .gp-conflict-pill { font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; border:1px solid; white-space:nowrap; }
+  .gp-conflict-pill.mismatch { background:#fef3c7; color:#92400e; border-color:#fde68a; }
+  .gp-conflict-pill.missing { background:#fee2e2; color:#7f1d1d; border-color:#fca5a5; }
+  .gp-conflict-note { font-size:11px; color:#666; margin-top:2px; }
 </style>
 </head>
 <body>
@@ -238,7 +292,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.28.1</div>
+      <div class="sidebar-version">v2026.05.29.1</div>
     </div>
     <div class="main">
 
@@ -798,6 +852,146 @@
               <tbody id="gp-2021-flow"></tbody>
             </table>
           </div>
+
+          <!-- Arena Scheduling Comparison -->
+          <div class="gp-compare-section">
+            <div class="gp-section-label" style="margin-bottom:1rem;">
+              Arena Scheduling Comparison
+              <span class="gp-total-badge" style="background:#fef3c7;color:#92400e;">Vendor vs. PowerSchool</span>
+            </div>
+
+            <!-- Algorithm model explanation -->
+            <div class="gp-algo-row">
+              <div class="gp-algo-card ps-card">
+                <div class="gp-algo-label">PowerSchool</div>
+                <div class="gp-algo-title">Credit-Type Priority Model</div>
+                <div class="gp-algo-desc">Each credit type has its own defined priority chain. When a student earns a credit, it fills the first bucket in <strong>that credit type's chain</strong> that still has room. Overflow moves automatically to the next bucket in the chain.</div>
+                <div class="gp-algo-rule">
+                  <strong>Example — DS credit type:</strong><br>
+                  DS &rarr; Computer Tech &rarr; CTE &rarr; Elective<br>
+                  <span style="color:#555;">The credit always tries Computer Tech first, regardless of what order requirements are listed.</span>
+                </div>
+              </div>
+              <div class="gp-algo-vs">vs</div>
+              <div class="gp-algo-card vendor-card">
+                <div class="gp-algo-label">Arena Scheduling</div>
+                <div class="gp-algo-title">Bucket Sort-Order Model</div>
+                <div class="gp-algo-desc">Requirements are processed in sort order (1 &rarr; 99). For each requirement, any credit the student holds that matches its accepted credit types is consumed there — in the order the requirements appear, not the order the credit type defines.</div>
+                <div class="gp-algo-rule">
+                  <strong>Example — DS credit type:</strong><br>
+                  DS appears in CTE (sort&nbsp;11) and Computer Tech (sort&nbsp;14)<br>
+                  <span style="color:#555;">DS always fills CTE first because sort 11 comes before sort 14.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Scenario walkthrough -->
+            <div class="gp-section-label" style="font-size:12px;margin-bottom:0.75rem;">
+              Concrete Example: Same Student, Different Results
+            </div>
+            <div class="gp-scenario-box">
+              <div class="gp-scenario-intro">
+                A student completes two courses — one Digital Studies course (credit type <code style="font-size:11px;background:#f1f5f9;padding:1px 5px;border-radius:3px;border:1px solid #e2e8f0;">DS</code>) worth 1.0 credit, and one CTE course (credit type <code style="font-size:11px;background:#f1f5f9;padding:1px 5px;border-radius:3px;border:1px solid #e2e8f0;">CTE</code>) worth 1.0 credit. Two requirements still need credits: CTE (1.0 cr needed) and Computer Tech (0.5 cr needed).
+              </div>
+              <div class="gp-scenario-courses">
+                <div class="gp-course-card">
+                  <div class="gp-course-name">Digital Studies Course</div>
+                  <div class="gp-course-meta">Credit type: <span>DS</span> &nbsp;|&nbsp; 1.0 credit</div>
+                </div>
+                <div class="gp-course-card">
+                  <div class="gp-course-name">CTE Foundations Course</div>
+                  <div class="gp-course-meta">Credit type: <span>CTE</span> &nbsp;|&nbsp; 1.0 credit</div>
+                </div>
+              </div>
+
+              <div class="gp-result-row">
+                <div class="gp-result-col">
+                  <div class="gp-result-header ps">PowerSchool — credit-type chains</div>
+                  <div class="gp-result-body ps">
+                    <div class="gp-result-step">
+                      <div class="gp-result-step-num">1</div>
+                      <div>DS credit chain: <strong>Computer Tech first.</strong> 0.5 cr fills Computer Tech (satisfied). 0.5 cr overflows to CTE.</div>
+                    </div>
+                    <div class="gp-result-step">
+                      <div class="gp-result-step-num">2</div>
+                      <div>CTE credit chain: <strong>CTE first.</strong> CTE needs 1.0 cr — gets 0.5 from DS overflow + 0.5 from the CTE course (satisfied). Remaining 0.5 of CTE course flows to Elective.</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="gp-result-col">
+                  <div class="gp-result-header vendor">Arena Scheduling — sort-order processing</div>
+                  <div class="gp-result-body vendor">
+                    <div class="gp-result-step">
+                      <div class="gp-result-step-num">1</div>
+                      <div>Sort 11 — CTE requirement: DS type is in CTE's accepted list. <strong>DS credit fills CTE</strong> (1.0 cr, satisfied). DS is now fully consumed.</div>
+                    </div>
+                    <div class="gp-result-step">
+                      <div class="gp-result-step-num">2</div>
+                      <div>Sort 14 — Computer Tech: DS was already used. CTE credit type is not in Computer Tech's accepted list. <strong>Computer Tech stays empty.</strong></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="gp-outcome-row">
+                <div class="gp-outcome-col ps">
+                  <div class="gp-outcome-label">PowerSchool result</div>
+                  <div class="gp-outcome-item"><span>CTE (1.0 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
+                  <div class="gp-outcome-item"><span>Computer Tech (0.5 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
+                </div>
+                <div class="gp-outcome-col vendor">
+                  <div class="gp-outcome-label">Arena Scheduling result</div>
+                  <div class="gp-outcome-item"><span>CTE (1.0 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
+                  <div class="gp-outcome-item"><span>Computer Tech (0.5 cr)</span><span class="gp-badge-fail">0 / 0.5 ✗</span></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conflict credit types table -->
+            <div class="gp-section-label" style="font-size:12px;margin-bottom:0.75rem;">
+              All Affected Credit Types — Where the Two Systems Diverge
+            </div>
+            <div class="gp-conflict-table-wrap">
+              <table class="gp-conflict-table">
+                <thead>
+                  <tr>
+                    <th>Credit Type</th>
+                    <th>PowerSchool fills first</th>
+                    <th>Arena Scheduling fills first</th>
+                    <th>Issue</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><span class="gp-type-badge">DS</span></td>
+                    <td>Computer Tech/Digital Studies</td>
+                    <td>CTE (sort 11 &lt; sort 14)</td>
+                    <td><span class="gp-conflict-pill mismatch">Wrong order</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="gp-type-badge">DSMAA</span></td>
+                    <td>Computer Tech/Digital Studies</td>
+                    <td>CTE (sort 11 &lt; sort 14)</td>
+                    <td><span class="gp-conflict-pill mismatch">Wrong order</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="gp-type-badge">CTESCI</span></td>
+                    <td>Science → Science AA → <strong>CTE</strong></td>
+                    <td>Science → Science AA (CTE not listed)</td>
+                    <td><span class="gp-conflict-pill missing">CTE bucket missing</span><div class="gp-conflict-note">Students who satisfy CTE via CTESCI in PowerSchool will show CTE incomplete in Arena.</div></td>
+                  </tr>
+                  <tr>
+                    <td><span class="gp-type-badge">DSCTESAA</span></td>
+                    <td>Computer Tech → <strong>CTE</strong> → Science AA</td>
+                    <td>Computer Tech → Science AA (CTE not listed)</td>
+                    <td><span class="gp-conflict-pill missing">CTE bucket missing</span><div class="gp-conflict-note">CTE is a valid destination in PowerSchool but not configured in Arena.</div></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- end Arena Scheduling Comparison -->
+
         </div>
 
         <div class="tab-content" id="gp-tab-2026">
