@@ -262,11 +262,14 @@
   .gp-student-note { font-size:12px; color:#555; line-height:1.5; margin-bottom:0.875rem; background:#fff; border:1px solid #fca5a5; border-radius:6px; padding:0.6rem 0.875rem; }
   .gp-student-note code { font-size:11px; background:#fee2e2; color:#7f1d1d; padding:1px 5px; border-radius:3px; }
   .gp-student-table { width:100%; border-collapse:collapse; background:white; border-radius:7px; overflow:hidden; border:1px solid #fca5a5; font-size:12px; }
-  .gp-student-table th { background:#fff5f5; padding:8px 12px; text-align:left; font-size:11px; font-weight:700; color:#7f1d1d; border-bottom:1px solid #fca5a5; }
+  .gp-student-table th { background:#fff5f5; padding:8px 12px; text-align:left; font-size:11px; font-weight:700; color:#7f1d1d; border-bottom:2px solid #fca5a5; }
   .gp-student-table th.student-col { color:#374151; }
-  .gp-student-table td { padding:8px 12px; border-bottom:1px solid #fee2e2; vertical-align:middle; line-height:1.45; }
+  .gp-student-table th:nth-child(2) { border-right:2px solid #d1d5db; background:#f0f9ff; color:#0c4a6e; }
+  .gp-student-table th:nth-child(3) { background:#faf5ff; color:#4c1d95; }
+  .gp-student-table td { padding:8px 12px; border-bottom:1px solid #fee2e2; vertical-align:top; line-height:1.45; }
   .gp-student-table tr:last-child td { border-bottom:none; }
-  .gp-student-table td.row-label { font-weight:600; color:#374151; white-space:nowrap; font-size:11px; background:#fafafa; border-right:1px solid #fee2e2; }
+  .gp-student-table td.row-label { font-weight:600; color:#374151; white-space:nowrap; font-size:11px; background:#fafafa; border-right:2px solid #d1d5db; vertical-align:middle; }
+  .gp-student-table td:nth-child(2) { border-right:2px solid #d1d5db; }
   .gp-student-table td.cell-match { background:#f0fdf4; }
   .gp-student-table td.cell-mismatch { background:#fff1f2; border-left:3px solid #f87171; }
   .gp-cell-result { font-weight:600; color:#333; }
@@ -341,7 +344,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.4</div>
+      <div class="sidebar-version">v2026.05.29.5</div>
     </div>
     <div class="main">
 
@@ -1108,16 +1111,14 @@
 
               <!-- Concrete student scenario for the impossibility -->
               <div class="gp-student-scenario">
-                <div class="gp-section-label" style="font-size:11px;margin:1.25rem 0 0.6rem;">Concrete Example: Same Students, Different Results</div>
+                <div class="gp-section-label" style="font-size:11px;margin:1.25rem 0 0.6rem;">Why No Single Sort Order Works</div>
                 <div class="gp-student-note">
-                  If the vendor fixes the missing-bucket problem by adding <code>CTESCI</code> to CTE's accepted list,
-                  <code>CTESCI</code> would now appear in <em>both</em> the Science AA and CTE buckets — same as <code>CTESAA</code>.
-                  But a deeper conflict remains: these two course types fill requirements in <strong>opposite order</strong> in PowerSchool.
-                  <code>CTESCI</code>'s chain hits Science AA before CTE; <code>CTESAA</code>'s chain hits CTE before Science AA.
-                  Arena uses one global sort order for all course types, so whatever order it picks, it will match PowerSchool for one and contradict it for the other.
-                  <br><br>
-                  Here's the proof. Both students below have the <em>exact same unfulfilled requirements</em> (CTE: 0.5 cr, Science AA: 0.5 cr).
-                  The only difference is which course they took — and that's enough to make any single Arena sort order wrong for one of them:
+                  <code>CTESCI</code> and <code>CTESAA</code> both satisfy two of the same buckets — Science AA and CTE — but PowerSchool fills them in <strong>opposite order</strong>:
+                  <ul style="margin:0.4rem 0 0.4rem 1.25rem; padding:0; font-size:12px; line-height:1.7;">
+                    <li><code>CTESCI</code>: Science AA fills first, then CTE</li>
+                    <li><code>CTESAA</code>: CTE fills first, then Science AA</li>
+                  </ul>
+                  Arena must pick <strong>one</strong> sort order for both. The two students below have the exact same unfulfilled requirements — the only difference is which course they took:
                 </div>
                 <table class="gp-student-table">
                   <thead>
