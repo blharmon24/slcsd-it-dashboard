@@ -350,7 +350,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.6</div>
+      <div class="sidebar-version">v2026.05.29.7</div>
     </div>
     <div class="main">
 
@@ -926,7 +926,7 @@
                 <div class="gp-algo-desc">Each credit type has its own defined priority chain. When a student earns a credit, it fills the first bucket in <strong>that credit type's chain</strong> that still has room. Overflow moves automatically to the next bucket in the chain.</div>
                 <div class="gp-algo-rule">
                   <strong>Example — DS credit type:</strong><br>
-                  DS &rarr; Computer Tech &rarr; CTE &rarr; Elective<br>
+                  DS &rarr; Computer Tech &rarr; Career Tech Ed &rarr; Elective<br>
                   <span style="color:#555;">The credit always tries Computer Tech first, regardless of what order requirements are listed.</span>
                 </div>
               </div>
@@ -937,8 +937,8 @@
                 <div class="gp-algo-desc">Requirements are processed in sort order (1 &rarr; 99). For each requirement, any credit the student holds that matches its accepted credit types is consumed there — in the order the requirements appear, not the order the credit type defines.</div>
                 <div class="gp-algo-rule">
                   <strong>Example — DS credit type:</strong><br>
-                  DS appears in CTE (sort&nbsp;11) and Computer Tech (sort&nbsp;14)<br>
-                  <span style="color:#555;">DS always fills CTE first because sort 11 comes before sort 14.</span>
+                  DS appears in Career Tech Ed (sort&nbsp;11) and Computer Tech (sort&nbsp;14)<br>
+                  <span style="color:#555;">DS always fills Career Tech Ed first because sort 11 comes before sort 14.</span>
                 </div>
               </div>
             </div>
@@ -949,7 +949,7 @@
             </div>
             <div class="gp-scenario-box">
               <div class="gp-scenario-intro">
-                A student completes two courses — one Digital Studies course (credit type <code style="font-size:11px;background:#f1f5f9;padding:1px 5px;border-radius:3px;border:1px solid #e2e8f0;">DS</code>) worth 1.0 credit, and one CTE course (credit type <code style="font-size:11px;background:#f1f5f9;padding:1px 5px;border-radius:3px;border:1px solid #e2e8f0;">CTE</code>) worth 1.0 credit. Two requirements still need credits: CTE (1.0 cr needed) and Computer Tech (0.5 cr needed).
+                A student completes two courses — one Digital Studies course (credit type <code style="font-size:11px;background:#f1f5f9;padding:1px 5px;border-radius:3px;border:1px solid #e2e8f0;">DS</code>) worth 1.0 credit, and one CTE course (credit type <code style="font-size:11px;background:#f1f5f9;padding:1px 5px;border-radius:3px;border:1px solid #e2e8f0;">CTE</code>) worth 1.0 credit. Two requirements still need credits: Career Tech Ed (1.0 cr needed) and Computer Tech (0.5 cr needed).
               </div>
               <div class="gp-scenario-courses">
                 <div class="gp-course-card">
@@ -968,11 +968,11 @@
                   <div class="gp-result-body ps">
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">1</div>
-                      <div>DS credit chain: <strong>Computer Tech first.</strong> 0.5 cr fills Computer Tech (satisfied). 0.5 cr overflows to CTE.</div>
+                      <div>DS credit chain: <strong>Computer Tech first.</strong> 0.5 cr fills Computer Tech (satisfied). 0.5 cr overflows to Career Tech Ed.</div>
                     </div>
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">2</div>
-                      <div>CTE credit chain: <strong>CTE first.</strong> CTE needs 1.0 cr — gets 0.5 from DS overflow + 0.5 from the CTE course (satisfied). Remaining 0.5 of CTE course flows to Elective.</div>
+                      <div>CTE credit chain: <strong>Career Tech Ed first.</strong> Career Tech Ed needs 1.0 cr — gets 0.5 from DS overflow + 0.5 from the CTE course (satisfied). Remaining 0.5 of CTE course flows to Elective.</div>
                     </div>
                   </div>
                 </div>
@@ -981,7 +981,7 @@
                   <div class="gp-result-body vendor">
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">1</div>
-                      <div>Sort 11 — CTE requirement: DS type is in CTE's accepted list. <strong>DS credit fills CTE</strong> (1.0 cr, satisfied). DS is now fully consumed.</div>
+                      <div>Sort 11 — Career Tech Ed requirement: DS type is in Career Tech Ed's accepted list. <strong>DS credit fills Career Tech Ed</strong> (1.0 cr, satisfied). DS is now fully consumed.</div>
                     </div>
                     <div class="gp-result-step">
                       <div class="gp-result-step-num">2</div>
@@ -994,12 +994,12 @@
               <div class="gp-outcome-row">
                 <div class="gp-outcome-col ps">
                   <div class="gp-outcome-label">PowerSchool result</div>
-                  <div class="gp-outcome-item"><span>CTE (1.0 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
+                  <div class="gp-outcome-item"><span>Career Tech Ed (1.0 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
                   <div class="gp-outcome-item"><span>Computer Tech (0.5 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
                 </div>
                 <div class="gp-outcome-col vendor">
                   <div class="gp-outcome-label">Arena Scheduling result</div>
-                  <div class="gp-outcome-item"><span>CTE (1.0 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
+                  <div class="gp-outcome-item"><span>Career Tech Ed (1.0 cr)</span><span class="gp-badge-ok">Satisfied ✓</span></div>
                   <div class="gp-outcome-item"><span>Computer Tech (0.5 cr)</span><span class="gp-badge-fail">0 / 0.5 ✗</span></div>
                 </div>
               </div>
@@ -1023,26 +1023,26 @@
                   <tr>
                     <td><span class="gp-type-badge">DS</span></td>
                     <td>Computer Tech/Digital Studies</td>
-                    <td>CTE (sort 11 &lt; sort 14)</td>
+                    <td>Career Tech Ed (sort 11 &lt; sort 14)</td>
                     <td><span class="gp-conflict-pill mismatch">Wrong order</span></td>
                   </tr>
                   <tr>
                     <td><span class="gp-type-badge">DSMAA</span></td>
                     <td>Computer Tech/Digital Studies</td>
-                    <td>CTE (sort 11 &lt; sort 14)</td>
+                    <td>Career Tech Ed (sort 11 &lt; sort 14)</td>
                     <td><span class="gp-conflict-pill mismatch">Wrong order</span></td>
                   </tr>
                   <tr>
                     <td><span class="gp-type-badge">CTESCI</span></td>
-                    <td>Science → Science AA → <strong>CTE</strong></td>
-                    <td>Science → Science AA (CTE not listed)</td>
-                    <td><span class="gp-conflict-pill missing">CTE bucket missing</span><div class="gp-conflict-note">Students who satisfy CTE via CTESCI in PowerSchool will show CTE incomplete in Arena.</div></td>
+                    <td>Science → Science AA → <strong>Career Tech Ed</strong></td>
+                    <td>Science → Science AA (Career Tech Ed not listed)</td>
+                    <td><span class="gp-conflict-pill missing">Career Tech Ed bucket missing</span><div class="gp-conflict-note">Students who satisfy Career Tech Ed via CTESCI in PowerSchool will show Career Tech Ed incomplete in Arena.</div></td>
                   </tr>
                   <tr>
                     <td><span class="gp-type-badge">DSCTESAA</span></td>
-                    <td>Computer Tech → <strong>CTE</strong> → Science AA</td>
-                    <td>Computer Tech → Science AA (CTE not listed)</td>
-                    <td><span class="gp-conflict-pill missing">CTE bucket missing</span><div class="gp-conflict-note">CTE is a valid destination in PowerSchool but not configured in Arena.</div></td>
+                    <td>Computer Tech → <strong>Career Tech Ed</strong> → Science AA</td>
+                    <td>Computer Tech → Science AA (Career Tech Ed not listed)</td>
+                    <td><span class="gp-conflict-pill missing">Career Tech Ed bucket missing</span><div class="gp-conflict-note">Career Tech Ed is a valid destination in PowerSchool but not configured in Arena.</div></td>
                   </tr>
                 </tbody>
               </table>
@@ -1053,7 +1053,7 @@
               <div class="gp-impossible-title">No Sort Order Can Fix This</div>
               <div class="gp-impossible-subtitle">
                 Some of the conflicts above could be resolved by reordering requirements — but the problem below is mathematically irreconcilable.
-                Two credit types both appear in the <strong>CTE</strong> and <strong>Science AA</strong> buckets,
+                Two credit types both appear in the <strong>Career Tech Ed</strong> and <strong>Science AA</strong> buckets,
                 and PowerSchool routes them in <em>opposite priority orders</em> through those two buckets.
                 A single sort order can only place one bucket before the other — it cannot satisfy both at once.
               </div>
@@ -1063,9 +1063,9 @@
                   <div class="gp-impossible-ct">CTESAA</div>
                   <div class="gp-impossible-chain">
                     PowerSchool chain:<br>
-                    <strong>CTE</strong> &rarr; Science AA &rarr; Elective
+                    <strong>Career Tech Ed</strong> &rarr; Science AA &rarr; Elective
                   </div>
-                  <span class="gp-impossible-needs needs-cte-first">Requires: CTE before Science AA</span>
+                  <span class="gp-impossible-needs needs-cte-first">Requires: Career Tech Ed before Science AA</span>
                 </div>
 
                 <div class="gp-impossible-vs">
@@ -1077,9 +1077,9 @@
                   <div class="gp-impossible-ct">CTESCI</div>
                   <div class="gp-impossible-chain">
                     PowerSchool chain:<br>
-                    Science &rarr; <strong>Science AA &rarr; CTE</strong> &rarr; Elective
+                    Science &rarr; <strong>Science AA &rarr; Career Tech Ed</strong> &rarr; Elective
                   </div>
-                  <span class="gp-impossible-needs needs-sciaa-first">Requires: Science AA before CTE</span>
+                  <span class="gp-impossible-needs needs-sciaa-first">Requires: Science AA before Career Tech Ed</span>
                 </div>
               </div>
 
@@ -1090,7 +1090,7 @@
                   <div class="gp-sort-buckets">
                     <span class="gp-sort-bucket sci">Science</span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket cte">CTE</span>
+                    <span class="gp-sort-bucket cte">Career Tech Ed</span>
                     <span class="gp-sort-arr">&rarr;</span>
                     <span class="gp-sort-bucket sciaa">Science AA</span>
                     <span class="gp-sort-arr">&rarr;</span>
@@ -1106,7 +1106,7 @@
                     <span class="gp-sort-arr">&rarr;</span>
                     <span class="gp-sort-bucket sciaa">Science AA</span>
                     <span class="gp-sort-arr">&rarr;</span>
-                    <span class="gp-sort-bucket cte">CTE</span>
+                    <span class="gp-sort-bucket cte">Career Tech Ed</span>
                     <span class="gp-sort-arr">&rarr;</span>
                     <span class="gp-sort-bucket elec">Elective</span>
                   </div>
@@ -1125,11 +1125,11 @@
                     <div class="gp-vs-label header"></div>
                     <div class="gp-vs-col-a">
                       <div class="gp-vs-student-name">Student A &mdash; <span class="gp-type-badge" style="font-size:10px;">CTESCI</span> course</div>
-                      <div class="gp-vs-order">PS fills: <strong>Science AA first</strong>, then CTE</div>
+                      <div class="gp-vs-order">PS fills: <strong>Science AA first</strong>, then Career Tech Ed</div>
                     </div>
                     <div class="gp-vs-col-b">
                       <div class="gp-vs-student-name">Student B &mdash; <span class="gp-type-badge" style="font-size:10px;">CTESAA</span> course</div>
-                      <div class="gp-vs-order">PS fills: <strong>CTE first</strong>, then Science AA</div>
+                      <div class="gp-vs-order">PS fills: <strong>Career Tech Ed first</strong>, then Science AA</div>
                     </div>
                   </div>
 
@@ -1138,24 +1138,24 @@
                     <div class="gp-vs-label">PowerSchool</div>
                     <div class="gp-vs-col-a match">
                       <div class="gp-vs-result ok">Science AA fills ✓</div>
-                      <div class="gp-vs-detail">CTE still open</div>
+                      <div class="gp-vs-detail">Career Tech Ed still open</div>
                     </div>
                     <div class="gp-vs-col-b match">
-                      <div class="gp-vs-result ok">CTE fills ✓</div>
+                      <div class="gp-vs-result ok">Career Tech Ed fills ✓</div>
                       <div class="gp-vs-detail">Science AA still open</div>
                     </div>
                   </div>
 
                   <!-- Arena: CTE sorted first -->
                   <div class="gp-vs-row">
-                    <div class="gp-vs-label">Arena<br>CTE sorted first</div>
+                    <div class="gp-vs-label">Arena<br>Career Tech Ed first</div>
                     <div class="gp-vs-col-a mismatch">
-                      <div class="gp-vs-result bad">CTE fills ✗</div>
+                      <div class="gp-vs-result bad">Career Tech Ed fills ✗</div>
                       <div class="gp-vs-detail">Science AA left open — PS says Sci AA should be filled</div>
                       <span class="gp-vs-badge mismatch">Wrong</span>
                     </div>
                     <div class="gp-vs-col-b match">
-                      <div class="gp-vs-result ok">CTE fills ✓</div>
+                      <div class="gp-vs-result ok">Career Tech Ed fills ✓</div>
                       <div class="gp-vs-detail">Matches PS</div>
                       <span class="gp-vs-badge match">Correct</span>
                     </div>
@@ -1171,13 +1171,13 @@
                     </div>
                     <div class="gp-vs-col-b mismatch">
                       <div class="gp-vs-result bad">Science AA fills ✗</div>
-                      <div class="gp-vs-detail">CTE left open — PS says CTE should be filled</div>
+                      <div class="gp-vs-detail">Career Tech Ed left open — PS says Career Tech Ed should be filled</div>
                       <span class="gp-vs-badge mismatch">Wrong</span>
                     </div>
                   </div>
 
                 </div>
-                <div class="gp-vs-conclusion">Sort "CTE first" fixes Student B but breaks Student A. Sort "Sci AA first" fixes Student A but breaks Student B. No sort order works for both.</div>
+                <div class="gp-vs-conclusion">Sort "Career Tech Ed first" fixes Student B but breaks Student A. Sort "Sci AA first" fixes Student A but breaks Student B. No sort order works for both.</div>
               </div>
               <!-- end student scenario -->
 
