@@ -225,6 +225,24 @@
   .gp-conflict-pill.missing { background:#fee2e2; color:#7f1d1d; border-color:#fca5a5; }
   .gp-conflict-note { font-size:11px; color:#666; margin-top:2px; }
 
+  /* Proposed sort order changes */
+  .gp-proposal-section { margin-bottom:1.25rem; }
+  .gp-proposal-intro { font-size:12px; color:#555; line-height:1.5; margin-bottom:0.875rem; }
+  .gp-sort-compare-table { width:100%; border-collapse:collapse; font-size:12px; background:white; border-radius:7px; overflow:hidden; border:1px solid #e2e8f0; }
+  .gp-sort-compare-table th { background:#f1f5f9; padding:7px 12px; text-align:left; font-size:11px; font-weight:700; color:#374151; border-bottom:2px solid #e2e8f0; }
+  .gp-sort-compare-table th.sort-col { text-align:center; width:90px; }
+  .gp-sort-compare-table td { padding:6px 12px; border-bottom:1px solid #f1f5f9; color:#374151; vertical-align:middle; }
+  .gp-sort-compare-table tr:last-child td { border-bottom:none; }
+  .gp-sort-compare-table tr.changed { background:#fffbeb; }
+  .gp-sort-compare-table td.sort-col { text-align:center; font-weight:700; font-variant-numeric:tabular-nums; }
+  .gp-sort-compare-table td.sort-current { color:#6b7280; }
+  .gp-sort-compare-table td.sort-proposed-same { color:#6b7280; }
+  .gp-sort-compare-table td.sort-proposed-new { color:#16a34a; font-size:13px; }
+  .gp-sort-arrow { color:#f59e0b; font-weight:700; text-align:center; }
+  .gp-proposal-fixes { font-size:11px; color:#92400e; font-style:italic; }
+  .gp-proposal-callout { border-radius:6px; padding:0.6rem 0.875rem; font-size:12px; line-height:1.5; margin-top:0.75rem; }
+  .gp-proposal-callout.fix { background:#f0fdf4; border:1px solid #86efac; color:#14532d; }
+  .gp-proposal-callout.limit { background:#fff1f2; border:1px solid #fca5a5; color:#7f1d1d; }
   /* Structural impossibility proof */
   .gp-impossible-box { background:#fff5f5; border:1px solid #fca5a5; border-radius:8px; padding:1.25rem; margin-top:1.5rem; }
   .gp-impossible-header { display:flex; align-items:center; gap:8px; margin-bottom:0.25rem; }
@@ -410,7 +428,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.18</div>
+      <div class="sidebar-version">v2026.05.29.19</div>
     </div>
     <div class="main">
 
@@ -1107,6 +1125,131 @@
                 </tbody>
               </table>
             </div>
+            <!-- Proposed sort order changes -->
+            <div class="gp-proposal-section">
+              <div class="gp-section-label" style="font-size:12px;margin-bottom:0.6rem;">Proposed Sort Order Changes — What Can Be Fixed</div>
+              <div class="gp-proposal-intro">
+                Four of the five conflicts above can be resolved by swapping the positions of two requirements relative to Career Tech Ed.
+                The table below shows the full sort order with the exact proposed changes highlighted.
+              </div>
+              <table class="gp-sort-compare-table">
+                <thead>
+                  <tr>
+                    <th>Requirement</th>
+                    <th class="sort-col">Current Sort</th>
+                    <th class="sort-col"></th>
+                    <th class="sort-col">Proposed Sort</th>
+                    <th>Conflict resolved</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Language Arts 9</td>
+                    <td class="sort-col sort-current">1</td><td></td><td class="sort-col sort-proposed-same">1</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>Language Arts 10</td>
+                    <td class="sort-col sort-current">2</td><td></td><td class="sort-col sort-proposed-same">2</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>Language Arts 11</td>
+                    <td class="sort-col sort-current">3</td><td></td><td class="sort-col sort-proposed-same">3</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>Language Arts 12</td>
+                    <td class="sort-col sort-current">4</td><td></td><td class="sort-col sort-proposed-same">4</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>Mathematics</td>
+                    <td class="sort-col sort-current">5</td><td></td><td class="sort-col sort-proposed-same">5</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>Science</td>
+                    <td class="sort-col sort-current">6</td><td></td><td class="sort-col sort-proposed-same">6</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>World Geography</td>
+                    <td class="sort-col sort-current">7</td><td></td><td class="sort-col sort-proposed-same">7</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>World History</td>
+                    <td class="sort-col sort-current">8</td><td></td><td class="sort-col sort-proposed-same">8</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>United States History</td>
+                    <td class="sort-col sort-current">9</td><td></td><td class="sort-col sort-proposed-same">9</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>U S Gov't Citizen</td>
+                    <td class="sort-col sort-current">10</td><td></td><td class="sort-col sort-proposed-same">10</td><td></td>
+                  </tr>
+                  <tr class="changed">
+                    <td><strong>Financial Literacy</strong></td>
+                    <td class="sort-col sort-current">13</td>
+                    <td class="sort-arrow">→</td>
+                    <td class="sort-col sort-proposed-new">11</td>
+                    <td class="gp-proposal-fixes">Fixes CTEFL wrong order</td>
+                  </tr>
+                  <tr class="changed">
+                    <td><strong>Computer Tech/Digital Studies</strong></td>
+                    <td class="sort-col sort-current">14</td>
+                    <td class="sort-arrow">→</td>
+                    <td class="sort-col sort-proposed-new">12</td>
+                    <td class="gp-proposal-fixes">Fixes DS, DSMAA, DSCTESAA wrong order</td>
+                  </tr>
+                  <tr class="changed">
+                    <td><strong>Career Tech Ed</strong></td>
+                    <td class="sort-col sort-current">11</td>
+                    <td class="sort-arrow">→</td>
+                    <td class="sort-col sort-proposed-new">13</td>
+                    <td class="gp-proposal-fixes">Moved to make room above</td>
+                  </tr>
+                  <tr class="changed">
+                    <td><strong>Fine Arts</strong></td>
+                    <td class="sort-col sort-current">12</td>
+                    <td class="sort-arrow">→</td>
+                    <td class="sort-col sort-proposed-new">14</td>
+                    <td class="gp-proposal-fixes">Moved to make room above</td>
+                  </tr>
+                  <tr>
+                    <td>Mathematics AA</td>
+                    <td class="sort-col sort-current">15</td><td></td><td class="sort-col sort-proposed-same">15</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>Science AA</td>
+                    <td class="sort-col sort-current">16</td><td></td><td class="sort-col sort-proposed-same">16</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>Soc Studies Elect</td>
+                    <td class="sort-col sort-current">17</td><td></td><td class="sort-col sort-proposed-same">17</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>Health</td>
+                    <td class="sort-col sort-current">18</td><td></td><td class="sort-col sort-proposed-same">18</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>Part Skills &amp; Fitness</td>
+                    <td class="sort-col sort-current">19</td><td></td><td class="sort-col sort-proposed-same">19</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>Lifetime Activities</td>
+                    <td class="sort-col sort-current">20</td><td></td><td class="sort-col sort-proposed-same">20</td><td></td>
+                  </tr>
+                  <tr>
+                    <td>Elective</td>
+                    <td class="sort-col sort-current">99</td><td></td><td class="sort-col sort-proposed-same">99</td><td></td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="gp-proposal-callout fix">
+                <strong>What this fixes:</strong> Financial Literacy (sort 11) and Computer Tech/Digital Studies (sort 12) now both appear before Career Tech Ed (sort 13). ClassChoice will fill them first — matching PowerSchool's chain order for CTEFL, DS, DSMAA, and DSCTESAA.
+              </div>
+              <div class="gp-proposal-callout limit">
+                <strong>What this cannot fix:</strong> The CTESCI / CTESAA conflict remains regardless of sort order. Both are accepted in Career Tech Ed and Science AA, and PowerSchool routes them in opposite orders through those two buckets. See the structural impossibility below.
+              </div>
+            </div>
+            <!-- end proposed sort order changes -->
+
             <!-- Structural impossibility proof -->
             <div class="gp-impossible-box">
               <div class="gp-impossible-eyebrow">Structural Impossibility</div>
