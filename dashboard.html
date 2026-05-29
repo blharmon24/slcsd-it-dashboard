@@ -410,7 +410,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.10</div>
+      <div class="sidebar-version">v2026.05.29.11</div>
     </div>
     <div class="main">
 
@@ -1177,7 +1177,12 @@
 
               <!-- Concrete student scenario for the impossibility -->
               <div class="gp-student-scenario">
-                <div class="gp-section-label" style="font-size:11px;margin:1.25rem 0 0.6rem;">Why No Single Sort Order Works</div>
+                <div class="gp-section-label" style="font-size:11px;margin:1.25rem 0 0.6rem;">Why No Single Sort Order Works — Even After the Fix</div>
+
+                <div style="background:#fef9c3;border:1px solid #fde047;border-radius:6px;padding:0.6rem 0.875rem;margin-bottom:0.875rem;font-size:12px;color:#713f12;line-height:1.5;">
+                  <strong>The scenario below is a hypothetical.</strong> Right now, Arena is missing CTESCI from Career Tech Ed's accepted list (the bug shown in the table above). Suppose the vendor fixes that by adding CTESCI to Career Tech Ed's list. Now CTESCI is accepted in <em>both</em> Science AA <em>and</em> Career Tech Ed in Arena — the same two buckets that CTESAA already occupies. That's when this new problem appears:
+                </div>
+
                 <div class="gp-vs-grid">
 
                   <!-- Header row -->
@@ -1186,10 +1191,12 @@
                     <div class="gp-vs-col-a">
                       <div class="gp-vs-student-name">Student A &mdash; <span class="gp-type-badge" style="font-size:10px;">CTESCI</span> course &mdash; 0.5 cr awarded</div>
                       <div class="gp-vs-order">PS chain: Science (full) &rarr; <strong>Science AA</strong> &rarr; Career Tech Ed &rarr; Elective</div>
+                      <div class="gp-vs-order" style="margin-top:3px;color:#713f12;">After fix: Arena also accepts CTESCI in Career Tech Ed</div>
                     </div>
                     <div class="gp-vs-col-b">
                       <div class="gp-vs-student-name">Student B &mdash; <span class="gp-type-badge" style="font-size:10px;">CTESAA</span> course &mdash; 0.5 cr awarded</div>
                       <div class="gp-vs-order">PS chain: <strong>Career Tech Ed</strong> &rarr; Science AA &rarr; Elective</div>
+                      <div class="gp-vs-order" style="margin-top:3px;color:#64748b;">Arena accepts CTESAA in both Career Tech Ed and Science AA (unchanged)</div>
                     </div>
                   </div>
 
