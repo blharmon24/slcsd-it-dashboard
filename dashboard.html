@@ -282,6 +282,18 @@
   .gp-vs-badge.match { background:#dcfce7; color:#166534; }
   .gp-vs-badge.mismatch { background:#fee2e2; color:#991b1b; }
   .gp-vs-conclusion { font-size:11px; color:#6b7280; margin-top:8px; text-align:center; }
+  .gp-req-row { margin:6px 0; }
+  .gp-req-row:first-child { margin-top:2px; }
+  .gp-req-meta { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:3px; }
+  .gp-req-name { font-size:11px; font-weight:600; color:#374151; }
+  .gp-req-count { font-size:10px; color:#6b7280; font-variant-numeric:tabular-nums; }
+  .gp-req-track { height:11px; border-radius:3px; background:#e5e7eb; overflow:hidden; }
+  .gp-req-track.needs-fill { background:#fff7ed; border:1px dashed #fb923c; overflow:visible; }
+  .gp-req-fill { height:100%; border-radius:3px; }
+  .gp-req-fill.correct { background:#16a34a; width:100%; }
+  .gp-req-fill.wrong { background:#dc2626; width:100%; }
+  .gp-vs-bar-legend { display:flex; gap:12px; flex-wrap:wrap; font-size:10px; color:#6b7280; margin-top:8px; align-items:center; }
+  .gp-vs-legend-swatch { display:inline-block; width:16px; height:9px; border-radius:2px; margin-right:3px; vertical-align:middle; }
 </style>
 </head>
 <body>
@@ -350,7 +362,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.8</div>
+      <div class="sidebar-version">v2026.05.29.9</div>
     </div>
     <div class="main">
 
@@ -1135,14 +1147,26 @@
 
                   <!-- Open requirements row -->
                   <div class="gp-vs-row">
-                    <div class="gp-vs-label" style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Open requirements<br>before this course</div>
+                    <div class="gp-vs-label" style="font-size:10px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Before this course<br><span style="font-weight:400;">(identical for both)</span></div>
                     <div class="gp-vs-col-a" style="background:#f8fafc;">
-                      <div class="gp-vs-detail">Career Tech Ed: needs 0.5 cr</div>
-                      <div class="gp-vs-detail">Science AA: needs 0.5 cr</div>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Career Tech Ed</span><span class="gp-req-count">0 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill" style="width:0"></div></div>
+                      </div>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Science AA</span><span class="gp-req-count">0 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill" style="width:0"></div></div>
+                      </div>
                     </div>
                     <div class="gp-vs-col-b" style="background:#f8fafc;">
-                      <div class="gp-vs-detail">Career Tech Ed: needs 0.5 cr</div>
-                      <div class="gp-vs-detail">Science AA: needs 0.5 cr</div>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Career Tech Ed</span><span class="gp-req-count">0 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill" style="width:0"></div></div>
+                      </div>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Science AA</span><span class="gp-req-count">0 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill" style="width:0"></div></div>
+                      </div>
                     </div>
                   </div>
 
@@ -1150,47 +1174,90 @@
                   <div class="gp-vs-row">
                     <div class="gp-vs-label">PowerSchool</div>
                     <div class="gp-vs-col-a match">
-                      <div class="gp-vs-result ok">0.5 cr &rarr; Science AA ✓</div>
-                      <div class="gp-vs-detail">Science is already full; 0.5 cr moves to next bucket in chain. Career Tech Ed still needs 0.5 cr.</div>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Career Tech Ed</span><span class="gp-req-count">0 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill" style="width:0"></div></div>
+                      </div>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Science AA</span><span class="gp-req-count">0.5 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill correct"></div></div>
+                      </div>
+                      <div class="gp-vs-detail" style="margin-top:5px;">Science bucket is full; 0.5 cr moves to next in chain.</div>
                     </div>
                     <div class="gp-vs-col-b match">
-                      <div class="gp-vs-result ok">0.5 cr &rarr; Career Tech Ed ✓</div>
-                      <div class="gp-vs-detail">Career Tech Ed is first in chain and still open. Science AA still needs 0.5 cr.</div>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Career Tech Ed</span><span class="gp-req-count">0.5 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill correct"></div></div>
+                      </div>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Science AA</span><span class="gp-req-count">0 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill" style="width:0"></div></div>
+                      </div>
+                      <div class="gp-vs-detail" style="margin-top:5px;">Career Tech Ed is first in chain and still open.</div>
                     </div>
                   </div>
 
                   <!-- Arena: Career Tech Ed sorted first -->
                   <div class="gp-vs-row">
-                    <div class="gp-vs-label">Arena<br>Career Tech Ed sorted first</div>
+                    <div class="gp-vs-label">Arena<br>Career Tech Ed<br>sorted first</div>
                     <div class="gp-vs-col-a mismatch">
-                      <div class="gp-vs-result bad">0.5 cr &rarr; Career Tech Ed ✗</div>
-                      <div class="gp-vs-detail">CTESCI is accepted in Career Tech Ed; Arena fills it with 0.5 cr. Science AA still needs 0.5 cr — PS put it in Science AA instead.</div>
-                      <span class="gp-vs-badge mismatch">Wrong</span>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Career Tech Ed</span><span class="gp-req-count">0.5 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill wrong"></div></div>
+                      </div>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Science AA</span><span class="gp-req-count">0 of 0.5 Credits</span></div>
+                        <div class="gp-req-track needs-fill"><div class="gp-req-fill" style="width:0"></div></div>
+                      </div>
+                      <span class="gp-vs-badge mismatch" style="margin-top:6px;display:inline-block;">Wrong — PS filled Science AA, not Career Tech Ed</span>
                     </div>
                     <div class="gp-vs-col-b match">
-                      <div class="gp-vs-result ok">0.5 cr &rarr; Career Tech Ed ✓</div>
-                      <div class="gp-vs-detail">Both systems agree: 0.5 cr fills Career Tech Ed.</div>
-                      <span class="gp-vs-badge match">Correct</span>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Career Tech Ed</span><span class="gp-req-count">0.5 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill correct"></div></div>
+                      </div>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Science AA</span><span class="gp-req-count">0 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill" style="width:0"></div></div>
+                      </div>
+                      <span class="gp-vs-badge match" style="margin-top:6px;display:inline-block;">Correct — matches PS</span>
                     </div>
                   </div>
 
                   <!-- Arena: Science AA sorted first -->
                   <div class="gp-vs-row">
-                    <div class="gp-vs-label">Arena<br>Science AA sorted first</div>
+                    <div class="gp-vs-label">Arena<br>Science AA<br>sorted first</div>
                     <div class="gp-vs-col-a match">
-                      <div class="gp-vs-result ok">0.5 cr &rarr; Science AA ✓</div>
-                      <div class="gp-vs-detail">Both systems agree: 0.5 cr fills Science AA.</div>
-                      <span class="gp-vs-badge match">Correct</span>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Career Tech Ed</span><span class="gp-req-count">0 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill" style="width:0"></div></div>
+                      </div>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Science AA</span><span class="gp-req-count">0.5 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill correct"></div></div>
+                      </div>
+                      <span class="gp-vs-badge match" style="margin-top:6px;display:inline-block;">Correct — matches PS</span>
                     </div>
                     <div class="gp-vs-col-b mismatch">
-                      <div class="gp-vs-result bad">0.5 cr &rarr; Science AA ✗</div>
-                      <div class="gp-vs-detail">CTESAA is accepted in Science AA; Arena fills it with 0.5 cr. Career Tech Ed still needs 0.5 cr — PS put it in Career Tech Ed instead.</div>
-                      <span class="gp-vs-badge mismatch">Wrong</span>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Career Tech Ed</span><span class="gp-req-count">0 of 0.5 Credits</span></div>
+                        <div class="gp-req-track needs-fill"><div class="gp-req-fill" style="width:0"></div></div>
+                      </div>
+                      <div class="gp-req-row">
+                        <div class="gp-req-meta"><span class="gp-req-name">Science AA</span><span class="gp-req-count">0.5 of 0.5 Credits</span></div>
+                        <div class="gp-req-track"><div class="gp-req-fill wrong"></div></div>
+                      </div>
+                      <span class="gp-vs-badge mismatch" style="margin-top:6px;display:inline-block;">Wrong — PS filled Career Tech Ed, not Science AA</span>
                     </div>
                   </div>
 
                 </div>
-                <div class="gp-vs-conclusion">Sort "Career Tech Ed first" fixes Student B but breaks Student A. Sort "Sci AA first" fixes Student A but breaks Student B. No sort order works for both.</div>
+                <div class="gp-vs-bar-legend">
+                  <span><span class="gp-vs-legend-swatch" style="background:#16a34a;"></span>Filled correctly (matches PS)</span>
+                  <span><span class="gp-vs-legend-swatch" style="background:#dc2626;"></span>Filled incorrectly (Arena disagrees with PS)</span>
+                  <span><span class="gp-vs-legend-swatch" style="background:#fff7ed;border:1px dashed #fb923c;"></span>Should be filled per PS — left empty by Arena</span>
+                </div>
+                <div class="gp-vs-conclusion">Sort "Career Tech Ed first" fixes Student B but breaks Student A. Sort "Science AA first" fixes Student A but breaks Student B. No sort order works for both.</div>
               </div>
               <!-- end student scenario -->
 
