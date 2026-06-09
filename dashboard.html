@@ -479,7 +479,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.05.29.36</div>
+      <div class="sidebar-version">v2026.06.09.1</div>
     </div>
     <div class="main">
 
@@ -1982,7 +1982,7 @@ function renderTasks(school, type, record) {
   document.getElementById('cl-tasks').innerHTML = tasks.map(t => {
     const comp = completions[t.key];
     const done = comp && comp.completed;
-    const meta = done && comp.completed_at ? (comp.completed_by_name ? comp.completed_by_name + ' Â· ' : '') + new Date(comp.completed_at).toLocaleDateString() : '';
+    const meta = done && comp.completed_at ? (comp.completed_by_name ? comp.completed_by_name + ' · ' : '') + new Date(comp.completed_at).toLocaleDateString() : '';
     const linkHtml = t.link ? ` <a href="${t.link.url}" target="_blank" rel="noopener" style="font-size:11px;color:#4A7CFF;text-decoration:none;margin-left:6px;font-weight:500;">${t.link.label} &#8599;</a>` : '';
     return `<div class="task-item ${locked ? 'task-locked' : ''}">
       <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleTask('${t.key}', this.checked)">
@@ -2864,7 +2864,7 @@ function renderRolloverDistrictTasks() {
     const note = roDistrictNotes[task.key]?.notes || '';
     const noteId = `ro-note-d-${task.key}`;
     const meta = checked && comp?.completed_by_name
-      ? `<div class="task-meta">${comp.completed_by_name} Â· ${new Date(comp.completed_at).toLocaleDateString()}</div>`
+      ? `<div class="task-meta">${comp.completed_by_name} · ${new Date(comp.completed_at).toLocaleDateString()}</div>`
       : '';
     const badge = '';
     const moveBtns = `<div style="display:flex;flex-direction:column;flex-shrink:0;">
@@ -3047,7 +3047,7 @@ function renderRolloverSchoolChecklist() {
     const note = roSchoolNotes[task.key]?.notes || '';
     const noteId = `ro-note-s-${task.key}`;
     const meta = checked && comp?.completed_by_name
-      ? `<div class="task-meta">${comp.completed_by_name} Â· ${new Date(comp.completed_at).toLocaleDateString()}</div>`
+      ? `<div class="task-meta">${comp.completed_by_name} · ${new Date(comp.completed_at).toLocaleDateString()}</div>`
       : '';
     const moveBtns = `<div style="display:flex;flex-direction:column;flex-shrink:0;">
       <button class="task-move-btn" onclick="moveTask('school','${task.key}','up')" ${idx === 0 ? 'disabled' : ''}>&#9650;</button>
