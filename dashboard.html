@@ -479,7 +479,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.06.10.2</div>
+      <div class="sidebar-version">v2026.06.10.3</div>
     </div>
     <div class="main">
 
@@ -654,7 +654,7 @@
             <div class="doc-grid">
               <div class="doc-field">
                 <label>Responsible Person</label>
-                <input id="sb-responsible" placeholder="Name">
+                <input id="sb-responsible" placeholder="e.g., Brandon H.">
               </div>
               <div class="doc-field">
                 <label>Build Status</label>
@@ -2277,7 +2277,7 @@ async function ensureSBRecord() {
     school_name: sbCurrentSchool.name,
     school_type: sbCurrentSchool.type,
     academic_year: getSBYear(),
-    responsible_person: document.getElementById('sb-responsible').value.trim(),
+    responsible_person: normalizeRequestedBy(document.getElementById('sb-responsible').value),
     status: document.getElementById('sb-status-select').value,
     updated_by: currentUser.id,
   }).select().single();
@@ -2346,7 +2346,9 @@ async function saveSBPowerScheduler(checked) {
 }
 
 async function saveScheduleDetail() {
-  const responsible = document.getElementById('sb-responsible').value.trim();
+  const responsible = normalizeRequestedBy(document.getElementById('sb-responsible').value);
+  // Reflect the normalized value back so the user sees exactly what was saved
+  document.getElementById('sb-responsible').value = responsible || '';
   const status = document.getElementById('sb-status-select').value;
   const errEl = document.getElementById('sb-save-error');
   errEl.style.display = 'none';
@@ -4500,7 +4502,7 @@ function renderK6CleanList() {
 async function toggleK6CleanStatus(schoolName, checked) {
   const year     = parseInt(getSBYear());
   const now      = new Date().toISOString();
-  const userName = currentUser.email.split('@')[0];
+  const userName = displayNameFromEmail(currentUser.email);
 
   const { data, error } = await sb.from('k6_clean_status').upsert({
     school_name:     schoolName,
