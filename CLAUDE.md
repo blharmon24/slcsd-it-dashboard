@@ -3,8 +3,9 @@
 ## Project Overview
 A school district IT dashboard built as a single HTML file. It serves as a central hub
 for tracking IT workflows, progress monitoring, checklists, and documentation across
-the district. It is viewable by anyone in the organization for the tracker portions,
-and managed by IT staff.
+the district. Access currently requires a Supabase Auth login — there is no anonymous
+or view-only path yet (a public/view-only mode for tracker portions is a future goal,
+not current behavior). Managed by IT staff.
 
 ## Current Status
 **Phase: Active development.**
@@ -130,6 +131,10 @@ uploaded master schedule. Accessible via "CTC Export" in the sidebar.
 ### Workflow concepts
 - Annual configuration (Build IDs, Catalog IDs, Term IDs) saved per year in `ctc_export_config`
 - Master schedule uploaded as a tab-delimited file, stored in `ctc_master_schedule`
+- **Teacher name and ID are intentionally NOT stored** — `TeachLastName` and `Teacher ID`
+  are read from the file for preview only (not saved, not previewed after reload) and are
+  never used to build the export files (which use the fixed per-school teacher key). The
+  `teach_last_name` and `teacher_id` columns were dropped from `ctc_master_schedule` (2026-06-10)
 - Re-uploading the master schedule replaces all rows for that year (delete + re-insert)
 - Generates 9 files: 3 export types × 3 schools (East HS, Highland HS, West HS)
 - Export types: Pre-Schedule Constraints, Teacher Assignments, Post-Build
@@ -409,9 +414,11 @@ Annual configuration for CTC export generation, one row per academic year.
 
 ### `ctc_master_schedule`
 Uploaded CTC master schedule rows, one per section per year.
-- `id`, `academic_year`, `teach_last_name`, `teacher_id`, `course_number`, `room`,
+- `id`, `academic_year`, `course_number`, `room`,
   `section_number`, `expression`, `term_id`, `school_id`, `max_cut`, `max_enrollment`,
   `ehs`, `hhs`, `whs`, `uploaded_at`, `uploaded_by` (FK auth.users)
+- Note: `teach_last_name` and `teacher_id` columns were dropped (2026-06-10) — teacher
+  name/ID are no longer stored (see CTC Export workflow notes)
 - RLS enabled — authenticated users can read, insert, and delete
 
 ### `term_dates`
@@ -500,8 +507,13 @@ Per-school "100% clean" flag for K-6 elementary schedule files, one row per scho
 - **Rollover task notes must stay year-agnostic** — always read/write from `rollover_district_notes`
   and `rollover_school_notes`, never store notes inside the completion records
 - **Do not add new libraries or dependencies** without asking first
-- **The dashboard is publicly viewable** for progress tracking — do not add auth gates
-  to the tracker/view portions without asking
+- **The dashboard is login-gated today** (Supabase Auth + RLS); data is not publicly
+  viewable. Only the GitHub Pages source file is public. A public/view-only mode for the
+  tracker portions is a future goal — do not add or remove auth gates without asking
+- **Minimize stored names to "First name + Last initial"** — free-text name fields go
+  through `normalizeRequestedBy()`; names derived from the FN.LN@domain email go through
+  `displayNameFromEmail()`. Apply this to any new name field (see also: the sidebar user
+  label still shows the raw email prefix and has not been converted)
 - When adding new features, keep them within the single dashboard.html file
 - When fixing bugs, make the smallest change possible — do not refactor unrelated code
 
