@@ -479,7 +479,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.06.10.4</div>
+      <div class="sidebar-version">v2026.06.10.5</div>
     </div>
     <div class="main">
 
@@ -2960,7 +2960,7 @@ function renderRolloverDistrictTasks() {
 async function toggleDistrictTask(taskKey, checked) {
   const year = getRolloverYear();
   const now = new Date().toISOString();
-  const userName = currentUser.email.split('@')[0];
+  const userName = displayNameFromEmail(currentUser.email);
   const existing = roDistrictCompletions[taskKey];
   const payload = {
     completed: checked,
@@ -3114,7 +3114,7 @@ async function ensureRolloverRecord() {
 async function toggleRolloverSchoolTask(taskKey, checked) {
   await ensureRolloverRecord();
   const now = new Date().toISOString();
-  const userName = currentUser.email.split('@')[0];
+  const userName = displayNameFromEmail(currentUser.email);
   const existing = roSchoolCompletions[taskKey];
   const payload = {
     completed: checked,
@@ -3215,7 +3215,7 @@ function refreshDistrictTasks() {
 async function toggleFieldCompletion(fieldTaskId, checked) {
   const year = getRolloverYear();
   const now = new Date().toISOString();
-  const userName = currentUser.email.split('@')[0];
+  const userName = displayNameFromEmail(currentUser.email);
   const existing = roFieldCompletions[fieldTaskId];
   const payload = {
     completed: checked,
