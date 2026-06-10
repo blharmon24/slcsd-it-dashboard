@@ -479,7 +479,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.06.10.1</div>
+      <div class="sidebar-version">v2026.06.10.2</div>
     </div>
     <div class="main">
 
@@ -1994,7 +1994,7 @@ function renderTasks(school, type, record) {
 async function toggleTask(taskKey, checked) {
   await ensureRecord();
   const now = new Date().toISOString();
-  const userName = currentUser.email.split('@')[0];
+  const userName = displayNameFromEmail(currentUser.email);
   const existing = completions[taskKey];
   if (existing) {
     await sb.from('checklist_completions').update({ completed: checked, completed_at: checked ? now : null, completed_by: checked ? currentUser.id : null, completed_by_name: checked ? userName : null }).eq('id', existing.id);
@@ -2015,6 +2015,18 @@ async function checkAndMarkComplete() {
     await sb.from('grade_store_records').update({ completed: allDone }).eq('id', currentRecordId);
     records[currentSchool].completed = allDone;
   }
+}
+
+// Derive a minimized "Firstname L." display name from a FN.LN@domain email.
+// e.g. "brandon.harmon@slcsd.org" -> "Brandon H." Falls back gracefully if the
+// local part isn't dotted.
+function displayNameFromEmail(email) {
+  const local = (email || '').split('@')[0];
+  const parts = local.split('.').filter(Boolean);
+  if (parts.length === 0) return local;
+  const first = parts[0].charAt(0).toUpperCase() + parts[0].slice(1).toLowerCase();
+  if (parts.length === 1) return first; // no last name in the email — just the first name
+  return `${first} ${parts[1].charAt(0).toUpperCase()}.`;
 }
 
 // Reduce any entered name to "First L." (first name + last initial) so we only
