@@ -479,7 +479,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.06.10.3</div>
+      <div class="sidebar-version">v2026.06.10.4</div>
     </div>
     <div class="main">
 
@@ -3439,8 +3439,9 @@ async function loadCTCScheduleFromDB() {
 
   // Map DB columns back to the header names the rest of the code expects
   ctcRows = data.map(r => ({
-    'TeachLastName':  r.teach_last_name  || '',
-    'Teacher ID':     r.teacher_id       || '',
+    // TeachLastName and Teacher ID are no longer stored; kept blank for column alignment
+    'TeachLastName':  '',
+    'Teacher ID':     '',
     'Course Number':  r.course_number    || '',
     'Room':           r.room             || '',
     'SECTION_NUMBER': r.section_number   || '',
@@ -3527,8 +3528,9 @@ async function saveCTCScheduleToDB(rows) {
   const now = new Date().toISOString();
   const dbRows = rows.map(r => ({
     academic_year:   year,
-    teach_last_name: r['TeachLastName']  || null,
-    teacher_id:      r['Teacher ID']     || null,
+    // TeachLastName and Teacher ID are intentionally NOT stored — they are not
+    // used to build any of the three export files (which use the fixed per-school
+    // teacher key from ctcSchoolData), so we keep them out of the database.
     course_number:   r['Course Number']  || null,
     room:            r['Room']           || null,
     section_number:  r['SECTION_NUMBER'] || null,
