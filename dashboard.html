@@ -479,7 +479,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.06.11.1</div>
+      <div class="sidebar-version">v2026.06.11.2</div>
     </div>
     <div class="main">
 
@@ -1812,19 +1812,28 @@ function statusLabel(s) {
   return 'Not Started';
 }
 
-// Build one SVG doughnut widget
-function makeSummaryDonut(completed, total, label) {
+// Build one SVG doughnut widget.
+// Blue arc = completed schools, yellow arc = in-progress schools (stacked after blue).
+function makeSummaryDonut(completed, inProgress, total, label) {
   const R = 28, CX = 36, CY = 36;
   const circumference = 2 * Math.PI * R;
-  const filled = total > 0 ? (completed / total) * circumference : 0;
-  const arcColor = total > 0 && completed === total ? '#10B981' : '#4A7CFF';
+  const completedLen = total > 0 ? (completed / total) * circumference : 0;
+  const inProgressLen = total > 0 ? (inProgress / total) * circumference : 0;
+  const allDone = total > 0 && completed === total;
+  const completedColor = allDone ? '#10B981' : '#4A7CFF';
+  // Use butt caps so adjacent segments meet cleanly; round caps would overlap.
   return `<div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
     <svg width="72" height="72" viewBox="0 0 72 72">
       <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#e8eaf0" stroke-width="9"/>
-      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${arcColor}" stroke-width="9"
-        stroke-dasharray="${filled.toFixed(1)} ${circumference.toFixed(1)}"
-        stroke-linecap="round"
+      <circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="${completedColor}" stroke-width="9"
+        stroke-dasharray="${completedLen.toFixed(1)} ${circumference.toFixed(1)}"
+        stroke-linecap="butt"
         transform="rotate(-90 ${CX} ${CY})"/>
+      ${inProgress > 0 ? `<circle cx="${CX}" cy="${CY}" r="${R}" fill="none" stroke="#F59E0B" stroke-width="9"
+        stroke-dasharray="${inProgressLen.toFixed(1)} ${circumference.toFixed(1)}"
+        stroke-dashoffset="${(-completedLen).toFixed(1)}"
+        stroke-linecap="butt"
+        transform="rotate(-90 ${CX} ${CY})"/>` : ''}
       <text x="${CX}" y="33" text-anchor="middle" font-size="15" font-weight="700" fill="#222" font-family="Arial,sans-serif">${completed}</text>
       <text x="${CX}" y="47" text-anchor="middle" font-size="10" fill="#999" font-family="Arial,sans-serif">of ${total}</text>
     </svg>
@@ -1833,8 +1842,8 @@ function makeSummaryDonut(completed, total, label) {
 }
 
 function renderSchools() {
-  let totalSchools = 0, completedSchools = 0;
-  const typeStats = { high: { done: 0, total: 0 }, middle: { done: 0, total: 0 }, elementary: { done: 0, total: 0 } };
+  let totalSchools = 0, completedSchools = 0, inProgressSchools = 0;
+  const typeStats = { high: { done: 0, inProgress: 0, total: 0 }, middle: { done: 0, inProgress: 0, total: 0 }, elementary: { done: 0, inProgress: 0, total: 0 } };
 
   ['high','middle','elementary'].forEach(type => {
     const grid = document.getElementById('grid-' + type);
@@ -1847,6 +1856,7 @@ function renderSchools() {
       typeStats[type].total++;
       const status = getStatus(school.name);
       if (status === 'complete') { completedSchools++; typeStats[type].done++; }
+      else if (status === 'in-progress') { inProgressSchools++; typeStats[type].inProgress++; }
       const rec = records[school.name];
       // Checklist progress indicator for this school
       const recComps = rec ? (allCompletions[rec.id] || {}) : {};
@@ -1873,13 +1883,13 @@ function renderSchools() {
   if (totalSchools > 0) {
     summaryBar.style.display = 'flex';
     summaryBar.innerHTML = `
-      ${makeSummaryDonut(completedSchools, totalSchools, 'All Schools')}
+      ${makeSummaryDonut(completedSchools, inProgressSchools, totalSchools, 'All Schools')}
       <div class="gs-stat-divider"></div>
-      ${makeSummaryDonut(typeStats.high.done, typeStats.high.total, 'High Schools')}
+      ${makeSummaryDonut(typeStats.high.done, typeStats.high.inProgress, typeStats.high.total, 'High Schools')}
       <div class="gs-stat-divider"></div>
-      ${makeSummaryDonut(typeStats.middle.done, typeStats.middle.total, 'Middle Schools')}
+      ${makeSummaryDonut(typeStats.middle.done, typeStats.middle.inProgress, typeStats.middle.total, 'Middle Schools')}
       <div class="gs-stat-divider"></div>
-      ${makeSummaryDonut(typeStats.elementary.done, typeStats.elementary.total, 'Elementary')}`;
+      ${makeSummaryDonut(typeStats.elementary.done, typeStats.elementary.inProgress, typeStats.elementary.total, 'Elementary')}`;
   } else {
     summaryBar.style.display = 'none';
   }
