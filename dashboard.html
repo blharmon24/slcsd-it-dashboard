@@ -479,7 +479,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.06.10.6</div>
+      <div class="sidebar-version">v2026.06.11.1</div>
     </div>
     <div class="main">
 
@@ -1796,11 +1796,14 @@ async function loadRecordsAndRender() {
 function getStatus(schoolName) {
   if (!records[schoolName]) return 'not-started';
   if (records[schoolName].completed) return 'complete';
-  // Only show In Progress if at least one checklist task has been completed
+  // Show In Progress once work has started: either a 'Requested by' entry exists
+  // (matters for elementary, which has a single task and otherwise jumps straight
+  // from Not Started to Complete) or at least one checklist task is completed.
   const recId = records[schoolName].id;
   const comps = allCompletions[recId] || {};
   const hasAnyCompleted = Object.values(comps).some(c => c.completed);
-  if (!hasAnyCompleted) return 'not-started';
+  const hasRequestedBy = !!(records[schoolName].requested_by && records[schoolName].requested_by.trim());
+  if (!hasAnyCompleted && !hasRequestedBy) return 'not-started';
   return 'in-progress';
 }
 function statusLabel(s) {
