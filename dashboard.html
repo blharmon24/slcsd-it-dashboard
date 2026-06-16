@@ -63,6 +63,10 @@
   .doc-field label { display: block; font-size: 12px; font-weight: 500; color: #555; margin-bottom: 4px; }
   .doc-field input { width: 100%; padding: 7px 10px; border: 1px solid #ddd; border-radius: 5px; font-size: 13px; }
   .doc-field input:focus { outline: none; border-color: #4A7CFF; }
+  .doc-field .date-row { display: flex; gap: 6px; align-items: stretch; }
+  .doc-field .date-row input { flex: 1; }
+  .today-btn { flex: none; padding: 0 12px; border: 1px solid #4A7CFF; background: #fff; color: #4A7CFF; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+  .today-btn:hover { background: #4A7CFF; color: #fff; }
   .save-btn { margin-top: 1rem; padding: 8px 20px; background: #4A7CFF; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer; }
   .save-btn:hover { background: #3a6aee; }
   .save-confirm { font-size: 12px; color: #065F46; margin-left: 10px; display: none; }
@@ -479,7 +483,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.06.11.2</div>
+      <div class="sidebar-version">v2026.06.16.1</div>
     </div>
     <div class="main">
 
@@ -1947,16 +1951,25 @@ function getAsOfDateDefault(schoolName) {
   return d.toISOString().split('T')[0];
 }
 
+// Auto-fill the "Date requested" field with today's local date
+function setRequestedDateToday() {
+  const input = document.getElementById('f-requested-date');
+  if (!input) return;
+  const now = new Date();
+  const local = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  input.value = local.toISOString().split('T')[0];
+}
+
 function renderDocFields(record, type) {
   const el = document.getElementById('cl-doc-fields');
   if (type === 'elementary') {
     el.innerHTML = `
       <div class="doc-field"><label>Requested by</label><input id="f-requested-by" value="${record.requested_by || ''}" placeholder="e.g., Brandon H."></div>
-      <div class="doc-field"><label>Date requested</label><input id="f-requested-date" type="date" value="${record.requested_date || ''}"></div>`;
+      <div class="doc-field"><label>Date requested</label><div class="date-row"><input id="f-requested-date" type="date" value="${record.requested_date || ''}"><button type="button" class="today-btn" onclick="setRequestedDateToday()">Today</button></div></div>`;
   } else {
     el.innerHTML = `
       <div class="doc-field"><label>Requested by</label><input id="f-requested-by" value="${record.requested_by || ''}" placeholder="e.g., Brandon H."></div>
-      <div class="doc-field"><label>Date requested</label><input id="f-requested-date" type="date" value="${record.requested_date || ''}"></div>
+      <div class="doc-field"><label>Date requested</label><div class="date-row"><input id="f-requested-date" type="date" value="${record.requested_date || ''}"><button type="button" class="today-btn" onclick="setRequestedDateToday()">Today</button></div></div>
       <div class="doc-field"><label>As-of date</label><input id="f-as-of-date" type="date" value="${record.as_of_date || getAsOfDateDefault(currentSchool)}"></div>
       <div class="doc-field"><label>Active student count</label><input id="f-active-students" type="number" value="${record.active_student_count || ''}" placeholder="0"></div>
       <div class="doc-field"><label>Students processed</label><input id="f-students-processed" type="number" value="${record.students_processed || ''}" placeholder="0"></div>
