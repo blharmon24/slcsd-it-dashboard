@@ -483,7 +483,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.06.16.1</div>
+      <div class="sidebar-version">v2026.06.29.1</div>
     </div>
     <div class="main">
 
@@ -2688,6 +2688,7 @@ const ROLLOVER_SCHOOLS = {
 };
 
 const ROLLOVER_DISTRICT_TASKS = [
+  { key: 'ro_d_revoke_access',        label: 'Revoke Staff Access (sync teacherLDAPenabled to PTAccess &amp; adminLDAPenabled to PSaccess, then set PTAccess &amp; PSaccess = 0 except your &amp; boss\'s accounts)' },
   { key: 'ro_d_state_reporting',      label: 'Sam has finished State Reporting' },
   { key: 'ro_d_disable_sif',         label: 'Disable SIF Adapter (System Management -&gt; Server -&gt; Global API and SIF Settings)' },
   { key: 'ro_d_store_grades',         label: 'Permanently Store All Grades for Current Year' },
