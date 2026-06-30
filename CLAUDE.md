@@ -19,6 +19,7 @@ not current behavior). Managed by IT staff.
 - **Password Reset Flow** — self-service forgot password link + in-page reset screen (added 2026-05-07)
 - **Copy K-6 Schedule Check** — client-side K-6 elementary schedule validator; verifies DEPENDENT_SECS references, duplicate course numbers, and shared dep sections; downloads a highlighted HTML report (added 2026-05-18)
 - **K-6 School Clean Status** — per-school checkboxes on the Copy K-6 Schedule Check tab tracking which schools are 100% clean; saved to Supabase by academic year (added 2026-05-18)
+- **Post-Rollover Tasks** — schools × tasks check-off matrix on the PowerScheduler page; each task has a per-year assignee (VG/BH/JF/SQ) and a per-school completion check-off; tasks add/removable from the page (added 2026-06-30)
 
 ## Tech Stack
 - **Frontend:** Single HTML file (`dashboard.html`) — HTML, CSS, and JavaScript
@@ -197,6 +198,39 @@ per-school steps. Third tab on the School Schedule Build Tracker page.
 - School-specific built-in task for East HS, Highland HS, West HS only:
   `ro_s_ctc_enrollments` — "Copy Generic CTC Section enrollments to Real CTC sections"
 - `getSchoolGroup(schoolName)` helper derives group from `ROLLOVER_SCHOOLS` constant
+
+---
+
+## Feature: Post-Rollover Tasks
+
+### What it does
+A schools × tasks check-off matrix for the repetitive new-year setup work that follows
+the EOY rollover. Fourth tab on the PowerScheduler page (next to "School Rollover").
+Each setup task is assigned to one team member who completes it at every school; the grid
+lets anyone check off each school so none are missed.
+
+### UX structure
+- **Spreadsheet-style grid** — schools down the left (sticky column, grouped
+  Elementary / Middle / High / Other), tasks across the top (one column each)
+- **Sticky header per task column** shows: the task label (with PS nav path), a per-year
+  **assignee dropdown** (VG / BH / JF / SQ), a live **done count** (e.g. `21/40`, turns
+  green at 100%), and a remove (✕) button
+- **Each cell is a check-off** for that school. Checking it stamps who + when (hover shows
+  it); the cell turns green. Cells update in place (no full re-render / scroll jump)
+- **Add a task** via the input above the grid; new tasks append as a new column
+- **Remove a task** soft-deletes it (`active = false`) — the column disappears but
+  historical check-offs are preserved in the database
+
+### Key behaviors
+- **Schools are a fixed JS constant** (`POST_RO_SCHOOLS`, grouped by type, ~40 schools with
+  LOC numbers) — rows are not DB-driven
+- **Tasks live in Supabase** (`post_rollover_tasks`) — add/remove from the page, no SQL needed
+- **Task definitions are year-agnostic**; **assignees and check-offs are per academic year**
+  (uses `getProYear()` → `getSBYear()`), so each year starts fresh and prior years stay as history
+- Assignee dropdown is limited to VG/BH/JF/SQ, but **anyone** can check off / set assignees
+- Completion names use `displayNameFromEmail()` (First L.), consistent with the rest of the app
+- One-time table setup lives in `sql/post_rollover_tasks_setup.sql` (creates tables, RLS,
+  grants, and seeds the 34 task columns from the original Matrix spreadsheet)
 
 ---
 
@@ -492,6 +526,28 @@ Personal work queue tasks, one per user per item.
   `priority` (text: `urgent` | `medium` | `low`), `completed` (boolean),
   `sort_order` (int), `created_at`
 - RLS enabled — users can only read/write their own rows (`auth.uid() = user_id`)
+
+### `post_rollover_tasks`
+Year-agnostic task definitions (columns) for the Post-Rollover Tasks grid.
+- `id` (uuid), `label` (text), `sort_order` (int), `active` (boolean, default true),
+  `created_at`
+- Removing a task in the UI sets `active = false` (soft delete; history preserved)
+- RLS enabled — authenticated users can read/write
+
+### `post_rollover_assignees`
+Per-task, per-year assignee (the person responsible for running that task at every school).
+- `id` (uuid), `task_id` (FK post_rollover_tasks, cascade delete), `academic_year` (int),
+  `assignee` (text — VG / BH / JF / SQ)
+- Unique constraint on `(task_id, academic_year)`
+- RLS enabled — authenticated users can read/write
+
+### `post_rollover_completions`
+Per-task, per-school, per-year check-off for the Post-Rollover Tasks grid.
+- `id` (uuid), `task_id` (FK post_rollover_tasks, cascade delete), `school_name` (text),
+  `academic_year` (int), `completed` (boolean), `completed_at`, `completed_by` (FK auth.users),
+  `completed_by_name` (text)
+- Unique constraint on `(task_id, school_name, academic_year)`
+- RLS enabled — authenticated users can read/write
 
 ### `k6_clean_status`
 Per-school "100% clean" flag for K-6 elementary schedule files, one row per school per year.

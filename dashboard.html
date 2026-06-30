@@ -483,7 +483,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.06.30.6</div>
+      <div class="sidebar-version">v2026.06.30.7</div>
     </div>
     <div class="main">
 
@@ -631,6 +631,7 @@
           <button class="tab-btn active" id="tab-btn-schedule" onclick="switchSBTab('schedule')">Schedule Build</button>
           <button class="tab-btn" id="tab-btn-ctc" onclick="switchSBTab('ctc')">CTC Export</button>
           <button class="tab-btn" id="tab-btn-rollover" onclick="switchSBTab('rollover')">School Rollover</button>
+          <button class="tab-btn" id="tab-btn-postrollover" onclick="switchSBTab('postrollover')">Post-Rollover Tasks</button>
           <button class="tab-btn" id="tab-btn-classchoice" onclick="switchSBTab('classchoice')">Class Choice Processes</button>
           <button class="tab-btn" id="tab-btn-k6check" onclick="switchSBTab('k6check')">Copy K-6 Schedule Check</button>
         </div>
@@ -895,6 +896,41 @@
           </div>
 
         </div> <!-- end tab-rollover -->
+
+        <!-- Post-Rollover Tasks tab -->
+        <div class="tab-content" id="tab-postrollover">
+          <style>
+            #tab-postrollover .pro-grid { border-collapse:separate; border-spacing:0; font-size:11px; width:auto; }
+            #tab-postrollover .pro-grid th, #tab-postrollover .pro-grid td { border-right:1px solid #eef0f3; border-bottom:1px solid #eef0f3; }
+            #tab-postrollover .pro-grid thead th { position:sticky; top:0; z-index:2; background:#f8fafc; vertical-align:top; padding:5px 4px; }
+            #tab-postrollover .pro-corner { position:sticky; left:0; z-index:6 !important; background:#eef2f7 !important; text-align:left; min-width:185px; max-width:185px; padding:5px 10px !important; font-weight:600; color:#374151; }
+            #tab-postrollover .pro-task-th { min-width:100px; max-width:100px; text-align:center; }
+            #tab-postrollover .pro-task-label { font-weight:600; color:#334155; line-height:1.15; max-height:56px; overflow:hidden; margin-bottom:3px; }
+            #tab-postrollover .pro-assignee { font-size:11px; padding:1px 2px; border:1px solid #cbd5e1; border-radius:4px; width:100%; background:white; cursor:pointer; }
+            #tab-postrollover .pro-count { font-size:10px; color:#64748b; margin-top:3px; }
+            #tab-postrollover .pro-count.pro-done { color:#059669; font-weight:700; }
+            #tab-postrollover .pro-remove { background:none; border:none; color:#d8b7b7; cursor:pointer; font-size:11px; margin-top:2px; line-height:1; }
+            #tab-postrollover .pro-remove:hover { color:#dc2626; }
+            #tab-postrollover .pro-school { position:sticky; left:0; z-index:1; background:white; text-align:left; white-space:nowrap; padding:4px 10px; font-weight:500; color:#111827; min-width:185px; max-width:185px; }
+            #tab-postrollover tbody tr:hover .pro-school { background:#f9fafb; }
+            #tab-postrollover .pro-group-cell { background:#f1f5f9; font-weight:700; color:#475569; font-size:10px; text-transform:uppercase; letter-spacing:0.04em; padding:4px 10px; }
+            #tab-postrollover .pro-cell { text-align:center; padding:2px; }
+            #tab-postrollover .pro-cell-done { background:#f0fdf4; }
+            #tab-postrollover .pro-cell input { width:15px; height:15px; cursor:pointer; accent-color:#059669; }
+          </style>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem;">
+            <div style="font-size:13px;color:#555;max-width:680px;">Each task is assigned to one person who completes it at every school. Check off each school as you go &mdash; the count at the top of each column shows progress. Assignees and check-offs are tracked per year.</div>
+            <div id="pro-year-label" style="font-size:13px;font-weight:600;color:#374151;white-space:nowrap;"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-bottom:0.75rem;">
+            <input id="pro-add-task" placeholder="Add a task (e.g. Bell Schedule (Start Page&gt;School&gt;Bell Schedule))..." style="flex:1;font-size:13px;border:1px solid #d0d5dd;border-radius:6px;padding:6px 10px;" onkeydown="if(event.key==='Enter')addPostRolloverTask()">
+            <button class="save-btn" onclick="addPostRolloverTask()" style="margin:0;padding:6px 16px;font-size:12px;white-space:nowrap;">Add Task</button>
+          </div>
+          <div id="pro-grid-wrap" style="overflow:auto;max-height:72vh;border:1px solid #e0e4ea;border-radius:8px;background:white;">
+            <table id="pro-grid" class="pro-grid"></table>
+          </div>
+          <div id="pro-empty" style="display:none;padding:2rem;text-align:center;color:#888;font-size:13px;">No tasks yet. Add one above to start building your grid.</div>
+        </div> <!-- end tab-postrollover -->
 
         <!-- Class Choice Processes tab -->
         <div class="tab-content" id="tab-classchoice">
@@ -2212,6 +2248,7 @@ function switchSBTab(tab) {
   if (tab === 'schedule')   loadScheduleBuildRecords();
   if (tab === 'ctc')        initCTCPage();
   if (tab === 'rollover')   loadRolloverData();
+  if (tab === 'postrollover') loadPostRolloverData();
   if (tab === 'classchoice') initClassChoicePage();
   if (tab === 'k6check')    loadK6CleanStatus();
   localStorage.setItem('it_dash_sb_tab', tab);
@@ -2222,6 +2259,7 @@ function onSBPageYearChange() {
   if (activeTab === 'schedule') loadScheduleBuildRecords();
   if (activeTab === 'ctc')      initCTCPage();
   if (activeTab === 'rollover') loadRolloverData();
+  if (activeTab === 'postrollover') loadPostRolloverData();
   if (activeTab === 'k6check')  loadK6CleanStatus();
 }
 
@@ -4571,6 +4609,178 @@ async function toggleK6CleanStatus(schoolName, checked) {
   if (error) { alert('Error saving status: ' + error.message); return; }
   k6CleanStatuses[schoolName] = data;
   renderK6CleanList();
+}
+
+// â”€â”€ Post-Rollover Tasks (assignment + per-school check-off grid) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+// Schools are a fixed list (rows of the grid), grouped by type. Tasks (columns)
+// live in Supabase and are added/removed from the page.
+const POST_RO_SCHOOLS = {
+  elementary: [
+    { name: 'Backman', loc: 104 }, { name: 'Beacon Heights', loc: 108 },
+    { name: 'Bonneville', loc: 112 }, { name: 'Dilworth', loc: 124 },
+    { name: 'Edison', loc: 132 }, { name: 'Emerson', loc: 136 },
+    { name: 'Ensign', loc: 144 }, { name: 'Escalante', loc: 262 },
+    { name: 'Franklin', loc: 148 }, { name: 'Highland Park', loc: 180 },
+    { name: 'Indian Hills', loc: 184 }, { name: 'Liberty', loc: 196 },
+    { name: 'Meadowlark', loc: 216 }, { name: 'Mountain View', loc: 160 },
+    { name: 'Newman', loc: 220 }, { name: 'Nibley Park', loc: 224 },
+    { name: 'North Star', loc: 140 }, { name: 'Parkview', loc: 242 },
+    { name: 'Rose Park', loc: 252 }, { name: 'Uintah', loc: 268 },
+    { name: 'Wasatch', loc: 272 }, { name: 'Washington', loc: 276 },
+    { name: 'Whittier', loc: 288 },
+  ],
+  middle: [
+    { name: 'Bryant', loc: 404 }, { name: 'Clayton', loc: 408 },
+    { name: 'Glendale', loc: 412 }, { name: 'Hillside', loc: 416 },
+    { name: 'Northwest', loc: 440 },
+  ],
+  high: [
+    { name: 'C & Tech Center', loc: 749 }, { name: 'East', loc: 704 },
+    { name: 'Highland', loc: 708 }, { name: 'Horizonte', loc: 750 },
+    { name: 'Innovations', loc: 748 }, { name: 'SLCSE', loc: 300 },
+    { name: 'West', loc: 716 },
+  ],
+  other: [
+    { name: 'Open Classroom', loc: 240 }, { name: 'Secondary Hospital', loc: 613 },
+    { name: 'Private School', loc: 630 }, { name: 'Elem Hospital', loc: 813 },
+    { name: 'CBTU', loc: 826 },
+  ],
+};
+const PRO_GROUP_LABELS = { elementary: 'Elementary', middle: 'Middle Schools', high: 'High Schools', other: 'Other' };
+const PRO_GROUPS = ['elementary', 'middle', 'high', 'other'];
+const PRO_ASSIGNEES = ['VG', 'BH', 'JF', 'SQ'];
+
+let proTasks = [];        // [{ id, label, sort_order }]
+let proAssignees = {};    // task_id -> assignee initials (current year)
+let proCompletions = {};  // `${task_id}|${school_name}` -> completion record (current year)
+
+function getProYear() { return parseInt(getSBYear()) || new Date().getFullYear(); }
+function proEsc(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function proAllSchools() { return PRO_GROUPS.reduce((a, g) => a.concat(POST_RO_SCHOOLS[g]), []); }
+function proDoneCount(taskId) {
+  return proAllSchools().filter(s => proCompletions[taskId + '|' + s.name]?.completed).length;
+}
+
+async function loadPostRolloverData() {
+  const year = getProYear();
+  document.getElementById('pro-year-label').textContent = (year - 1) + '-' + String(year).slice(2);
+
+  const { data: tasks } = await sb.from('post_rollover_tasks').select('*').eq('active', true).order('sort_order');
+  proTasks = tasks || [];
+
+  proAssignees = {};
+  const { data: asg } = await sb.from('post_rollover_assignees').select('*').eq('academic_year', year);
+  if (asg) asg.forEach(a => { proAssignees[a.task_id] = a.assignee || ''; });
+
+  proCompletions = {};
+  const { data: comps } = await sb.from('post_rollover_completions').select('*').eq('academic_year', year);
+  if (comps) comps.forEach(c => { proCompletions[c.task_id + '|' + c.school_name] = c; });
+
+  renderPostRolloverGrid();
+}
+
+function renderPostRolloverGrid() {
+  const wrap = document.getElementById('pro-grid-wrap');
+  const empty = document.getElementById('pro-empty');
+  const table = document.getElementById('pro-grid');
+  if (!proTasks.length) { wrap.style.display = 'none'; empty.style.display = 'block'; table.innerHTML = ''; return; }
+  wrap.style.display = 'block'; empty.style.display = 'none';
+  const total = proAllSchools().length;
+
+  // Header: one sticky row per task column (label + assignee + done count + remove)
+  let head = '<thead><tr>';
+  head += `<th class="pro-corner">School <span style="color:#94a3b8;font-weight:400;">(${total})</span></th>`;
+  proTasks.forEach(t => {
+    const a = proAssignees[t.id] || '';
+    const done = proDoneCount(t.id);
+    const opts = ['<option value="">&mdash;</option>']
+      .concat(PRO_ASSIGNEES.map(p => `<option value="${p}" ${p === a ? 'selected' : ''}>${p}</option>`)).join('');
+    head += `<th class="pro-task-th">
+        <div class="pro-task-label" title="${proEsc(t.label)}">${proEsc(t.label)}</div>
+        <select class="pro-assignee" onchange="setPostRolloverAssignee('${t.id}', this.value)">${opts}</select>
+        <div class="pro-count ${done === total ? 'pro-done' : ''}" id="pro-count-${t.id}">${done}/${total}</div>
+        <button class="pro-remove" title="Remove task" onclick="removePostRolloverTask('${t.id}')">&#10005;</button>
+      </th>`;
+  });
+  head += '</tr></thead>';
+
+  // Body: schools grouped, a check-off cell per task
+  let body = '<tbody>';
+  PRO_GROUPS.forEach(grp => {
+    const schools = POST_RO_SCHOOLS[grp];
+    if (!schools.length) return;
+    body += `<tr><td class="pro-group-cell" colspan="${proTasks.length + 1}">${PRO_GROUP_LABELS[grp]}</td></tr>`;
+    schools.forEach(s => {
+      const safe = s.name.replace(/'/g, "\\'");
+      body += `<tr><th class="pro-school">${proEsc(s.name)} <span style="color:#9ca3af;font-weight:400;">${s.loc}</span></th>`;
+      proTasks.forEach(t => {
+        const c = proCompletions[t.id + '|' + s.name];
+        const done = !!c?.completed;
+        const tip = done && c.completed_by_name ? `title="${proEsc(c.completed_by_name)} &middot; ${new Date(c.completed_at).toLocaleDateString()}"` : '';
+        body += `<td class="pro-cell ${done ? 'pro-cell-done' : ''}"><input type="checkbox" ${done ? 'checked' : ''} ${tip} onchange="togglePostRolloverCell('${t.id}','${safe}', this)"></td>`;
+      });
+      body += '</tr>';
+    });
+  });
+  body += '</tbody>';
+  table.innerHTML = head + body;
+}
+
+async function togglePostRolloverCell(taskId, schoolName, cb) {
+  const checked = cb.checked;
+  const year = getProYear();
+  const now = new Date().toISOString();
+  const userName = displayNameFromEmail(currentUser.email);
+  const { data, error } = await sb.from('post_rollover_completions').upsert({
+    task_id: taskId, school_name: schoolName, academic_year: year,
+    completed: checked,
+    completed_at: checked ? now : null,
+    completed_by: checked ? currentUser.id : null,
+    completed_by_name: checked ? userName : null,
+  }, { onConflict: 'task_id,school_name,academic_year' }).select().single();
+  if (error) { alert('Error saving check-off: ' + error.message); cb.checked = !checked; return; }
+
+  proCompletions[taskId + '|' + schoolName] = data;
+  // Update just this cell + the column count (avoids a full re-render / scroll jump)
+  cb.closest('td').classList.toggle('pro-cell-done', checked);
+  cb.title = checked && data.completed_by_name ? `${data.completed_by_name} · ${new Date(data.completed_at).toLocaleDateString()}` : '';
+  const total = proAllSchools().length;
+  const done = proDoneCount(taskId);
+  const countEl = document.getElementById('pro-count-' + taskId);
+  if (countEl) { countEl.textContent = done + '/' + total; countEl.classList.toggle('pro-done', done === total); }
+}
+
+async function setPostRolloverAssignee(taskId, value) {
+  const year = getProYear();
+  const { error } = await sb.from('post_rollover_assignees').upsert({
+    task_id: taskId, academic_year: year, assignee: value || null,
+  }, { onConflict: 'task_id,academic_year' });
+  if (error) { alert('Error saving assignee: ' + error.message); return; }
+  proAssignees[taskId] = value;
+}
+
+async function addPostRolloverTask() {
+  const input = document.getElementById('pro-add-task');
+  const label = input.value.trim();
+  if (!label) return;
+  const maxOrder = proTasks.reduce((m, t) => Math.max(m, t.sort_order || 0), 0);
+  const { data, error } = await sb.from('post_rollover_tasks')
+    .insert({ label, sort_order: maxOrder + 1, active: true }).select().single();
+  if (error) { alert('Error adding task: ' + error.message); return; }
+  proTasks.push(data);
+  input.value = '';
+  renderPostRolloverGrid();
+}
+
+async function removePostRolloverTask(taskId) {
+  const t = proTasks.find(x => x.id === taskId);
+  if (!confirm('Remove task "' + (t ? t.label : '') + '" from the grid?')) return;
+  // Soft-delete: hide the column but keep historical check-offs in the database
+  const { error } = await sb.from('post_rollover_tasks').update({ active: false }).eq('id', taskId);
+  if (error) { alert('Error removing task: ' + error.message); return; }
+  proTasks = proTasks.filter(x => x.id !== taskId);
+  renderPostRolloverGrid();
 }
 
 // â”€â”€ CardToUTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
