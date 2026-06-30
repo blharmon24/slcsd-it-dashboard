@@ -483,7 +483,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.06.30.2</div>
+      <div class="sidebar-version">v2026.06.30.3</div>
     </div>
     <div class="main">
 
@@ -3075,8 +3075,16 @@ async function openRolloverSchool(name, type) {
     : {};
   roSchoolNotes = roAllSchoolNotes[name] || {};
 
+  // Push a history entry so the browser/mouse back button returns to the school
+  // list instead of leaving the dashboard. Guard against stacking entries when
+  // switching between sibling schools (we're already in the detail view).
+  const roDetailView = document.getElementById('ro-detail-view');
+  if (roDetailView.style.display === 'none') {
+    history.pushState({ roView: 'school-detail' }, '');
+  }
+
   document.getElementById('ro-list-view').style.display = 'none';
-  document.getElementById('ro-detail-view').style.display = 'block';
+  roDetailView.style.display = 'block';
   document.getElementById('ro-detail-name').textContent = name;
   document.getElementById('ro-detail-year-badge').textContent = getRolloverYear();
 
@@ -4812,6 +4820,12 @@ window.addEventListener('popstate', function() {
   const checklistView = document.getElementById('checklist-view');
   if (checklistView && checklistView.style.display !== 'none') {
     showSchoolList();
+    return;
+  }
+  // Same handling for the School Rollover detail view
+  const roDetailView = document.getElementById('ro-detail-view');
+  if (roDetailView && roDetailView.style.display !== 'none') {
+    showRolloverList();
   }
 });
 
