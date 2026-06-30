@@ -483,7 +483,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.06.30.3</div>
+      <div class="sidebar-version">v2026.06.30.4</div>
     </div>
     <div class="main">
 
@@ -2137,8 +2137,14 @@ async function loadHistory() {
 }
 
 async function viewHistoryDetail(recordId, schoolName, schoolType, term, year) {
+  // Push a history entry so the browser/mouse back button returns to the
+  // history list instead of leaving the dashboard
+  const histDetail = document.getElementById('history-detail');
+  if (histDetail.style.display === 'none' || histDetail.style.display === '') {
+    history.pushState({ histView: 'detail' }, '');
+  }
   document.getElementById('history-list').style.display = 'none';
-  document.getElementById('history-detail').style.display = 'block';
+  histDetail.style.display = 'block';
   document.getElementById('hd-title').textContent = schoolName + ' - ' + term + ' ' + year;
   const { data: record } = await sb.from('grade_store_records').select('*').eq('id', recordId).single();
   const { data: comps } = await sb.from('checklist_completions').select('*').eq('record_id', recordId);
@@ -2317,8 +2323,14 @@ async function openScheduleSchool(school, type) {
   const rec = sbRecords[school.name] || {};
   sbCurrentRecordId = rec.id || null;
 
+  // Push a history entry so the browser/mouse back button returns to the
+  // school list instead of leaving the dashboard
+  const sbDetailView = document.getElementById('sb-detail-view');
+  if (sbDetailView.style.display === 'none' || sbDetailView.style.display === '') {
+    history.pushState({ sbView: 'school-detail' }, '');
+  }
   document.getElementById('sb-list-view').style.display = 'none';
-  document.getElementById('sb-detail-view').style.display = 'block';
+  sbDetailView.style.display = 'block';
   document.getElementById('sb-detail-name').textContent = school.name;
   document.getElementById('sb-detail-year-badge').textContent = getSBYear();
   document.getElementById('sb-responsible').value = rec.responsible_person || '';
@@ -4826,6 +4838,18 @@ window.addEventListener('popstate', function() {
   const roDetailView = document.getElementById('ro-detail-view');
   if (roDetailView && roDetailView.style.display !== 'none') {
     showRolloverList();
+    return;
+  }
+  // Same handling for the Schedule Build detail view
+  const sbDetailView = document.getElementById('sb-detail-view');
+  if (sbDetailView && sbDetailView.style.display !== 'none') {
+    showScheduleList();
+    return;
+  }
+  // Same handling for the Grade Store History detail view
+  const histDetail = document.getElementById('history-detail');
+  if (histDetail && histDetail.style.display !== 'none' && histDetail.style.display !== '') {
+    showHistoryList();
   }
 });
 
