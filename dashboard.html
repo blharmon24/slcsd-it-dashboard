@@ -483,7 +483,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.06.30.7</div>
+      <div class="sidebar-version">v2026.06.30.8</div>
     </div>
     <div class="main">
 
@@ -909,6 +909,12 @@
             #tab-postrollover .pro-assignee { font-size:11px; padding:1px 2px; border:1px solid #cbd5e1; border-radius:4px; width:100%; background:white; cursor:pointer; }
             #tab-postrollover .pro-count { font-size:10px; color:#64748b; margin-top:3px; }
             #tab-postrollover .pro-count.pro-done { color:#059669; font-weight:700; }
+            #tab-postrollover .pro-drag { cursor:grab; color:#cbd5e1; font-size:12px; line-height:1; margin-bottom:3px; user-select:none; }
+            #tab-postrollover .pro-drag:hover { color:#64748b; }
+            #tab-postrollover .pro-drag:active { cursor:grabbing; }
+            #tab-postrollover .pro-task-th.pro-drop-target { background:#e0edff; }
+            #tab-postrollover .pro-edit { background:none; border:none; color:#94a3b8; cursor:pointer; font-size:11px; margin-top:2px; line-height:1; }
+            #tab-postrollover .pro-edit:hover { color:#2563EB; }
             #tab-postrollover .pro-remove { background:none; border:none; color:#d8b7b7; cursor:pointer; font-size:11px; margin-top:2px; line-height:1; }
             #tab-postrollover .pro-remove:hover { color:#dc2626; }
             #tab-postrollover .pro-school { position:sticky; left:0; z-index:1; background:white; text-align:left; white-space:nowrap; padding:4px 10px; font-weight:500; color:#111827; min-width:185px; max-width:185px; }
@@ -4696,10 +4702,12 @@ function renderPostRolloverGrid() {
     const done = proDoneCount(t.id);
     const opts = ['<option value="">&mdash;</option>']
       .concat(PRO_ASSIGNEES.map(p => `<option value="${p}" ${p === a ? 'selected' : ''}>${p}</option>`)).join('');
-    head += `<th class="pro-task-th">
+    head += `<th class="pro-task-th" ondragover="proDragOver(event)" ondragleave="proDragLeave(event)" ondrop="proDrop(event,'${t.id}')">
+        <div class="pro-drag" draggable="true" title="Drag to reorder" ondragstart="proDragStart(event,'${t.id}')" ondragend="proDragEnd(event)">&#9776;</div>
         <div class="pro-task-label" title="${proEsc(t.label)}">${proEsc(t.label)}</div>
         <select class="pro-assignee" onchange="setPostRolloverAssignee('${t.id}', this.value)">${opts}</select>
         <div class="pro-count ${done === total ? 'pro-done' : ''}" id="pro-count-${t.id}">${done}/${total}</div>
+        <button class="pro-edit" title="Rename task" onclick="renamePostRolloverTask('${t.id}')">&#9998;</button>
         <button class="pro-remove" title="Remove task" onclick="removePostRolloverTask('${t.id}')">&#10005;</button>
       </th>`;
   });
@@ -4770,6 +4778,64 @@ async function addPostRolloverTask() {
   if (error) { alert('Error adding task: ' + error.message); return; }
   proTasks.push(data);
   input.value = '';
+  renderPostRolloverGrid();
+}
+
+// Drag-to-reorder task columns ------------------------------------------------
+let proDragTaskId = null;
+function proDragStart(e, id) {
+  proDragTaskId = id;
+  e.dataTransfer.effectAllowed = 'move';
+  try { e.dataTransfer.setData('text/plain', id); } catch (_) {}
+}
+function proDragEnd() {
+  proDragTaskId = null;
+  document.querySelectorAll('#tab-postrollover .pro-drop-target').forEach(el => el.classList.remove('pro-drop-target'));
+}
+function proDragOver(e) {
+  if (!proDragTaskId) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  e.currentTarget.classList.add('pro-drop-target');
+}
+function proDragLeave(e) { e.currentTarget.classList.remove('pro-drop-target'); }
+async function proDrop(e, targetId) {
+  e.preventDefault();
+  e.currentTarget.classList.remove('pro-drop-target');
+  const dragId = proDragTaskId;
+  proDragTaskId = null;
+  if (!dragId || dragId === targetId) return;
+  const from = proTasks.findIndex(t => t.id === dragId);
+  const to   = proTasks.findIndex(t => t.id === targetId);
+  if (from < 0 || to < 0 || from === to) return;
+
+  const [moved] = proTasks.splice(from, 1);
+  proTasks.splice(to, 0, moved);
+  // Persist new sort_order for every task whose position changed
+  const updates = [];
+  proTasks.forEach((t, i) => {
+    const so = i + 1;
+    if (t.sort_order !== so) {
+      t.sort_order = so;
+      updates.push(sb.from('post_rollover_tasks').update({ sort_order: so }).eq('id', t.id));
+    }
+  });
+  renderPostRolloverGrid();
+  const results = await Promise.all(updates);
+  const failed = results.find(r => r.error);
+  if (failed) alert('Error saving new order: ' + failed.error.message);
+}
+
+async function renamePostRolloverTask(taskId) {
+  const t = proTasks.find(x => x.id === taskId);
+  if (!t) return;
+  const next = prompt('Edit task name:', t.label);
+  if (next === null) return;                 // cancelled
+  const label = next.trim();
+  if (!label || label === t.label) return;   // empty or unchanged
+  const { error } = await sb.from('post_rollover_tasks').update({ label }).eq('id', taskId);
+  if (error) { alert('Error renaming task: ' + error.message); return; }
+  t.label = label;
   renderPostRolloverGrid();
 }
 

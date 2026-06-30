@@ -218,6 +218,9 @@ lets anyone check off each school so none are missed.
 - **Each cell is a check-off** for that school. Checking it stamps who + when (hover shows
   it); the cell turns green. Cells update in place (no full re-render / scroll jump)
 - **Add a task** via the input above the grid; new tasks append as a new column
+- **Rename a task** via the ✎ button in the column header (updates the `label`)
+- **Reorder tasks** by dragging the ☰ handle at the top of a column header onto another
+  column; new positions persist to `sort_order`
 - **Remove a task** soft-deletes it (`active = false`) — the column disappears but
   historical check-offs are preserved in the database
 
