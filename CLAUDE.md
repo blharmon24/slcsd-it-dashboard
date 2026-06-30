@@ -77,7 +77,10 @@ Active tab on the Schedule Build page persists to localStorage (`it_dash_sb_tab`
 Tracks the full workflow of storing PowerSchool grades across all schools in the district.
 Each school goes through a series of steps and checklist items that must be completed
 to successfully store grades for a given term. The dashboard shows:
-- Summary bar with four SVG doughnut charts: All Schools, High Schools, Middle Schools, Elementary
+- Summary bar with four SVG doughnut charts: All Schools, High Schools, Middle Schools, Elementary.
+  Each doughnut stacks two arcs: blue = completed schools (turns green when all complete),
+  yellow (`#F59E0B`) = in-progress schools, drawn right after the blue arc. Arc caps are `butt`
+  so the segments meet cleanly (`makeSummaryDonut(completed, inProgress, total, label)`)
 - Per-card checklist progress indicator showing tasks done / total
 - Overdue highlighting (red card) when a school is still Not Started 14+ days after term end
 - Auto term selection based on saved term end dates
@@ -88,6 +91,11 @@ to successfully store grades for a given term. The dashboard shows:
 - Each record has associated `checklist_completions` tracking individual task steps
 - `ctc_confirmed` flag indicates CTC confirmation step is done
 - `completed` flag marks the entire grade store process as finished for that school/term
+  (set automatically when all of a school's checklist tasks are done)
+- Status (`getStatus`): `complete` if the `completed` flag is set; `in-progress` if a
+  `requested_by` entry exists OR any checklist task is completed; otherwise `not-started`.
+  The `requested_by` trigger matters for elementary, which has a single checklist task and
+  would otherwise jump straight from Not Started to Complete. Applies to all school types.
 - Academic year is stored as a 4-digit integer (e.g., `2025`) but displayed as `25-26`
 
 ### Term end dates
