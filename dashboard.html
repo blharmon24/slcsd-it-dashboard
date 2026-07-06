@@ -483,7 +483,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.07.01.1</div>
+      <div class="sidebar-version">v2026.07.06.1</div>
     </div>
     <div class="main">
 
@@ -1630,6 +1630,7 @@ const ELEM_TASKS = [
 ];
 
 let currentUser = null;
+let currentRole = 'staff';   // resolved from user_roles on login; defaults to least-privilege
 let records = {};
 let completions = {};
 let allCompletions = {}; // keyed by record_id -&gt; { task_key -&gt; completion }
@@ -1675,7 +1676,51 @@ async function handleLogin() {
   const { data, error } = await sb.auth.signInWithPassword({ email, password });
   if (error) { errEl.style.display = 'block'; return; }
   currentUser = data.user;
-  showApp();
+  await showApp();
+}
+
+// ── Role-based access ──────────────────────────────────────────────
+// Admin sees every page. Staff sees only the pages listed here.
+// (CardToUTA is fully client-side, so staff need no database access at all.)
+const STAFF_PAGES = ['cardtouta'];
+
+function canSeePage(name) {
+  return currentRole === 'admin' || STAFF_PAGES.includes(name);
+}
+
+function defaultPageForRole() {
+  return currentRole === 'admin' ? 'grade-storing' : (STAFF_PAGES[0] || 'cardtouta');
+}
+
+// Look up the signed-in user's role. Fails closed (stays 'staff') so a read
+// error can never silently grant elevated access in the UI.
+async function loadUserRole() {
+  currentRole = 'staff';
+  try {
+    const { data, error } = await sb
+      .from('user_roles').select('role').eq('user_id', currentUser.id).maybeSingle();
+    if (!error && data && data.role) currentRole = data.role;
+  } catch (e) { /* keep least-privilege default */ }
+}
+
+// Hide sidebar links the current role may not see, plus any section header
+// left with no visible links beneath it.
+function applyRoleToSidebar() {
+  const items = [...document.querySelectorAll('.sidebar .nav-item')];
+  items.forEach(it => {
+    const m = it.getAttribute('onclick')?.match(/showPage\('([^']+)'/);
+    it.style.display = (m && canSeePage(m[1])) ? '' : 'none';
+  });
+  const kids = [...document.querySelectorAll('.sidebar > div')];
+  kids.forEach((el, i) => {
+    if (!el.classList.contains('sidebar-section')) return;
+    let anyVisible = false;
+    for (let j = i + 1; j < kids.length; j++) {
+      if (kids[j].classList.contains('sidebar-section')) break;
+      if (kids[j].classList.contains('nav-item') && kids[j].style.display !== 'none') { anyVisible = true; break; }
+    }
+    el.style.display = anyVisible ? '' : 'none';
+  });
 }
 
 async function handleLogout() {
@@ -1685,15 +1730,21 @@ async function handleLogout() {
   document.getElementById('login-screen').style.display = 'flex';
 }
 
-function showApp() {
+async function showApp() {
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('app-shell').style.display = 'block';
   document.getElementById('user-label').textContent = currentUser.email.split('@')[0];
 
-  // Restore the last active page, defaulting to grade-storing
-  const valid = ['grade-storing', 'schedule-commit', 'my-tasks', 'cardtouta'];
+  // Resolve role, then hide any sidebar links this role may not see
+  await loadUserRole();
+  applyRoleToSidebar();
+
+  // Restore the last active page, defaulting to grade-storing — but never
+  // land on a page the current role isn't allowed to see.
+  const valid = ['grade-storing', 'schedule-commit', 'my-tasks', 'cardtouta', 'grad-plans'];
   const saved = localStorage.getItem('it_dash_page');
-  const page  = valid.includes(saved) ? saved : 'grade-storing';
+  let page = valid.includes(saved) ? saved : 'grade-storing';
+  if (!canSeePage(page)) page = defaultPageForRole();
 
   // Find the matching nav item so it gets highlighted correctly
   const navEl = [...document.querySelectorAll('.nav-item')].find(n =>
@@ -2720,6 +2771,12 @@ function switchGPTab(tab) {
 }
 
 function showPage(name, el) {
+  // Role guard: redirect away from any page this user isn't allowed to see
+  if (!canSeePage(name)) {
+    name = defaultPageForRole();
+    el = [...document.querySelectorAll('.sidebar .nav-item')].find(n =>
+      n.getAttribute('onclick')?.includes(`'${name}'`)) || null;
+  }
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
