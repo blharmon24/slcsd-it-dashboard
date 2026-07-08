@@ -483,7 +483,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.07.07.1</div>
+      <div class="sidebar-version">v2026.07.08.1</div>
     </div>
     <div class="main">
 
@@ -947,7 +947,7 @@
           <div class="tasks-card" style="margin-bottom:1.5rem;">
             <div class="tasks-card-title">Class Choice Shared Seats</div>
             <div style="padding:1rem;">
-              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Upload the CTC master schedule file. The source file should include the following: TeachLastName, Teacher ID, Course Number, Room, SECTION_NUMBER, EXPRESSION, TermId, SCHOOLID, MaxCut, MAXENROLLMENT, EHS, HHS, WHS. Reads Course Number, Section_Number, EHS, HHS, WHS columns and generates a download with the Shared seats string (EHS=704, HHS=708, WHS=716; zeros excluded).</p>
+              <p style="font-size:12px;color:#666;margin-bottom:0.75rem;">Upload the CTC master schedule file &mdash; the same file used by <strong>CTC Export</strong>. It must be a <strong>tab-delimited text file</strong> (.txt / .tsv / .tab). Comma-separated CSVs and Excel .xlsx files will <strong>not</strong> work &mdash; if you have an Excel file, save it as &ldquo;Text (Tab delimited) (*.txt)&rdquo; first.<br><br>The source file should include the following columns: TeachLastName, Teacher ID, Course Number, Room, SECTION_NUMBER, EXPRESSION, TermId, SCHOOLID, MaxCut, MAXENROLLMENT, EHS, HHS, WHS. Reads Course Number, Section_Number, EHS, HHS, WHS and generates a download with the Shared seats string (EHS=704, HHS=708, WHS=716; zeros excluded).</p>
               <div id="cc-drop-zone"
                    style="border:2px dashed #cbd5e1;border-radius:8px;padding:2rem;text-align:center;cursor:pointer;transition:border-color 0.2s,background 0.2s;"
                    onclick="document.getElementById('cc-file-input').click()"
@@ -957,7 +957,7 @@
                 <div style="font-size:24px;margin-bottom:0.5rem;">&#128196;</div>
                 <div style="font-size:13px;color:#64748b;">Drag a file here or <span style="color:#2563EB;text-decoration:underline;">click to browse</span></div>
                 <div id="cc-file-name" style="font-size:12px;color:#374151;margin-top:0.5rem;font-weight:500;"></div>
-                <input type="file" id="cc-file-input" accept=".txt,.tsv,.csv,.tab" onchange="handleCCFileSelect(event)" style="display:none;">
+                <input type="file" id="cc-file-input" accept=".txt,.tsv,.tab" onchange="handleCCFileSelect(event)" style="display:none;">
               </div>
               <div id="cc-row-count" style="margin-top:0.5rem;font-size:12px;color:#065F46;font-weight:500;"></div>
               <div id="cc-upload-error" style="display:none;color:#c0392b;font-size:12px;margin-top:0.5rem;"></div>
@@ -4120,8 +4120,19 @@ function processCCFile(file) {
 }
 
 function parseCCFile(text) {
+  // Binary files (e.g. .xlsx) read as text contain the zip signature / null bytes.
+  if (text.charCodeAt(0) === 0x50 && text.charCodeAt(1) === 0x4B || text.includes(' ')) {
+    showCCError('This looks like an Excel (.xlsx) or other binary file. Save it as "Text (Tab delimited) (*.txt)" and upload that instead.');
+    return;
+  }
   const lines = text.split(/\r?\n/).filter(l => l.trim());
   if (lines.length < 2) { showCCError('File appears empty or has no data rows.'); return; }
+
+  // The file must be tab-delimited. A comma-CSV header has no tabs.
+  if (!lines[0].includes('\t')) {
+    showCCError('This file is not tab-delimited. Save/export it as a tab-delimited text file (.txt / .tsv) and upload that instead.');
+    return;
+  }
 
   function normCol(h) { return h.trim().toLowerCase().replace(/[\s_]+/g, '_'); }
   const headers = lines[0].split('\t').map(normCol);
