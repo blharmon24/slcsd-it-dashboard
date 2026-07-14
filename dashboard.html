@@ -483,7 +483,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.07.08.1</div>
+      <div class="sidebar-version">v2026.07.14.1</div>
     </div>
     <div class="main">
 
@@ -2805,6 +2805,7 @@ const ROLLOVER_SCHOOLS = {
 };
 
 const ROLLOVER_DISTRICT_TASKS = [
+  { key: 'ro_d_disable_parent_portal', label: 'Disable access to the parent portal' },
   { key: 'ro_d_revoke_access',        label: 'Revoke Staff Access (sync teacherLDAPenabled to PTAccess &amp; adminLDAPenabled to PSaccess, then set PTAccess &amp; PSaccess = 0 except your &amp; boss\'s accounts)' },
   { key: 'ro_d_state_reporting',      label: 'Sam has finished State Reporting' },
   { key: 'ro_d_disable_sif',         label: 'Disable SIF Adapter (System Management -&gt; Server -&gt; Global API and SIF Settings)' },
@@ -2821,6 +2822,7 @@ const ROLLOVER_DISTRICT_TASKS = [
   { key: 'ro_d_add_ctc_enrollments',  label: 'Add CTC Enrollments from previously exported file' },
   { key: 'ro_d_update_placements',    label: 'Update Special Permit / District Placement (from OE/DP export run earlier)' },
   { key: 'ro_d_attendance_year',      label: 'Update Attendance Calculation Year (District Setup -&gt; Attendance Tracking)' },
+  { key: 'ro_d_reenable_parent_portal', label: 'Re-enable the parent portal' },
 ];
 
 const ROLLOVER_SCHOOL_TASKS = [
