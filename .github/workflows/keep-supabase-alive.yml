@@ -3,6 +3,7 @@ name: Keep Supabase Alive
 on:
   schedule:
     - cron: '0 14-22 * * *'  # 8 AM–4 PM MDT (UTC-6)
+    - cron: '0 12 1 * *'     # 1st of each month — repo keepalive commit
   workflow_dispatch:       # allow manual trigger
 
 jobs:
@@ -15,3 +16,19 @@ jobs:
             "https://vaesgkliwzrneqymbvwf.supabase.co/rest/v1/schools?select=id&limit=1" \
             -H "apikey: sb_publishable_Hm4h3uIuYqMBXTM3YhUx-w_o3UOREGj" \
             -H "Authorization: Bearer sb_publishable_Hm4h3uIuYqMBXTM3YhUx-w_o3UOREGj"
+
+  # GitHub disables scheduled workflows after 60 days with no repo commits.
+  # An empty commit once a month keeps this workflow (and the Supabase ping) enabled.
+  repo-keepalive:
+    if: github.event.schedule == '0 12 1 * *'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Empty keepalive commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --allow-empty -m "chore: monthly keepalive (prevents scheduled workflow auto-disable)"
+          git push
