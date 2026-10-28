@@ -483,7 +483,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.10.07.1</div>
+      <div class="sidebar-version">v2026.10.28.1</div>
     </div>
     <div class="main">
 
@@ -1609,6 +1609,8 @@ const MH_TASKS = [
   { key: 'report_cards', label: 'Print and send report cards to DB team (Select all students>Print a student report>Report Card. Send PDF to S:\\536_shared\\InfoSys\\ThereFore\\Student Report Cards\\Term folder)' },
   { key: 'advance_progress_reports', label: 'Advance Progress Reports to next term in PowerSchool (System Management>Reports>Report Card Templates)' },
 ];
+// High-school-only task inserted directly after 'Store Grades'
+const HS_SEND_I_GRADES_TASK = { key: 'send_i_grades_principal', label: 'Send list of newly stored "I" grades to the principal' };
 const HS_ONLY_TASKS = [
   { key: 'grad_plan', label: 'Run Graduation Plan Progress Report Data Capture (Select All Students. People>Graduation Plan Progress Report Data Capture)' },
 ];
@@ -1649,6 +1651,7 @@ function getTasksForSchool(type, schoolName, term) {
   }
   if (type === 'high') {
     const tasks = [...MH_TASKS, ...HS_ONLY_TASKS];
+    tasks.splice(tasks.findIndex(t => t.key === 'store_grades') + 1, 0, HS_SEND_I_GRADES_TASK);
     if (isFinalTerm(schoolName, term)) {
       tasks.push(STORE_CLASS_RANK_TASK);
       const hide = ['grade_display'];
