@@ -483,7 +483,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.10.28.1</div>
+      <div class="sidebar-version">v2026.10.30.1</div>
     </div>
     <div class="main">
 
@@ -1610,7 +1610,42 @@ const MH_TASKS = [
   { key: 'advance_progress_reports', label: 'Advance Progress Reports to next term in PowerSchool (System Management>Reports>Report Card Templates)' },
 ];
 // High-school-only task inserted directly after 'Store Grades'
-const HS_SEND_I_GRADES_TASK = { key: 'send_i_grades_principal', label: 'Send list of newly stored "I" grades to the principal' };
+// task_key kept as 'send_i_grades_principal' so existing completions still match
+const HS_SEND_I_GRADES_TASK = { key: 'send_i_grades_principal', label: 'Send a list of newly stored "I", "NG", and Blank grades to the principal', sqlHowTo: true };
+// PowerSchool school IDs used to fill in the "How to" query for each high school
+const HS_PS_SCHOOL_IDS = { 'East HS': 704, 'Highland HS': 708, 'West HS': 716, 'Horizonte': 750, 'SLCSE': 300 };
+// Query for the "How to" panel on HS_SEND_I_GRADES_TASK; schoolid is filled in per school
+function getIGradesSql(schoolName) {
+  const schoolId = HS_PS_SCHOOL_IDS[schoolName] || 716;
+  return `SELECT s.student_number,
+       s.lastfirst,
+       sg.course_number,
+       sg.course_name,
+       sg.storecode,
+       sg.grade,
+       sg.datestored,
+       sg.credit_type,
+       sg.grade_level,
+       sg.teacher_name
+FROM storedgrades sg
+JOIN students s ON s.id = sg.studentid
+WHERE sg.schoolid = ${schoolId}
+  AND sg.termid >= 3600   -- 2026-27 school year and later
+  AND (sg.grade IN ('I', 'NG') OR sg.grade IS NULL)
+ORDER BY s.student_number, sg.course_number, sg.storecode;`;
+}
+// Toggle a task's "How to" SQL panel open/closed
+function toggleTaskSql(link) {
+  const panel = link.closest('.task-item').querySelector('.task-sql');
+  panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+}
+// Copy the SQL from a task's "How to" panel to the clipboard
+async function copyTaskSql(btn) {
+  const sql = btn.closest('.task-sql').querySelector('pre').textContent;
+  try { await navigator.clipboard.writeText(sql); btn.textContent = 'Copied!'; }
+  catch (e) { btn.textContent = 'Copy failed'; }
+  setTimeout(() => { btn.textContent = 'Copy'; }, 1500);
+}
 const HS_ONLY_TASKS = [
   { key: 'grad_plan', label: 'Run Graduation Plan Progress Report Data Capture (Select All Students. People>Graduation Plan Progress Report Data Capture)' },
 ];
@@ -2125,9 +2160,18 @@ function renderTasks(school, type, record) {
     const done = comp && comp.completed;
     const meta = done && comp.completed_at ? (comp.completed_by_name ? comp.completed_by_name + ' · ' : '') + new Date(comp.completed_at).toLocaleDateString() : '';
     const linkHtml = t.link ? ` <a href="${t.link.url}" target="_blank" rel="noopener" style="font-size:11px;color:#4A7CFF;text-decoration:none;margin-left:6px;font-weight:500;">${t.link.label} &#8599;</a>` : '';
+    // Tasks with sqlHowTo get a "How to" toggle that expands the query to run
+    const sqlToggle = t.sqlHowTo ? ` <a href="#" onclick="event.preventDefault();toggleTaskSql(this)" style="font-size:11px;color:#4A7CFF;text-decoration:none;margin-left:6px;font-weight:500;">How to &#9662;</a>` : '';
+    const sqlPanel = t.sqlHowTo ? `<div class="task-sql" style="display:none;margin-top:6px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <span style="font-size:11px;color:#666;">Run this query in PowerSchool and send the results to the principal:</span>
+          <button onclick="copyTaskSql(this)" style="font-size:11px;padding:2px 8px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;">Copy</button>
+        </div>
+        <pre style="margin:0;padding:10px;background:#1e293b;color:#e2e8f0;border-radius:6px;font-size:12px;overflow-x:auto;white-space:pre;">${escapeHtml(getIGradesSql(school.name))}</pre>
+      </div>` : '';
     return `<div class="task-item ${locked ? 'task-locked' : ''}">
       <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleTask('${t.key}', this.checked)">
-      <div><div class="task-label ${done ? 'done' : ''}">${t.label}${linkHtml}</div>${meta ? '<div class="task-meta">' + meta + '</div>' : ''}</div>
+      <div style="flex:1;min-width:0;"><div class="task-label ${done ? 'done' : ''}">${t.label}${linkHtml}${sqlToggle}</div>${meta ? '<div class="task-meta">' + meta + '</div>' : ''}${sqlPanel}</div>
     </div>`;
   }).join('');
 }
