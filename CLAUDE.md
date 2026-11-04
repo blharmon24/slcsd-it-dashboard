@@ -86,6 +86,9 @@ to successfully store grades for a given term. The dashboard shows:
 - Overdue highlighting (red card) when a school is still Not Started 14+ days after term end
 - Auto term selection based on saved term end dates
 - As-of date auto-fills to the day before the term end date
+- **Helpdesk ticket #** input on the "send report cards to DB team" task (`ticketField: true`);
+  one ticket per term + year shared by ALL schools, stored in `grade_store_term_tickets`
+  (setup: `sql/grade_store_db_ticket.sql`); also shown in Grade Store History
 
 ### Workflow concepts
 - Each school has a `grade_store_record` per term/academic year
@@ -465,6 +468,12 @@ Uploaded CTC master schedule rows, one per section per year.
 - Note: `teach_last_name` and `teacher_id` columns were dropped (2026-06-10) — teacher
   name/ID are no longer stored (see CTC Export workflow notes)
 - RLS enabled — authenticated users can read, insert, and delete
+
+### `grade_store_term_tickets`
+One helpdesk ticket # per term per academic year (report cards sent to DB team), shared by all schools.
+- `id`, `academic_year` (int), `term_label`, `ticket_number` (text), `updated_at`, `updated_by` (FK auth.users)
+- Unique constraint on `(academic_year, term_label)`
+- RLS enabled — admin-only (`is_admin()`), explicit grants
 
 ### `term_dates`
 Term end dates per academic year, split by schedule type.
