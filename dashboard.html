@@ -483,7 +483,7 @@
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.11.04.1</div>
+      <div class="sidebar-version">v2026.11.04.2</div>
     </div>
     <div class="main">
 
@@ -1931,6 +1931,7 @@ async function loadRecordsAndRender() {
   const { data } = await sb.from('grade_store_records').select('*').eq('term_label', getTerm()).eq('academic_year', getYear());
   records = {};
   allCompletions = {};
+  await loadTermTicket();
   if (data) {
     data.forEach(r => { records[r.school_name] = r; });
     const ids = data.map(r => r.id);
@@ -2169,10 +2170,11 @@ function renderTasks(school, type, record) {
         </div>
         <pre style="margin:0;padding:10px;background:#1e293b;color:#e2e8f0;border-radius:6px;font-size:12px;overflow-x:auto;white-space:pre;">${escapeHtml(getIGradesSql(school.name))}</pre>
       </div>` : '';
-    // Tasks with ticketField get an input for the helpdesk ticket # sent to the DB team
-    const ticketHtml = t.ticketField ? `<div style="margin-top:6px;display:flex;align-items:center;gap:6px;">
+    // Tasks with ticketField get an input for the term-wide helpdesk ticket # sent to the DB team
+    const ticketHtml = t.ticketField ? `<div style="margin-top:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
         <label for="f-db-ticket" style="font-size:11px;color:#666;">Helpdesk ticket #</label>
-        <input id="f-db-ticket" type="text" value="${escapeHtml(record.db_ticket_number || '')}" placeholder="e.g. 123456" onchange="saveDbTicket(this.value)" style="font-size:12px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;width:140px;">
+        <input id="f-db-ticket" type="text" value="${escapeHtml(termTicket || '')}" placeholder="e.g. 123456" onchange="saveTermTicket(this.value)" style="font-size:12px;padding:3px 6px;border:1px solid #ccc;border-radius:4px;width:140px;">
+        <span style="font-size:11px;color:#999;">Shared by all schools for ${getTerm()} ${getYear()}</span>
       </div>` : '';
     return `<div class="task-item ${locked ? 'task-locked' : ''}">
       <input type="checkbox" ${done ? 'checked' : ''} onchange="toggleTask('${t.key}', this.checked)">
@@ -2198,12 +2200,21 @@ async function toggleTask(taskKey, checked) {
   await checkAndMarkComplete();
 }
 
-// Save the helpdesk ticket # for the report-card-to-DB-team task
-async function saveDbTicket(value) {
-  await ensureRecord();
+// Helpdesk ticket # for the report-card-to-DB-team task.
+// One ticket per term + year, shared by every school (grade_store_term_tickets).
+let termTicket = null;
+async function loadTermTicket() {
+  const { data } = await sb.from('grade_store_term_tickets').select('ticket_number')
+    .eq('term_label', getTerm()).eq('academic_year', getYear()).maybeSingle();
+  termTicket = data ? data.ticket_number : null;
+}
+async function saveTermTicket(value) {
   const ticket = value.trim() || null;
-  await sb.from('grade_store_records').update({ db_ticket_number: ticket }).eq('id', currentRecordId);
-  records[currentSchool].db_ticket_number = ticket;
+  await sb.from('grade_store_term_tickets').upsert({
+    academic_year: getYear(), term_label: getTerm(), ticket_number: ticket,
+    updated_at: new Date().toISOString(), updated_by: currentUser.id
+  }, { onConflict: 'academic_year,term_label' });
+  termTicket = ticket;
 }
 
 async function checkAndMarkComplete() {
@@ -2335,7 +2346,8 @@ async function viewHistoryDetail(recordId, schoolName, schoolType, term, year) {
       rows.push({ label: 'CTC confirmed', value: record.ctc_confirmed ? 'Yes' : 'No' });
     }
   }
-  rows.push({ label: 'DB helpdesk ticket #', value: record.db_ticket_number ? escapeHtml(record.db_ticket_number) : '-' });
+  const { data: tk } = await sb.from('grade_store_term_tickets').select('ticket_number').eq('term_label', term).eq('academic_year', year).maybeSingle();
+  rows.push({ label: 'DB helpdesk ticket #', value: tk && tk.ticket_number ? escapeHtml(tk.ticket_number) : '-' });
   rows.push({ label: 'Overall status', value: record.completed ? 'Complete' : 'In Progress' });
   document.getElementById('hd-doc-rows').innerHTML = rows.map(r =>
     `<div class="detail-row"><div class="detail-label">${r.label}</div><div class="detail-value">${r.value}</div></div>`
