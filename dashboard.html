@@ -149,6 +149,34 @@
   .tab-btn:hover:not(.active) { color:#333; }
   .tab-content { display:none; }
   .tab-content.active { display:block; }
+  /* Renewals page */
+  .rn-nav-badge { display:inline-block; min-width:18px; padding:0 6px; margin-left:6px; border-radius:9px; background:#dc2626; color:#fff; font-size:11px; font-weight:600; line-height:18px; text-align:center; }
+  .rn-toolbar { display:flex; justify-content:space-between; align-items:center; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
+  .rn-summary { display:flex; gap:8px; flex-wrap:wrap; }
+  .rn-pill { padding:4px 12px; border-radius:999px; font-size:12px; font-weight:600; }
+  .rn-pill.red { background:#fee2e2; color:#991b1b; }
+  .rn-pill.amber { background:#fef3c7; color:#92400e; }
+  .rn-pill.green { background:#dcfce7; color:#166534; }
+  .rn-form { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:12px 16px; padding:1rem; }
+  .rn-form label { display:flex; flex-direction:column; gap:4px; font-size:12px; font-weight:500; color:#555; }
+  .rn-form input[type=text], .rn-form input[type=date], .rn-form select, .rn-form textarea { padding:7px 10px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:inherit; }
+  .rn-form .rn-check { flex-direction:row; align-items:center; gap:8px; padding-top:18px; }
+  .rn-form .rn-wide { grid-column:1 / -1; }
+  .rn-btn-plain { padding:8px 16px; background:white; border:1px solid #ddd; border-radius:6px; font-size:13px; cursor:pointer; }
+  .rn-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .rn-table th { text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:0.04em; color:#666; padding:8px 10px; border-bottom:1px solid #e0e4ea; background:#fafbfc; white-space:nowrap; }
+  .rn-table td { padding:9px 10px; border-bottom:1px solid #f0f2f5; vertical-align:top; }
+  .rn-table tr.red td { background:#fef2f2; }
+  .rn-table tr.amber td { background:#fffbeb; }
+  .rn-days { display:inline-block; min-width:64px; padding:2px 8px; border-radius:999px; font-size:12px; font-weight:600; text-align:center; white-space:nowrap; }
+  .rn-days.red { background:#dc2626; color:#fff; }
+  .rn-days.amber { background:#F59E0B; color:#fff; }
+  .rn-days.green { background:#dcfce7; color:#166534; }
+  .rn-sub { font-size:11px; color:#888; margin-top:2px; }
+  .rn-notes { font-size:11px; color:#666; margin-top:4px; white-space:pre-wrap; }
+  .rn-tag { display:inline-block; padding:1px 6px; border-radius:4px; font-size:11px; background:#eef2ff; color:#3730a3; margin-left:4px; }
+  .rn-act { background:none; border:none; cursor:pointer; color:#888; font-size:14px; padding:2px 4px; }
+  .rn-act:hover { color:#333; }
   .gs-stat { text-align:center; }
   .gs-stat-value { font-size:22px; font-weight:700; color:#222; line-height:1.1; }
   .gs-stat-label { font-size:11px; color:#888; text-transform:uppercase; letter-spacing:0.06em; margin-top:2px; }
@@ -481,9 +509,11 @@
       <div class="nav-item" onclick="showPage('schedule-commit', this)">PowerScheduler</div>
       <div class="nav-item" onclick="showPage('cardtouta', this)">CardToUTA</div>
       <div class="nav-item" onclick="showPage('grad-plans', this)">Grad Plans</div>
+      <div class="sidebar-section">Infrastructure</div>
+      <div class="nav-item" onclick="showPage('renewals', this)">Renewals <span id="rn-nav-badge" class="rn-nav-badge" style="display:none;"></span></div>
       <div class="sidebar-section">Personal</div>
       <div class="nav-item" onclick="showPage('my-tasks', this)">My Tasks</div>
-      <div class="sidebar-version">v2026.11.04.4</div>
+      <div class="sidebar-version">v2026.11.05.1</div>
     </div>
     <div class="main">
 
@@ -1536,6 +1566,58 @@
         </div>
       </div> <!-- end page-grad-plans -->
 
+      <!-- Renewals page (Certificates tab + future Contracts tab) -->
+      <div class="page" id="page-renewals">
+        <div class="page-title">Renewals</div>
+        <div class="page-sub">Track anything that expires - certificates now, vendor contracts next.</div>
+        <div class="tab-bar">
+          <button class="tab-btn active" id="rn-tab-btn-certs" onclick="switchRNTab('certs')">Certificates</button>
+          <button class="tab-btn" id="rn-tab-btn-contracts" onclick="switchRNTab('contracts')">Contracts</button>
+        </div>
+
+        <div class="tab-content active" id="rn-tab-certs">
+          <div class="rn-toolbar">
+            <div id="rn-summary" class="rn-summary"></div>
+            <button class="save-btn" style="margin-top:0;" onclick="rnOpenForm()">+ Add Certificate</button>
+          </div>
+
+          <!-- Add / edit form (hidden until opened) -->
+          <div class="tasks-card" id="rn-form-card" style="display:none;margin-bottom:1.25rem;">
+            <div class="tasks-card-title"><span id="rn-form-title">Add Certificate</span></div>
+            <div class="rn-form">
+              <input type="hidden" id="rn-f-id">
+              <label>System / Name *<input type="text" id="rn-f-name" placeholder="e.g. PowerSchool prod"></label>
+              <label>Hostname(s)<input type="text" id="rn-f-hostnames" placeholder="ps.slcschools.org, *.slcschools.org"></label>
+              <label>Issuer
+                <select id="rn-f-issuer"></select>
+              </label>
+              <label>Owner
+                <select id="rn-f-owner"></select>
+              </label>
+              <label>Issued<input type="date" id="rn-f-issued"></label>
+              <label>Expires *<input type="date" id="rn-f-expires"></label>
+              <label>Installed on<input type="text" id="rn-f-installed" placeholder="server, load balancer, appliance"></label>
+              <label class="rn-check"><input type="checkbox" id="rn-f-auto"> Auto-renews</label>
+              <label class="rn-wide">Renewal notes<textarea id="rn-f-notes" rows="3" placeholder="How to renew / where to install"></textarea></label>
+            </div>
+            <div style="padding:0 1rem 1rem;display:flex;gap:8px;align-items:center;">
+              <button class="save-btn" style="margin-top:0;" onclick="rnSaveForm()">Save</button>
+              <button class="rn-btn-plain" onclick="rnCloseForm()">Cancel</button>
+              <span id="rn-form-error" style="color:#c0392b;font-size:12px;"></span>
+            </div>
+          </div>
+
+          <div class="tasks-card">
+            <div class="tasks-card-title">Certificates <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#888;">sorted by days left</span></div>
+            <div id="rn-cert-list" style="overflow-x:auto;"><div style="color:#888;padding:1.5rem;">Loading...</div></div>
+          </div>
+        </div>
+
+        <div class="tab-content" id="rn-tab-contracts">
+          <div class="coming-soon"><h2>Coming Soon</h2><p>Vendor contract renewals will be tracked here.</p></div>
+        </div>
+      </div> <!-- end page-renewals -->
+
       <!-- My Tasks page -->
       <div class="page" id="page-my-tasks">
         <div class="page-title">My Tasks</div>
@@ -1776,7 +1858,7 @@ async function showApp() {
 
   // Restore the last active page, defaulting to grade-storing — but never
   // land on a page the current role isn't allowed to see.
-  const valid = ['grade-storing', 'schedule-commit', 'my-tasks', 'cardtouta', 'grad-plans'];
+  const valid = ['grade-storing', 'schedule-commit', 'my-tasks', 'cardtouta', 'grad-plans', 'renewals'];
   const saved = localStorage.getItem('it_dash_page');
   let page = valid.includes(saved) ? saved : 'grade-storing';
   if (!canSeePage(page)) page = defaultPageForRole();
@@ -1786,6 +1868,9 @@ async function showApp() {
     n.getAttribute('onclick')?.includes(`'${page}'`)
   );
   showPage(page, navEl);
+
+  // Sidebar "needs attention" count for Renewals (admins only)
+  if (page !== 'renewals') rnLoadBadge();
 }
 
 // Current academic year as its starting 4-digit year. The school year rolls
@@ -2881,7 +2966,205 @@ function showPage(name, el) {
   if (name === 'my-tasks') initMyTasksPage();
   if (name === 'cardtouta') initCardToUTAPage();
   if (name === 'grad-plans') initGradPlansPage();
+  if (name === 'renewals') initRenewalsPage();
   localStorage.setItem('it_dash_page', name);
+}
+
+// ── Renewals: Certificates ─────────────────────────────────────────
+// Inventory of web/TLS certs stored in `renewal_certificates` (admin-only).
+// Status is derived from days until expiration:
+//   red   = expired or ≤ 14 days left
+//   amber = ≤ 30 days left
+//   green = everything else
+// Auto-renewing certs (e.g. Let's Encrypt) get a quieter warning: they only
+// go amber at ≤ 14 days and red once actually expired.
+
+const RN_ISSUERS = [
+  { key: 'self_signed', label: 'Self-signed (internal)' },
+  { key: 'internal_ca', label: 'Internal CA' },
+  { key: 'digicert',    label: 'DigiCert' },
+  { key: 'letsencrypt', label: "Let's Encrypt" },
+  { key: 'other',       label: 'Other' },
+];
+let rnCerts = [];
+
+function rnIssuerLabel(key) {
+  return (RN_ISSUERS.find(i => i.key === key) || { label: key || '' }).label;
+}
+
+// Whole days from today (local midnight) until a 'YYYY-MM-DD' date
+function rnDaysLeft(dateStr) {
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return Math.round((new Date(dateStr + 'T00:00:00') - today) / 86400000);
+}
+
+function rnStatus(cert) {
+  const d = rnDaysLeft(cert.expires_date);
+  if (cert.auto_renew) return d < 0 ? 'red' : d <= 14 ? 'amber' : 'green';
+  return d <= 14 ? 'red' : d <= 30 ? 'amber' : 'green';
+}
+
+function rnFmtDate(dateStr) {
+  if (!dateStr) return '';
+  const [y, m, d] = dateStr.split('-');
+  return `${+m}/${+d}/${y}`;
+}
+
+function switchRNTab(tab) {
+  document.querySelectorAll('#page-renewals .tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('#page-renewals .tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById('rn-tab-btn-' + tab).classList.add('active');
+  document.getElementById('rn-tab-' + tab).classList.add('active');
+  localStorage.setItem('it_dash_rn_tab', tab);
+}
+
+async function initRenewalsPage() {
+  switchRNTab(localStorage.getItem('it_dash_rn_tab') || 'certs');
+  // Fill the form dropdowns once
+  const issuerSel = document.getElementById('rn-f-issuer');
+  if (!issuerSel.options.length) {
+    issuerSel.innerHTML = RN_ISSUERS.map(i => `<option value="${i.key}">${proEsc(i.label)}</option>`).join('');
+    document.getElementById('rn-f-owner').innerHTML =
+      '<option value="">&mdash;</option>' + PRO_ASSIGNEES.map(a => `<option value="${a}">${a}</option>`).join('');
+  }
+  await rnLoadCerts();
+}
+
+async function rnLoadCerts() {
+  const { data, error } = await sb.from('renewal_certificates')
+    .select('*').eq('active', true).order('expires_date');
+  const list = document.getElementById('rn-cert-list');
+  if (error) {
+    if (list) list.innerHTML = `<div style="color:#c0392b;padding:1.5rem;">Could not load certificates: ${proEsc(error.message)}</div>`;
+    return;
+  }
+  rnCerts = data || [];
+  rnRender();
+}
+
+// Sidebar badge: count of certs needing attention (red or amber).
+// Called on login for admins and after every change on the page.
+function rnUpdateBadge(certs = rnCerts) {
+  const n = certs.filter(c => rnStatus(c) !== 'green').length;
+  const badge = document.getElementById('rn-nav-badge');
+  if (!badge) return;
+  badge.textContent = n;
+  badge.style.display = n ? '' : 'none';
+}
+
+async function rnLoadBadge() {
+  if (currentRole !== 'admin') return;
+  const { data, error } = await sb.from('renewal_certificates')
+    .select('expires_date, auto_renew').eq('active', true);
+  if (error) return; // table may not exist yet - fail quietly
+  rnUpdateBadge(data || []);
+}
+
+function rnRender() {
+  rnUpdateBadge();
+  const counts = { red: 0, amber: 0, green: 0 };
+  rnCerts.forEach(c => counts[rnStatus(c)]++);
+  document.getElementById('rn-summary').innerHTML = rnCerts.length
+    ? `<span class="rn-pill red">${counts.red} urgent</span>` +
+      `<span class="rn-pill amber">${counts.amber} expiring &le; 30 days</span>` +
+      `<span class="rn-pill green">${counts.green} OK</span>`
+    : '';
+
+  const list = document.getElementById('rn-cert-list');
+  if (!rnCerts.length) {
+    list.innerHTML = '<div style="color:#888;padding:1.5rem;">No certificates yet. Click <b>+ Add Certificate</b> to start.</div>';
+    return;
+  }
+  const rows = rnCerts.map(c => {
+    const st = rnStatus(c);
+    const d = rnDaysLeft(c.expires_date);
+    const daysText = d < 0 ? `Expired ${-d}d ago` : d === 0 ? 'Today' : `${d} days`;
+    const updated = c.updated_by_name
+      ? `Updated by ${proEsc(c.updated_by_name)} ${c.updated_at ? new Date(c.updated_at).toLocaleDateString() : ''}` : '';
+    return `<tr class="${st === 'green' ? '' : st}">
+      <td><span class="rn-days ${st}">${daysText}</span></td>
+      <td><b>${proEsc(c.name)}</b>${c.auto_renew ? '<span class="rn-tag">auto-renew</span>' : ''}
+        ${c.installed_on ? `<div class="rn-sub">On: ${proEsc(c.installed_on)}</div>` : ''}
+        ${c.notes ? `<div class="rn-notes">${proEsc(c.notes)}</div>` : ''}</td>
+      <td style="word-break:break-word;max-width:260px;">${proEsc(c.hostnames || '')}</td>
+      <td style="white-space:nowrap;">${proEsc(rnIssuerLabel(c.issuer))}</td>
+      <td style="white-space:nowrap;">${rnFmtDate(c.issued_date)}</td>
+      <td style="white-space:nowrap;"><b>${rnFmtDate(c.expires_date)}</b></td>
+      <td>${proEsc(c.owner || '')}</td>
+      <td style="white-space:nowrap;" title="${updated}">
+        <button class="rn-act" title="Edit" onclick="rnOpenForm('${c.id}')">&#9998;</button>
+        <button class="rn-act" title="Remove" onclick="rnRemoveCert('${c.id}')">&#10005;</button>
+      </td>
+    </tr>`;
+  }).join('');
+  list.innerHTML = `<table class="rn-table">
+    <thead><tr><th>Days Left</th><th>System</th><th>Hostname(s)</th><th>Issuer</th><th>Issued</th><th>Expires</th><th>Owner</th><th></th></tr></thead>
+    <tbody>${rows}</tbody></table>`;
+}
+
+// Open the add/edit form; pass an id to edit an existing cert
+function rnOpenForm(id) {
+  const c = id ? rnCerts.find(x => x.id === id) : null;
+  document.getElementById('rn-form-title').textContent = c ? 'Edit Certificate' : 'Add Certificate';
+  document.getElementById('rn-f-id').value        = c ? c.id : '';
+  document.getElementById('rn-f-name').value      = c ? c.name : '';
+  document.getElementById('rn-f-hostnames').value = c ? (c.hostnames || '') : '';
+  document.getElementById('rn-f-issuer').value    = c ? c.issuer : 'self_signed';
+  document.getElementById('rn-f-owner').value     = c ? (c.owner || '') : '';
+  document.getElementById('rn-f-issued').value    = c ? (c.issued_date || '') : '';
+  document.getElementById('rn-f-expires').value   = c ? c.expires_date : '';
+  document.getElementById('rn-f-installed').value = c ? (c.installed_on || '') : '';
+  document.getElementById('rn-f-auto').checked    = c ? !!c.auto_renew : false;
+  document.getElementById('rn-f-notes').value     = c ? (c.notes || '') : '';
+  document.getElementById('rn-form-error').textContent = '';
+  const card = document.getElementById('rn-form-card');
+  card.style.display = '';
+  card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  document.getElementById('rn-f-name').focus();
+}
+
+function rnCloseForm() {
+  document.getElementById('rn-form-card').style.display = 'none';
+}
+
+async function rnSaveForm() {
+  const errEl = document.getElementById('rn-form-error');
+  const id = document.getElementById('rn-f-id').value;
+  const row = {
+    name:         document.getElementById('rn-f-name').value.trim(),
+    hostnames:    document.getElementById('rn-f-hostnames').value.trim() || null,
+    issuer:       document.getElementById('rn-f-issuer').value,
+    owner:        document.getElementById('rn-f-owner').value || null,
+    issued_date:  document.getElementById('rn-f-issued').value || null,
+    expires_date: document.getElementById('rn-f-expires').value,
+    installed_on: document.getElementById('rn-f-installed').value.trim() || null,
+    auto_renew:   document.getElementById('rn-f-auto').checked,
+    notes:        document.getElementById('rn-f-notes').value.trim() || null,
+    updated_at:   new Date().toISOString(),
+    updated_by:   currentUser.id,
+    updated_by_name: displayNameFromEmail(currentUser.email),
+  };
+  if (!row.name || !row.expires_date) { errEl.textContent = 'Name and Expires are required.'; return; }
+  if (row.issued_date && row.issued_date > row.expires_date) { errEl.textContent = 'Issued date is after the expiration date.'; return; }
+
+  const { error } = id
+    ? await sb.from('renewal_certificates').update(row).eq('id', id)
+    : await sb.from('renewal_certificates').insert(row);
+  if (error) { errEl.textContent = 'Save failed: ' + error.message; return; }
+  rnCloseForm();
+  await rnLoadCerts();
+}
+
+// Soft delete - the row stays in the table with active = false
+async function rnRemoveCert(id) {
+  const c = rnCerts.find(x => x.id === id);
+  if (!confirm('Remove certificate "' + (c ? c.name : '') + '" from the list?')) return;
+  const { error } = await sb.from('renewal_certificates')
+    .update({ active: false, updated_at: new Date().toISOString(), updated_by: currentUser.id,
+              updated_by_name: displayNameFromEmail(currentUser.email) })
+    .eq('id', id);
+  if (error) { alert('Remove failed: ' + error.message); return; }
+  await rnLoadCerts();
 }
 
 // â”€â”€ School Rollover â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

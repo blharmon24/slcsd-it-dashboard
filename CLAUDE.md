@@ -20,6 +20,7 @@ not current behavior). Managed by IT staff.
 - **Copy K-6 Schedule Check** — client-side K-6 elementary schedule validator; verifies DEPENDENT_SECS references, duplicate course numbers, and shared dep sections; downloads a highlighted HTML report (added 2026-05-18)
 - **K-6 School Clean Status** — per-school checkboxes on the Copy K-6 Schedule Check tab tracking which schools are 100% clean; saved to Supabase by academic year (added 2026-05-18)
 - **Post-Rollover Tasks** — schools × tasks check-off matrix on the PowerScheduler page; each task has a per-year assignee (VG/BH/JF/SQ) and a per-school completion check-off; tasks add/removable from the page (added 2026-06-30)
+- **Renewals** — new "Infrastructure" sidebar section; Certificates tab tracks web/TLS certs (issuer, issued, expires, owner, auto-renew) with red/amber/green days-left status and a sidebar badge; Contracts tab is a placeholder. Table setup: `sql/renewal_certificates_setup.sql`. Expiry notifications planned via Supabase Edge Function (added 2026-11-05)
 
 ## Tech Stack
 - **Frontend:** Single HTML file (`dashboard.html`) — HTML, CSS, and JavaScript
@@ -46,7 +47,7 @@ not current behavior). Managed by IT staff.
 ## Page Persistence
 - The last active page is saved to `localStorage` under key `it_dash_page`
 - On login, the saved page is restored; defaults to `grade-storing` if none saved
-- Valid page keys: `grade-storing`, `schedule-commit`, `my-tasks`, `cardtouta`
+- Valid page keys: `grade-storing`, `schedule-commit`, `my-tasks`, `cardtouta`, `grad-plans`, `renewals`
 
 ## Sidebar Structure (as of 2026-05-07)
 **Grade Storing** (section header)
@@ -560,6 +561,13 @@ Per-task, per-school, per-year check-off for the Post-Rollover Tasks grid.
   `completed_by_name` (text)
 - Unique constraint on `(task_id, school_name, academic_year)`
 - RLS enabled — authenticated users can read/write
+
+### `renewal_certificates`
+Certificate inventory for the Renewals page (one row per cert; edit dates in place on renewal).
+- `id`, `name`, `hostnames`, `issuer` (`self_signed` | `internal_ca` | `digicert` | `letsencrypt` | `other`),
+  `issued_date`, `expires_date`, `auto_renew` (bool), `owner` (VG/BH/JF/SQ), `installed_on`, `notes`,
+  `active` (soft delete), `created_at`, `updated_at`, `updated_by`, `updated_by_name`
+- RLS admin-only (`is_admin()`), explicit grants
 
 ### `k6_clean_status`
 Per-school "100% clean" flag for K-6 elementary schedule files, one row per school per year.
